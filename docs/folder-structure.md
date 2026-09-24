@@ -20,10 +20,11 @@ Follows Nuxt 4 defaults. Do not invent new top-level patterns (no `services/`, `
 │  ├─ tasks/                  # Nitro tasks (db:seed)
 │  ├─ utils/                  # Auto-imported server helpers (auth, stripe, email, logTransaction)
 │  └─ db/                     # schema.sqlite.ts, schema.postgresql.ts, migrations/{dialect}/
-├─ shared/                    # Auto-imported in app AND server
-│  ├─ schemas/                # Zod schemas (forms + API validation)
-│  ├─ types/                  # Shared TS types
-│  └─ utils/                  # Pure functions (money, slug, pricing/fee math)
+├─ shared/
+│  ├─ schemas/                # Zod schemas (forms + API validation) — explicit imports only;
+│  │                          # Nuxt does not auto-import this subfolder (only utils/ and types/)
+│  ├─ types/                  # Shared TS types — auto-imported (ambient, both app AND server)
+│  └─ utils/                  # Pure functions (money, slug, pricing/fee math) — auto-imported
 ├─ tests/{unit,nuxt,integration,smoke,e2e}/   # see docs/testing.md
 ├─ public/                    # Static files
 ├─ docs/  infra/  setups/  .github/

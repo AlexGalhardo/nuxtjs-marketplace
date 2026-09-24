@@ -11,6 +11,11 @@ PLAN.md §5.1. Every phase ends with a review of the categories it touches, reco
 - **Env validation** (`server/utils/env.ts`, `server/plugins/env.ts`): `runtimeConfig` parsed with Zod at startup.
   With `NUXT_STRICT_ENV=true` (default) missing production secrets abort startup. Skipped in `nuxt dev` and prerender.
 - `GET /api/health` returns only `{ "status": "ok" }`.
+- **Auth (Phase 4)**: sealed session cookies (`nuxt-auth-utils`, scrypt password hashing); password
+  reset/API tokens stored as SHA-256 hashes (`server/utils/token.ts`); generic login errors, always-200
+  forgot-password (no user enumeration); a password change invalidates every other session
+  (`server/plugins/auth-session.ts`); stricter rate limit on `/api/auth/**` (`routeRules`); ownership
+  checks via `requireShopOwner`/`requireApiToken` (`server/utils/auth.ts`).
 
 ## Rules for every change
 

@@ -7,12 +7,14 @@ const baseConfig = {
   stripe: { secretKey: '', webhookSecret: '' },
   resend: { apiKey: '' },
   email: { from: '' },
+  session: { password: '' },
   public: { siteUrl: 'http://localhost:3000', stripe: { publishableKey: '' } },
 }
 
 const withStripe = {
   ...baseConfig,
   stripe: { secretKey: 'sk_test_123', webhookSecret: 'whsec_123' },
+  session: { password: 'a'.repeat(32) },
   public: { ...baseConfig.public, stripe: { publishableKey: 'pk_test_123' } },
 }
 
@@ -25,17 +27,24 @@ describe('validateRuntimeEnv', () => {
     const result = validateRuntimeEnv(baseConfig, false)
 
     expect(result.errors).toEqual([])
-    expect(result.warnings).toHaveLength(3)
+    expect(result.warnings).toHaveLength(4)
   })
 
-  it('fails in strict mode when Stripe secrets are missing', () => {
+  it('fails in strict mode when required secrets are missing', () => {
     const result = validateRuntimeEnv(baseConfig, true)
 
     expect(result.errors).toEqual([
       'stripe.secretKey is not set',
       'stripe.webhookSecret is not set',
       'public.stripe.publishableKey is not set',
+      'session.password is not set',
     ])
+  })
+
+  it('rejects a session password shorter than 32 characters', () => {
+    const result = validateRuntimeEnv({ ...withStripe, session: { password: 'too-short' } }, true)
+
+    expect(result.errors[0]).toMatch(/^session\.password:/)
   })
 
   it('passes in strict mode when every required secret is set', () => {

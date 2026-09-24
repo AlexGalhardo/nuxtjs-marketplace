@@ -249,22 +249,24 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (explain 
 - **3.4 Tests** — [~] `tests/integration/product-types.test.ts` validates the DB layer end-to-end against SQLite; PostgreSQL migrations verified via `drizzle-kit generate` (SQL inspected) but not live-tested (Docker Desktop wasn't running locally) — full SQLite+Postgres CI matrix lands in Phase 13
 - **3.5 OWASP touchpoints (§5.1)** — [x] A05: only Drizzle's parameterized query builder is used (no raw/interpolated SQL anywhere in the schema or seed script); `/api/product-types` has no user input to validate yet
 
-### Phase 4 — Authentication
+### Phase 4 — Authentication ✅
 - **4.1 Server**
-  - [ ] `nuxt-auth-utils` + `NUXT_SESSION_PASSWORD`
-  - [ ] `POST /api/auth/signup` (name 4–24, email, password 8–32 + lowercase + uppercase + digit + special)
-  - [ ] `POST /api/auth/login`, `POST /api/auth/logout`
-  - [ ] `POST /api/auth/forgot-password` (always 200, token hashed, 1h expiry, email via Resend)
-  - [ ] `POST /api/auth/reset-password` (single-use token, invalidates sessions)
-  - [ ] Rate limit auth endpoints; generic error messages (no user enumeration)
-  - [ ] `server/utils/auth.ts`: `requireUser`, `requireAdmin`, `requireShopOwner`, `requireApiToken`
+  - [x] `nuxt-auth-utils` + `NUXT_SESSION_PASSWORD` (validated in `server/utils/env.ts`, ≥32 chars)
+  - [x] `POST /api/auth/signup` (name 4–24, email, password 8–32 + lowercase + uppercase + digit + special)
+  - [x] `POST /api/auth/login`, `POST /api/auth/logout`
+  - [x] `POST /api/auth/forgot-password` (always 200, token hashed, 1h expiry, email via Resend/console)
+  - [x] `POST /api/auth/reset-password` (single-use token, invalidates sessions)
+  - [x] Rate limit auth endpoints (30/5min per IP, `routeRules`); generic error messages (no user enumeration)
+  - [x] `server/utils/auth.ts`: `requireUser`, `requireAdmin`, `requireShopOwner`, `requireApiToken` — `requireUser` also carries the password-change session-invalidation check (nuxt-auth-utils' `fetch` session hook only fires for its own client-facing session route, not for `requireUserSession()` in our handlers — verified in its source, documented in `server/plugins/auth-session.ts`)
 - **4.2 UI**
-  - [ ] `/login` (password eye toggle, "Don't have an account? Sign up")
-  - [ ] `/signup` (live password rule checklist with `UAlert`/indicators, "Already have an account? Log in")
-  - [ ] `/forget-password`, `/reset-password?token=`
-  - [ ] Route middleware `auth` / `guest` / `admin`; header user menu
-- **4.3 Profile** — [ ] `/profile` personal data, addresses CRUD, change password
-- **4.4 Tests** — [ ] unit (password rules schema), integration (all endpoints), e2e (signup → login → logout → reset)
+  - [x] `/login` (password eye toggle via `UAuthForm`, "Don't have an account? Sign up")
+  - [x] `/signup` (live password rule checklist, "Already have an account? Log in")
+  - [x] `/forget-password`, `/reset-password?token=`
+  - [x] Route middleware `auth` / `guest` / `admin`; header user menu (`app/layouts/default.vue`)
+- **4.3 Profile** — [x] `/profile` personal data, addresses CRUD (with delete confirmation), change password
+- **4.4 Tests** — [x] unit (password/address/profile schemas), integration (auth + profile endpoints, ownership checks), e2e (signup → logout → login → reset → login)
+- **4.5 UI audit** — [x] `web-design-guidelines` run on all new pages/layouts; fixed: missing `autocomplete` on every password/email/name field, missing page `<h1>` (auth pages use a visually-hidden one, `UAuthForm`'s title isn't one), vague "Continue" submit labels → "Log in"/"Create account", delete-address had no confirmation (added a confirm modal), a few straight apostrophes
+- **4.6 OWASP touchpoints (§5.1)** — [x] A04 (scrypt hashing, sealed `Secure`/`HttpOnly`/`SameSite=Lax` cookies verified via response headers, reset tokens as SHA-256 hashes), A07 (password policy, generic login/forgot-password responses, single-use expiring reset tokens, password change invalidates other sessions), A01 (ownership test: another user's address → 404), A06 (rate limit + abuse-case tests: wrong password, duplicate signup, reused reset token)
 
 ### Phase 5 — UI shell & static pages
 - [ ] App layout (`UHeader`, `UFooter`, nav, color mode), `default` / `auth` / `dashboard` layouts
@@ -343,7 +345,7 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (explain 
 ## 7. Risks & open questions
 
 - NuxtHub dual-schema ergonomics (verify in 3.1). Fallback: plain Drizzle + custom `server/utils/db.ts` (documented exception).
-- Bun as Nuxt runtime (`bun --bun nuxt dev`) — fall back to Node for any failing step and log it here.
+- Bun as Nuxt runtime — resolved in Phase 4: `Bun.randomUUIDv7()` (`shared/utils/id.ts`) threw `Bun is not defined` under plain `nuxt dev` and under `@nuxt/test-utils`'s built-server tests, because both spawn a `node` subprocess internally (Nitro dev, and `@nuxt/test-utils`'s hardcoded `x("node", …)`). Fixed by using `bun --bun` for `dev`/`build`/`preview`/`test:integration`/`test:smoke`/`test:e2e` (package.json) — the `--bun` flag shims `node` to `bun` for the whole process tree, so `Bun` stays defined. No Node fallback was needed; the real Docker deploy (`bun .output/server/index.mjs`, no spawn involved) was never affected.
 - Stripe Connect Express availability depends on the seller's country; test mode is enough for development.
 - Separate charges & transfers: platform balance must cover refunds before reversals settle.
 

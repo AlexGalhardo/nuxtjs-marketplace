@@ -24,6 +24,9 @@ First time only: `bunx playwright install chromium`.
 
 - Each feature ships with tests at the appropriate levels; bugs get a regression test.
 - Test servers run with `NUXT_STRICT_ENV=false` so missing Stripe/Resend secrets are only warnings.
+- Integration tests boot the **production build**, not `nuxt dev` — nuxt-auth-utils' dev-only
+  auto-generated `NUXT_SESSION_PASSWORD` fallback does not apply, so any integration test that
+  touches a session (login/signup/etc.) must pass `NUXT_SESSION_PASSWORD` explicitly in `setup({ env })`.
 - Name tests by behavior (`'user can switch to dark mode from the header'`), not implementation.
 - Prefer role/label selectors (`getByRole`, `getByLabel`); `data-testid` only as a last resort.
 - Playwright tests import `test`/`expect` from `@nuxt/test-utils/playwright` and use `goto(path, { waitUntil: 'hydration' })`.

@@ -12,6 +12,11 @@ export const runtimeEnvSchema = z.object({
   }),
   resend: z.object({ apiKey: optionalString }),
   email: z.object({ from: optionalString }),
+  session: z.object({
+    password: z.string().refine((value) => value === '' || value.length >= 32, {
+      message: 'must be at least 32 characters',
+    }),
+  }),
   public: z.object({
     siteUrl: z.url(),
     stripe: z.object({ publishableKey: optionalString }),
@@ -25,6 +30,7 @@ const productionRequired = [
   ['stripe.secretKey', (env: RuntimeEnv) => env.stripe.secretKey],
   ['stripe.webhookSecret', (env: RuntimeEnv) => env.stripe.webhookSecret],
   ['public.stripe.publishableKey', (env: RuntimeEnv) => env.public.stripe.publishableKey],
+  ['session.password', (env: RuntimeEnv) => env.session.password],
 ] as const
 
 export interface EnvValidationResult {

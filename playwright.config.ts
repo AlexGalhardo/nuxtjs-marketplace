@@ -37,6 +37,9 @@ export default defineConfig<ConfigOptions>({
       PORT: String(port),
       NUXT_STRICT_ENV: 'false',
       NUXT_PUBLIC_SITE_URL: baseURL,
+      // nuxt-auth-utils' dev-only auto-generated password fallback does not apply to this
+      // production build (docs/testing.md).
+      NUXT_SESSION_PASSWORD: 'x'.repeat(32),
     },
   },
 })

@@ -24,5 +24,14 @@ export async function createSeedClient() {
 }
 
 export async function closeSeedClient(db: Awaited<ReturnType<typeof createDrizzleClient>>) {
-  await db.$client?.end?.()
+  // postgres-js exposes `end()`; the libsql client (sqlite) only has `close()`. Closing properly
+  // matters here: unlike a short-lived CLI process (where process exit releases the file lock
+  // regardless), this is called from long-lived processes (tests) where a leaked libsql
+  // connection keeps a lock on the sqlite file for the rest of the run.
+  const client = db.$client as { end?: () => Promise<void>; close?: () => void } | undefined
+  if (typeof client?.end === 'function') {
+    await client.end()
+  } else if (typeof client?.close === 'function') {
+    client.close()
+  }
 }
