@@ -1,14 +1,19 @@
-# Environment variables (planned — Phase 1.3)
+# Environment variables
 
-Copy `.env.example` to `.env`. Nuxt maps `NUXT_*` variables onto `runtimeConfig` automatically.
+Copy `.env.example` to `.env`. Nuxt maps `NUXT_*` variables onto `runtimeConfig` at runtime
+(declared in `nuxt.config.ts`, validated by `server/utils/env.ts` at startup).
+Variables marked *(Phase N)* are not wired yet; add them to `runtimeConfig`, the Zod schema and `.env.example` together.
 
 | Variable | Required | Description |
 |----------|----------|-------------|
+| `NUXT_STRICT_ENV` | no | Default `true`: missing production secrets abort startup. Set `false` only for tests/CI |
 | `NUXT_PUBLIC_SITE_URL` | yes | Public base URL (e.g. `http://localhost:3000`) |
-| `NUXT_SESSION_PASSWORD` | yes | ≥ 32 chars, seals the session cookie (nuxt-auth-utils) |
-| `NUXT_HUB_DB_DIALECT` | build | `sqlite` (default) or `postgresql` |
-| `DATABASE_URL` | postgres | PostgreSQL connection string |
-| `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT` | prod/docker | Blob storage (MinIO locally) |
+| `NUXT_SESSION_PASSWORD` | yes *(Phase 4)* | ≥ 32 chars, seals the session cookie (nuxt-auth-utils) |
+| `NUXT_HUB_DB_DIALECT` | build *(Phase 3)* | `sqlite` (default) or `postgresql` |
+| `DATABASE_URL` | postgres *(Phase 3)* | PostgreSQL connection string |
+| `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT` | prod/docker *(Phase 3)* | Blob storage (MinIO locally) |
+| `E2E_PORT` | no | Port for the Playwright test server (default `3100`) |
+| `PLAYWRIGHT_SKIP_BUILD` | no | `1` = Playwright reuses the existing `.output` build |
 | `NUXT_STRIPE_SECRET_KEY` | yes | Stripe secret key (test mode in dev) |
 | `NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | yes | Stripe publishable key |
 | `NUXT_STRIPE_WEBHOOK_SECRET` | yes | Webhook signing secret (`whsec_...`) |

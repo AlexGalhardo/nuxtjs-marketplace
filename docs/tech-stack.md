@@ -12,13 +12,16 @@ Check with `npm view <pkg> version` before adding a dependency.
 | File storage | NuxtHub Blob (fs / S3 / MinIO) | yes |
 | Images | `@nuxt/image` | yes |
 | Auth | `nuxt-auth-utils` | yes |
-| Testing | Vitest + `@nuxt/test-utils`, Playwright via `@nuxt/test-utils/playwright` | yes (test-utils) |
+| Security | `nuxt-security` (headers, CSP, rate limit) | community module (approved) |
+| Validation | Zod 4 | no (approved) |
+| Testing | Vitest 5 + `@nuxt/test-utils` 4, Playwright via `@nuxt/test-utils/playwright` | yes (test-utils) |
+| Lint/format, hooks | Biome 2.5, Husky 9, commitlint, changelogen | no (required by brief) |
 | TypeScript | 6.0.x (TS 7 breaks `vue-tsc` 3.3 — see PLAN.md D17) | — |
 
 ## Exceptions (no official Nuxt equivalent) — keep in sync with PLAN.md §2
 
-`stripe`, `resend`, `zod`, `@scalar/api-reference`, `@biomejs/biome`, `husky`, `@commitlint/*`,
-`@playwright/test`, `changelogen` (UnJS). Proposed: `nuxt-security` (community module).
+`stripe`, `resend`, `zod`, `nuxt-security` (community module), `@scalar/api-reference`, `@biomejs/biome`,
+`husky`, `@commitlint/*`, `@playwright/test`, `changelogen` (UnJS). All approved by the owner.
 Before adding any other non-official library: document it in PLAN.md and ask the project owner.
 
 ## AI tooling for agents

@@ -3,7 +3,7 @@
 A simplified marketplace (MercadoLivre-style) where anyone can buy and sell **physical** and **digital** products.
 Built to learn [Nuxt](https://nuxt.com) and its ecosystem.
 
-**Status:** Phase 0 (bootstrap). See [PLAN.md](PLAN.md) for scope, decisions and progress.
+**Status:** Phase 1 (foundation & tooling) complete. See [PLAN.md](PLAN.md) for scope, decisions and progress.
 
 ## Stack
 

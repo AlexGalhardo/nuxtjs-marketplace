@@ -1,21 +1,32 @@
-# Testing (planned — Phase 1.4, then every phase)
+# Testing
 
 | Kind | Tool | Location | What |
 |------|------|----------|------|
-| Unit | Vitest (node env) | `tests/unit/` | Pure functions in `shared/` and `server/utils/` (pricing, money, schemas) |
-| Component | Vitest + `@nuxt/test-utils` (nuxt env) | `tests/unit/components/` | Vue components with `mountSuspended` |
-| Integration | Vitest + `@nuxt/test-utils/e2e` (`setup`, `$fetch`) | `tests/integration/` | API endpoints against a real DB (SQLite and Postgres in CI) |
-| Smoke | Playwright (`@smoke` tag) | `tests/smoke/` | Every page returns 200 and renders its main heading; runs after build/deploy |
-| E2E | Playwright via `@nuxt/test-utils/playwright` | `tests/e2e/` | Full journeys: signup/login, sell, buy (Stripe test card), refund, admin |
+| Unit | Vitest project `unit` (node env) | `tests/unit/` | Pure functions in `shared/` and `server/utils/` (env, pricing, money, schemas). Use relative imports. |
+| Component | Vitest project `nuxt` (nuxt env) | `tests/nuxt/` | Vue components/composables with `mountSuspended` from `@nuxt/test-utils/runtime`; `~` aliases work |
+| Integration | Vitest project `integration` + `@nuxt/test-utils/e2e` | `tests/integration/` | Builds the app once per file and calls the real server with `$fetch`/`fetch` (DB-backed from Phase 3; SQLite and Postgres in CI) |
+| Smoke | Playwright project `smoke` | `tests/smoke/` | Every page loads, hydrates, shows its `h1` and logs **no console errors** (catches CSP violations) |
+| E2E | Playwright project `e2e` via `@nuxt/test-utils/playwright` | `tests/e2e/` | Full user journeys: signup/login, sell, buy (Stripe test card), refund, admin |
+
+## Commands
+
+| Command | Notes |
+|---------|-------|
+| `bun run test:unit` | `unit` + `nuxt` projects (fast, also run on pre-push) |
+| `bun run test:integration` | Builds Nuxt (~2–3 min); run on pre-push |
+| `bun run test:smoke` / `bun run test:e2e` | Playwright; builds then starts the server on port 3100 (`E2E_PORT`). With `PLAYWRIGHT_SKIP_BUILD=1` it reuses the existing `.output` |
+| `bun run test:coverage` | Coverage for `shared/` and `server/utils/` |
+| `bun run test` | Everything |
+
+First time only: `bunx playwright install chromium`.
 
 ## Rules
 
 - Each feature ships with tests at the appropriate levels; bugs get a regression test.
-- Stripe in tests: unit/integration mock the SDK and sign webhook payloads with
-  `stripe.webhooks.generateTestHeaderString`; e2e uses test-mode keys when available (skipped otherwise).
-- Emails: without `RESEND_API_KEY` they are captured in memory/console; tests assert on the captured payload.
-- Use `data-testid` only when role/label selectors are not possible.
-
-## Commands (to be added)
-
-`bun run test:unit`, `bun run test:integration`, `bun run test:smoke`, `bun run test:e2e`, `bun run test`.
+- Test servers run with `NUXT_STRICT_ENV=false` so missing Stripe/Resend secrets are only warnings.
+- Name tests by behavior (`'user can switch to dark mode from the header'`), not implementation.
+- Prefer role/label selectors (`getByRole`, `getByLabel`); `data-testid` only as a last resort.
+- Playwright tests import `test`/`expect` from `@nuxt/test-utils/playwright` and use `goto(path, { waitUntil: 'hydration' })`.
+- Stripe: unit/integration mock the SDK and sign webhook payloads with `stripe.webhooks.generateTestHeaderString`;
+  e2e uses test-mode keys when available (skipped otherwise).
+- Emails: without `NUXT_RESEND_API_KEY` they are captured/logged; tests assert on the captured payload.

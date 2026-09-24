@@ -16,8 +16,9 @@ Marketplace (MercadoLivre-like) to buy/sell physical and digital products. Nuxt 
 - **Nuxt conventions only** (auto-imports, `server/utils`, `shared/`, `useFetch`). See [docs/folder-structure.md](docs/folder-structure.md).
 - **Nuxt UI components + Tailwind v4** for all UI. See [docs/ui-ux-frontend.md](docs/ui-ux-frontend.md).
 - **Money = integer cents (USD)**; every money event goes to append-only `transaction_logs`. See [docs/payments-stripe.md](docs/payments-stripe.md).
-- **Conventional Commits + SemVer**; never `--no-verify`, never push without the owner's OK. See [docs/git-workflow.md](docs/git-workflow.md).
+- **Conventional Commits + SemVer**; never `--no-verify`; push only when the owner asks. See [docs/git-workflow.md](docs/git-workflow.md).
 - **Tests with every feature** (unit, integration, smoke, e2e). See [docs/testing.md](docs/testing.md).
+- **OWASP Top 10:2025 review** closes every phase (PLAN.md §5.1). See [docs/security.md](docs/security.md).
 
 ## Guides
 - Architecture: [docs/architecture.md](docs/architecture.md) · Conventions: [docs/coding-conventions.md](docs/coding-conventions.md)
@@ -27,7 +28,8 @@ Marketplace (MercadoLivre-like) to buy/sell physical and digital products. Nuxt 
 
 ## Commands
 - `bun install` · `bun run dev` · `bun run build` · `bun run typecheck`
-- Lint/test scripts are added in Phase 1 (see PLAN.md).
+- `bun run check` / `check:fix` (Biome) · `bun run test:unit` · `test:integration` · `test:smoke` · `test:e2e`
+- Before finishing a task: `bun run check && bun run typecheck && bun run test:unit`.
 
 ## AI tooling
 - MCP (`.mcp.json`): `nuxt` (docs) and `nuxt-ui` (components). Prefer them over guessing APIs.

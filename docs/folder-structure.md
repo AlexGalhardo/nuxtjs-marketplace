@@ -24,7 +24,7 @@ Follows Nuxt 4 defaults. Do not invent new top-level patterns (no `services/`, `
 │  ├─ schemas/                # Zod schemas (forms + API validation)
 │  ├─ types/                  # Shared TS types
 │  └─ utils/                  # Pure functions (money, slug, pricing/fee math)
-├─ tests/{unit,integration,smoke,e2e}/
+├─ tests/{unit,nuxt,integration,smoke,e2e}/   # see docs/testing.md
 ├─ public/                    # Static files
 ├─ docs/  infra/  setups/  .github/
 ├─ .claude/skills/            # Project agent skills (committed)

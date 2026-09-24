@@ -44,19 +44,21 @@ Multi-currency, carrier rate calculation, subscriptions, chat between buyer/sell
 | D16 | Git hooks | pre-commit `biome check --staged`; commit-msg `commitlint`; pre-push typecheck + unit + integration tests | |
 | D17 | TypeScript | **TS 6.0.x**, not 7.x | `vue-tsc@3.3` crashes with TS 7 (`ERR_PACKAGE_PATH_NOT_EXPORTED`). Revisit when vue-tsc supports TS 7. |
 | D18 | Validation | **Zod v4** (Standard Schema) shared in `shared/schemas` | Not a Nuxt lib → exception. Works with `UForm` and `readValidatedBody`. |
-| D19 | Remote | `origin` = `https://github.com/AlexGalhardo/nuxtjs-marketplace.git` | Never push without the owner's OK. |
+| D19 | Remote | `origin` = `https://github.com/AlexGalhardo/nuxtjs-marketplace.git` | Push only when the owner asks. |
+| D20 | Security baseline | **nuxt-security** enabled from Phase 1 (headers, nonce CSP, size limits, global rate limit 1000 req/5 min); **OWASP Top 10:2025** review closes every phase (§5.1) | Stricter per-route limits come with auth (Phase 4). |
+| D21 | Env validation | Zod-validated `runtimeConfig` at startup; `NUXT_STRICT_ENV` (default `true`) aborts on missing production secrets; skipped in `nuxt dev` and prerender | `NODE_ENV` is inlined at build time by Nitro, so strictness must be a runtime flag. Tests set `NUXT_STRICT_ENV=false`. |
 
-### Non-official libraries (Nuxt ecosystem has no equivalent) — approved/pending
+### Non-official libraries (Nuxt ecosystem has no equivalent)
 
 | Library | Why | Status |
 |---------|-----|--------|
 | `stripe` | Payments (required) | required by brief |
 | `resend` | Transactional email | approved (D7) |
-| `zod` | Schema validation shared client/server | pending confirmation |
+| `zod` | Schema validation shared client/server | approved 2026-09-24 |
 | `@scalar/api-reference` | API docs UI (Vue) | required by brief |
 | `@biomejs/biome`, `husky`, `@commitlint/cli` + `@commitlint/config-conventional` | Lint/format/hooks | required by brief |
 | `@playwright/test` | E2E (used through `@nuxt/test-utils/playwright`) | required by brief |
-| `nuxt-security` (community module) | Security headers, rate limiting, CSRF | pending confirmation (Phase 14) |
+| `nuxt-security` (community module) | Security headers, CSP, rate limiting, CSRF | approved 2026-09-24, enabled in Phase 1 |
 | `changelogen` (UnJS, used by Nuxt itself) | Semver bump + changelog | ecosystem-aligned |
 
 ---
@@ -151,6 +153,24 @@ setups/         6 setup shell scripts
 - Every phase ships with tests (unit + integration; e2e for user-facing flows). No phase is "done" with a red CI.
 - Run the `web-design-guidelines` skill on every new page/component batch before closing a UI task.
 - Unsupported-by-Bun issues → fall back to Node/npm **only for that step** and document it here.
+- Every phase closes with an **OWASP Top 10:2025 review** (§5.1) recorded in Change History.
+
+### 5.1 Security checklist — OWASP Top 10:2025 (https://top10.owasp.org/2025/)
+
+Run this list at the end of every phase (items the phase touches) and fully in Phase 14.
+
+| ID | Category | Controls in this project | Phases |
+|----|----------|--------------------------|--------|
+| A01 | Broken Access Control | Deny by default; `requireUser`/`requireShopOwner`/`requireAdmin` on every protected handler; ownership checks on every resource id; API token scopes; private blob files only via signed links; integration tests for "other user's resource → 403/404" | 4, 6, 9, 10, 11 |
+| A02 | Security Misconfiguration | nuxt-security headers + nonce CSP; strict env validation (D21); no stack traces/versions in responses; `/api/health` reveals nothing; non-root production Docker image; devtools disabled in prod | 1, 2, 13, 14 |
+| A03 | Software Supply Chain Failures | Pinned versions + committed `bun.lock`; `bun install --frozen-lockfile` in CI; dependency audit + Renovate/Dependabot; only approved libs (§2); skills reviewed before install; GitHub Actions pinned by SHA | 1, 13 |
+| A04 | Cryptographic Failures | scrypt password hashing (nuxt-auth-utils); sealed session cookies (`Secure`, `HttpOnly`, `SameSite=Lax`); reset/API tokens stored as SHA-256 hashes; HTTPS + HSTS in prod; no secrets in logs or client bundle | 4, 10, 14 |
+| A05 | Injection | Drizzle parameterized queries only (no interpolated raw SQL); Zod validation for every body/query/param; Vue auto-escaping, no `v-html` with user content; nuxt-security XSS validator | 3–11 |
+| A06 | Insecure Design | Threat model per money flow (§3.5); server recomputes prices/fees; idempotent webhooks; rate limits on auth, checkout and contact; abuse cases in tests | 4, 8, 9 |
+| A07 | Authentication Failures | Password policy (8–32, mixed classes); generic login errors; rate limiting + no user enumeration on forgot-password; single-use expiring reset tokens; sessions invalidated on reset | 4 |
+| A08 | Software or Data Integrity Failures | Stripe webhook signature verification; append-only `transaction_logs`/`audit_logs`; release artifacts built from tagged commits; deploy by Docker image digest | 8, 11, 13 |
+| A09 | Security Logging and Alerting Failures | `transaction_logs`, `audit_logs`, auth events (failed login, reset requested) logged without secrets/unneeded PII; admin can review logs | 4, 8, 11 |
+| A10 | Mishandling of Exceptional Conditions | `createError` with safe messages; global error page; failed Stripe calls leave orders consistent (no transfer without a log row); fail closed on auth errors; fail fast on bad config | 1, 8, 9 |
 
 ---
 
@@ -174,25 +194,28 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (explain 
   - [x] `PLAN.md`, `docs/`, `CLAUDE.md` = `AGENTS.md`, `README.md`
   - [x] `git init`, add `origin`, first commit
 
-### Phase 1 — Foundation & tooling
+### Phase 1 — Foundation & tooling ✅
 - **1.1 Lint/format**
-  - [ ] Add Biome 2 (`biome.json`: 2 spaces, single quotes, no semicolons, Vue/TS/JSON/CSS support; ignore `.nuxt`, `.output`, `.data`, migrations)
-  - [ ] Scripts: `lint`, `lint:fix`, `format`, `check`
-  - [ ] Format the whole codebase once
+  - [x] Add Biome 2.5 (`biome.json`: 2 spaces, single quotes, no semicolons, full Vue support via `html.experimentalFullSupportEnabled`, Tailwind directives; force-ignore `.nuxt`, `.output`, `.data`, migrations, third-party skills)
+  - [x] Scripts: `lint`, `lint:fix`, `format`, `check`, `check:fix`
+  - [x] Format the whole codebase once; replace the template's Nuxt SVG logo with an accessible text logo (a11y lint)
 - **1.2 Git hooks (D16)**
-  - [ ] Husky 9 `prepare` script
-  - [ ] `pre-commit`: `bunx biome check --staged --no-errors-on-unmatched`
-  - [ ] `commit-msg`: commitlint with `@commitlint/config-conventional`
-  - [ ] `pre-push`: `typecheck` + `test:unit` + `test:integration`
-- **1.3 Runtime config & env**
-  - [ ] `.env.example` with every variable (documented in `docs/environment-variables.md`)
-  - [ ] `runtimeConfig` typed; validate required env at startup (`server/plugins/env.ts`)
+  - [x] Husky 9 `prepare` script
+  - [x] `pre-commit`: `bunx biome check --staged --no-errors-on-unmatched --files-ignore-unknown=true`
+  - [x] `commit-msg`: commitlint (`@commitlint/config-conventional`, header ≤ 72, scope-enum as warning)
+  - [x] `pre-push`: `typecheck` + `test:unit` + `test:integration`
+- **1.3 Runtime config, env & security baseline**
+  - [x] `.env.example` with every current variable (documented in `docs/environment-variables.md`)
+  - [x] Typed `runtimeConfig`; Zod validation at startup (`server/utils/env.ts` + `server/plugins/env.ts`, D21)
+  - [x] `nuxt-security` baseline (D20); `GET /api/health`
 - **1.4 Test harness**
-  - [ ] Vitest 5 + `@nuxt/test-utils` with projects: `unit` (node), `nuxt` (nuxt env), `integration`
-  - [ ] Playwright via `@nuxt/test-utils/playwright`; `smoke` and `e2e` projects
-  - [ ] First passing tests of each kind (sanity)
+  - [x] Vitest 5 + `@nuxt/test-utils` 4 projects: `unit` (node), `nuxt` (nuxt env), `integration` (built server)
+  - [x] Playwright via `@nuxt/test-utils/playwright`; `smoke` and `e2e` projects; server on port 3100
+  - [x] First passing tests of each kind: env validation (unit), `AppLogo` (nuxt), health + security headers (integration), pages render without console/CSP errors (smoke), color mode toggle (e2e)
 - **1.5 Versioning**
-  - [ ] `changelogen` config + `release` script; `CHANGELOG.md`
+  - [x] `changelogen` config (`changelog.config.json`) + `release` script; `CHANGELOG.md`
+- **1.6 OWASP review**
+  - [x] A02 (secure headers, strict env validation, health endpoint leaks nothing), A03 (lockfile committed, pinned versions, skills reviewed), A10 (fail-fast startup on bad config)
 
 ### Phase 2 — Infrastructure & setup scripts
 - **2.1 Docker**
@@ -309,7 +332,8 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (explain 
 - [ ] Renovate/Dependabot for Bun deps
 
 ### Phase 14 — Hardening & launch readiness
-- [ ] Security headers / CSP / rate limiting (nuxt-security — pending approval)
+- [ ] Full OWASP Top 10:2025 audit (§5.1), fix findings, document residual risks
+- [ ] Tighten nuxt-security (CSP review, per-route rate limits, CSRF for cookie-authenticated mutations)
 - [ ] Performance (image sizes, caching `routeRules`, DB indexes)
 - [ ] Final docs pass; `v1.0.0` release
 
@@ -329,3 +353,4 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (explain 
 | Date | Change |
 |------|--------|
 | 2026-09-24 | Phase 0 complete: research, grill-me decisions, skills/MCP, Nuxt 4.5.2 scaffold, docs, first commit. |
+| 2026-09-24 | zod and nuxt-security approved; OWASP Top 10:2025 checklist added (§5.1). Phase 1 complete: Biome, Husky/commitlint, env validation, nuxt-security baseline, Vitest/Playwright harness (unit, nuxt, integration, smoke, e2e green), changelogen. |

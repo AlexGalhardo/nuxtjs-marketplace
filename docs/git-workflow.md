@@ -1,6 +1,6 @@
 # Git workflow
 
-- Remote: `origin` → https://github.com/AlexGalhardo/nuxtjs-marketplace.git. Never push without the owner's OK.
+- Remote: `origin` → https://github.com/AlexGalhardo/nuxtjs-marketplace.git. Push only when the owner asks.
 - **Conventional Commits 1.0.0**: `type(scope): subject`, lower-case imperative subject, ≤ 72 chars.
   Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
   Scopes (suggested): `auth`, `shop`, `product`, `marketplace`, `cart`, `checkout`, `payments`, `orders`,
@@ -11,8 +11,10 @@
   create the tag + `CHANGELOG.md`; pushing a `v*` tag triggers the release workflow.
 - **Branches**: `main` is always green. Work on `feat/<scope>-<short-name>` / `fix/...`, open a PR, squash-merge
   with a conventional title.
-- **Hooks (Husky, planned — Phase 1.2)**:
-  - `pre-commit`: `biome check --staged`
-  - `commit-msg`: `commitlint`
-  - `pre-push`: typecheck + unit + integration tests
+- **Hooks (Husky, `.husky/`)**, installed by `bun install` (`prepare` script):
+  - `pre-commit`: `biome check --staged` (fix with `bun run check:fix`)
+  - `commit-msg`: `commitlint` (`commitlint.config.js`; unknown scopes only warn)
+  - `pre-push`: `typecheck` + `test:unit` + `test:integration` (takes a few minutes)
   Never bypass hooks with `--no-verify`.
+- **Release**: `bun run release` (changelogen) bumps `package.json`, updates `CHANGELOG.md`, commits and tags;
+  then `git push --follow-tags`.

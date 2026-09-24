@@ -14,6 +14,7 @@ Files marked **(planned)** describe the target design; update them when the impl
 | [payments-stripe.md](payments-stripe.md) | Stripe Connect, checkout, webhooks, transfers, transaction logs |
 | [rest-api.md](rest-api.md) | `/api/v1` design, OpenAPI, Scalar docs |
 | [ui-ux-frontend.md](ui-ux-frontend.md) | Nuxt UI, Tailwind v4, layouts, forms, accessibility |
+| [security.md](security.md) | OWASP Top 10:2025 baseline, nuxt-security, env validation, rules |
 | [testing.md](testing.md) | Unit, integration, smoke, e2e strategy and commands |
 | [git-workflow.md](git-workflow.md) | Conventional Commits, SemVer, hooks, releases |
 | [infra-and-setup.md](infra-and-setup.md) | Docker, setup scripts, environments, CI/CD |
