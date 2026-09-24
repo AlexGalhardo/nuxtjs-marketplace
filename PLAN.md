@@ -217,21 +217,21 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (explain 
 - **1.6 OWASP review**
   - [x] A02 (secure headers, strict env validation, health endpoint leaks nothing), A03 (lockfile committed, pinned versions, skills reviewed), A10 (fail-fast startup on bad config)
 
-### Phase 2 — Infrastructure & setup scripts
+### Phase 2 — Infrastructure & setup scripts ✅
 - **2.1 Docker**
-  - [ ] `infra/docker/Dockerfile` (multi-stage, `oven/bun:1.4.2`, non-root, healthcheck)
-  - [ ] `infra/docker-compose.yml` (app + postgres + minio + stripe-cli for webhook forwarding)
-  - [ ] `infra/docker-compose.dev.yml` (only postgres + minio + stripe-cli, app runs on host)
-  - [ ] `.dockerignore`
+  - [x] `infra/docker/Dockerfile` (multi-stage, `oven/bun:1.4.2`, non-root, healthcheck)
+  - [x] `infra/docker-compose.yml` (app + postgres + minio + stripe-cli for webhook forwarding)
+  - [x] `infra/docker-compose.dev.yml` (only postgres + minio + stripe-cli, app runs on host)
+  - [x] `.dockerignore`
 - **2.2 Setup scripts (`setups/`)** — each: checks prerequisites, creates `.env`, installs deps, prepares DB (migrate + seed), prints next steps; idempotent
-  - [ ] `setup-unix-using-sqlite.sh`
-  - [ ] `setup-unix-using-postgres-local.sh`
-  - [ ] `setup-unix-using-postgres-with-docker.sh`
-  - [ ] `setup-windows-using-sqlite.sh` (Git Bash)
-  - [ ] `setup-windows-using-postgres-local.sh` (Git Bash)
-  - [ ] `setup-windows-using-postgres-with-docker.sh` (Git Bash + Docker Desktop)
-  - [ ] ShellCheck them in CI
-- **2.3 Docs** — [ ] `docs/infra-and-setup.md` updated with real commands
+  - [x] `setup-unix-using-sqlite.sh`
+  - [x] `setup-unix-using-postgres-local.sh`
+  - [x] `setup-unix-using-postgres-with-docker.sh`
+  - [x] `setup-windows-using-sqlite.sh` (Git Bash)
+  - [x] `setup-windows-using-postgres-local.sh` (Git Bash)
+  - [x] `setup-windows-using-postgres-with-docker.sh` (Git Bash + Docker Desktop)
+  - [~] ShellCheck them in CI — no `shellcheck` binary available locally; scripts pass `bash -n`, wiring into `ci.yml` deferred to Phase 13 (ubuntu-latest ships ShellCheck)
+- **2.3 Docs** — [x] `docs/infra-and-setup.md` updated with real commands
 
 ### Phase 3 — Data layer
 - **3.1 NuxtHub DB**
@@ -354,3 +354,4 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (explain 
 |------|--------|
 | 2026-09-24 | Phase 0 complete: research, grill-me decisions, skills/MCP, Nuxt 4.5.2 scaffold, docs, first commit. |
 | 2026-09-24 | zod and nuxt-security approved; OWASP Top 10:2025 checklist added (§5.1). Phase 1 complete: Biome, Husky/commitlint, env validation, nuxt-security baseline, Vitest/Playwright harness (unit, nuxt, integration, smoke, e2e green), changelogen. |
+| 2026-09-24 | Phase 2 complete: multi-stage Dockerfile (non-root, healthcheck), full and dev-only docker-compose stacks (postgres, minio, stripe-cli), 6 idempotent setup scripts (`setups/`) sharing `setups/lib.sh`, `docs/infra-and-setup.md` updated. ShellCheck-in-CI item deferred to Phase 13's `ci.yml`. |

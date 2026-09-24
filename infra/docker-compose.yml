@@ -1,0 +1,81 @@
+# Full stack: app + postgres + minio + stripe-cli. Run from the repo root:
+#   docker compose -f infra/docker-compose.yml up -d --build
+name: nuxtjs-marketplace
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: infra/docker/Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      NUXT_STRICT_ENV: ${NUXT_STRICT_ENV:-true}
+      NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD:-}
+      NUXT_HUB_DB_DIALECT: postgresql
+      DATABASE_URL: postgres://${POSTGRES_USER:-marketplace}:${POSTGRES_PASSWORD:-marketplace}@postgres:5432/${POSTGRES_DB:-marketplace}
+      S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
+      S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      S3_BUCKET: ${S3_BUCKET:-marketplace}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_ENDPOINT: http://minio:9000
+      NUXT_STRIPE_SECRET_KEY: ${NUXT_STRIPE_SECRET_KEY:-}
+      NUXT_STRIPE_WEBHOOK_SECRET: ${NUXT_STRIPE_WEBHOOK_SECRET:-}
+      NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
+      NUXT_PLATFORM_FEE_BPS: ${NUXT_PLATFORM_FEE_BPS:-1000}
+      NUXT_RESEND_API_KEY: ${NUXT_RESEND_API_KEY:-}
+      NUXT_EMAIL_FROM: ${NUXT_EMAIL_FROM:-}
+      NUXT_CONTACT_EMAIL: ${NUXT_CONTACT_EMAIL:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-marketplace}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-marketplace}
+      POSTGRES_DB: ${POSTGRES_DB:-marketplace}
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-marketplace}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  stripe-cli:
+    image: stripe/stripe-cli:latest
+    command: listen --api-key ${NUXT_STRIPE_SECRET_KEY:-} --forward-to app:3000/api/stripe/webhook --skip-verify
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  minio-data:
