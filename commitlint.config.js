@@ -1,0 +1,33 @@
+// Conventional Commits 1.0.0 — rules and scopes: docs/git-workflow.md
+export default {
+  extends: ['@commitlint/config-conventional'],
+  rules: {
+    'header-max-length': [2, 'always', 72],
+    'scope-enum': [
+      1,
+      'always',
+      [
+        'auth',
+        'shop',
+        'product',
+        'marketplace',
+        'cart',
+        'checkout',
+        'payments',
+        'orders',
+        'api',
+        'admin',
+        'ui',
+        'db',
+        'security',
+        'infra',
+        'setup',
+        'ci',
+        'docs',
+        'deps',
+        'test',
+        'release',
+      ],
+    ],
+  },
+}

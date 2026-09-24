@@ -4,22 +4,58 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "nuxt build",
     "dev": "nuxt dev",
+    "build": "nuxt build",
     "preview": "nuxt preview",
+    "start": "bun .output/server/index.mjs",
     "postinstall": "nuxt prepare",
-    "typecheck": "nuxt typecheck"
+    "prepare": "husky",
+    "typecheck": "nuxt typecheck",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "format": "biome format --write .",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
+    "test": "bun run test:unit && bun run test:integration && bun run test:smoke && bun run test:e2e",
+    "test:unit": "vitest run --project unit --project nuxt",
+    "test:integration": "vitest run --project integration",
+    "test:coverage": "vitest run --project unit --coverage",
+    "test:watch": "vitest --project unit --project nuxt",
+    "test:smoke": "playwright test --project smoke",
+    "test:e2e": "playwright test --project e2e",
+    "release": "changelogen --release"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.136",
     "@iconify-json/simple-icons": "^1.2.97",
     "@nuxt/ui": "^4.11.2",
     "nuxt": "^4.5.2",
-    "tailwindcss": "^4.3.3"
+    "nuxt-security": "^2.6.0",
+    "tailwindcss": "^4.3.3",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.14",
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
+    "@nuxt/test-utils": "^4.3.2",
+    "@playwright/test": "^1.63.0",
+    "@vitest/coverage-v8": "^5.0.1",
+    "@vue/test-utils": "^2.5.1",
+    "changelogen": "^0.6.2",
+    "happy-dom": "^20.14.5",
+    "husky": "^9.1.7",
+    "playwright-core": "^1.63.0",
     "typescript": "^6.0.3",
+    "vitest": "^5.0.1",
     "vue-tsc": "^3.3.11"
   },
-  "packageManager": "bun@1.4.2"
+  "packageManager": "bun@1.4.2",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlexGalhardo/nuxtjs-marketplace.git"
+  },
+  "engines": {
+    "bun": ">=1.4.2"
+  }
 }
