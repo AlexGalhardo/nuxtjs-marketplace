@@ -9,5 +9,8 @@ test('user can send a message from the contact page', async ({ page, goto }) => 
   await page.getByLabel('Message').fill('Hello, I have a question about my recent order.')
   await page.getByRole('button', { name: /send message/i }).click()
 
-  await expect(page.getByText('Message sent')).toBeVisible()
+  // Nuxt UI's toast renders both the visible toast title and a visually-hidden aria-live
+  // announcer with the same text (for screen readers) — `getByText` matches both, so scope to
+  // the visible title element specifically.
+  await expect(page.locator('[data-slot="title"]', { hasText: 'Message sent' })).toBeVisible()
 })

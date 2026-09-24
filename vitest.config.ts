@@ -24,8 +24,10 @@ export default defineConfig({
           name: 'integration',
           include: ['tests/integration/**/*.test.ts'],
           environment: 'node',
-          // Integration suites build and boot the Nuxt server once per file, sharing the same
-          // on-disk NuxtHub dir (.data) and SQLite file — run files sequentially to avoid races.
+          // One build for the whole project (tests/integration/global-setup.ts), not one per
+          // file — files share the same on-disk NuxtHub dir (.data) and SQLite file against that
+          // single server, so they still run sequentially to avoid races.
+          globalSetup: ['tests/integration/global-setup.ts'],
           fileParallelism: false,
           hookTimeout: 300_000,
           testTimeout: 60_000,

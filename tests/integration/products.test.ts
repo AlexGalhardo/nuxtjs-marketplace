@@ -1,5 +1,4 @@
-import { fileURLToPath } from 'node:url'
-import { $fetch, fetch, setup } from '@nuxt/test-utils/e2e'
+import { $fetch, fetch } from '@nuxt/test-utils/e2e'
 import { describe, expect, it } from 'vitest'
 import type { ProductType } from '../../shared/types/db'
 import { markShopChargesEnabled } from './helpers/shop'
@@ -47,14 +46,7 @@ async function signUpAndCreateShop(email: string) {
   return { cookie, shop }
 }
 
-describe('shop product endpoints', async () => {
-  await setup({
-    rootDir: fileURLToPath(new URL('../..', import.meta.url)),
-    server: true,
-    browser: false,
-    env: { NUXT_STRICT_ENV: 'false', NUXT_SESSION_PASSWORD: 'x'.repeat(32) },
-  })
-
+describe('shop product endpoints', () => {
   it('rejects unauthenticated access', async () => {
     const response = await fetch('/api/v1/shop/products')
     expect(response.status).toBe(401)

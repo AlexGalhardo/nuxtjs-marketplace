@@ -1,5 +1,4 @@
-import { fileURLToPath } from 'node:url'
-import { $fetch, fetch, setup } from '@nuxt/test-utils/e2e'
+import { $fetch, fetch } from '@nuxt/test-utils/e2e'
 import { describe, expect, it } from 'vitest'
 
 const validMessage = {
@@ -9,14 +8,7 @@ const validMessage = {
   message: 'Hello, I have a question about my recent order. Can you help?',
 }
 
-describe('POST /api/contact', async () => {
-  await setup({
-    rootDir: fileURLToPath(new URL('../..', import.meta.url)),
-    server: true,
-    browser: false,
-    env: { NUXT_STRICT_ENV: 'false' },
-  })
-
+describe('POST /api/contact', () => {
   it('accepts a valid contact message', async () => {
     const response = await $fetch('/api/contact', { method: 'POST', body: validMessage })
     expect(response).toEqual({ success: true })

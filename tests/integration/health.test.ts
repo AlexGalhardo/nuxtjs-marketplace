@@ -1,15 +1,7 @@
-import { fileURLToPath } from 'node:url'
-import { $fetch, fetch, setup } from '@nuxt/test-utils/e2e'
+import { $fetch, fetch } from '@nuxt/test-utils/e2e'
 import { describe, expect, it } from 'vitest'
 
-describe('GET /api/health', async () => {
-  await setup({
-    rootDir: fileURLToPath(new URL('../..', import.meta.url)),
-    server: true,
-    browser: false,
-    env: { NUXT_STRICT_ENV: 'false' },
-  })
-
+describe('GET /api/health', () => {
   it('reports the server as healthy', async () => {
     expect(await $fetch('/api/health')).toEqual({ status: 'ok' })
   })

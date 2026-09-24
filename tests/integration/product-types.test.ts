@@ -1,16 +1,8 @@
-import { fileURLToPath } from 'node:url'
-import { $fetch, setup } from '@nuxt/test-utils/e2e'
+import { $fetch } from '@nuxt/test-utils/e2e'
 import { describe, expect, it } from 'vitest'
 import type { ProductType } from '../../shared/types/db'
 
-describe('GET /api/product-types', async () => {
-  await setup({
-    rootDir: fileURLToPath(new URL('../..', import.meta.url)),
-    server: true,
-    browser: false,
-    env: { NUXT_STRICT_ENV: 'false' },
-  })
-
+describe('GET /api/product-types', () => {
   it('lists the seeded product types (requires bun run db:migrate && bun run db:seed)', async () => {
     const productTypes = await $fetch<ProductType[]>('/api/product-types')
 

@@ -53,7 +53,17 @@ export default defineNuxtConfig({
     // Stricter than the global limiter (D20): brute-force/enumeration protection on auth endpoints.
     // 30/5min per IP across signup+login+forgot/reset-password+me: tight enough to slow brute
     // force, loose enough for a real user's retries (mistyped password, forgot email, etc.).
-    '/api/auth/**': { security: { rateLimiter: { tokensPerInterval: 30, interval: 300_000 } } },
+    // Overridable via NUXT_AUTH_RATE_LIMIT_TOKENS: tests/integration/global-setup.ts raises it,
+    // since every integration test file now shares one server/IP (one build, not one per file —
+    // see the NITRO_PRESET note below) and together they legitimately sign up 30+ users.
+    '/api/auth/**': {
+      security: {
+        rateLimiter: {
+          tokensPerInterval: Number(process.env.NUXT_AUTH_RATE_LIMIT_TOKENS) || 30,
+          interval: 300_000,
+        },
+      },
+    },
     // Tighter than auth: the contact form has no account behind it to slow down repeat abuse.
     '/api/contact': { security: { rateLimiter: { tokensPerInterval: 5, interval: 900_000 } } },
   },
@@ -61,12 +71,20 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-06-30',
 
   // No hardcoded nitro.preset here: Nitro reads the standard NITRO_PRESET env var itself.
-  // `bun run build` sets NITRO_PRESET=bun for the real deploy runtime (`bun .output/server/index.mjs`,
-  // infra/docker/Dockerfile) — without it, the build-time dependency tracer resolves package.json
-  // `exports` conditions as if targeting Node, which can copy the wrong conditional file for a
-  // package that ships a separate "bun" condition (e.g. @libsql/isomorphic-ws) — present at build
-  // time, missing at runtime. `@nuxt/test-utils` always spawns the built server via plain `node`
-  // (not configurable), so test/dev builds correctly default to the node-server preset instead.
+  // `bun run build` sets NITRO_PRESET=bun for the deploy runtime (`bun .output/server/index.mjs`,
+  // infra/docker/Dockerfile); `test:smoke`/`test:e2e` inherit it because Playwright's `webServer`
+  // runs `bun run build && bun run start` (playwright.config.ts), and `test:integration` inherits
+  // it the same way because `tests/integration/global-setup.ts` also runs `bun run build` by hand
+  // (once for the whole suite) instead of going through `@nuxt/test-utils/e2e`'s own `setup()`.
+  // Getting this preset right matters: without NITRO_PRESET=bun, the build-time dependency tracer
+  // resolves package.json `exports` conditions as if targeting plain Node and only copies the
+  // Node-conditional file into `.output/server/node_modules` for a package that ships a separate
+  // "bun" condition (stripe, @libsql/isomorphic-ws), but the server ends up running under Bun
+  // regardless (`bun .output/server/index.mjs`, or `@nuxt/test-utils`' `bun --bun` `node` shim —
+  // docs/testing.md), whose native resolver picks the "bun" condition at runtime instead, pointing
+  // at a file that was never copied (`Cannot find package 'stripe'`, discovered in Phase 6 when a
+  // real "bun" conditional export first diverged from the Node one). `nuxt dev` keeps the
+  // node-server default since it isn't a preset-sensitive prebuilt bundle.
 
   // OWASP A02/A05: secure headers, CSP with nonces, request size limits, rate limiting
   security: {

@@ -1,5 +1,4 @@
-import { fileURLToPath } from 'node:url'
-import { $fetch, fetch, setup } from '@nuxt/test-utils/e2e'
+import { $fetch, fetch } from '@nuxt/test-utils/e2e'
 import { describe, expect, it } from 'vitest'
 
 interface ShopResponse {
@@ -33,14 +32,7 @@ function uniqueSlug() {
   return `shop-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 }
 
-describe('shop endpoints', async () => {
-  await setup({
-    rootDir: fileURLToPath(new URL('../..', import.meta.url)),
-    server: true,
-    browser: false,
-    env: { NUXT_STRICT_ENV: 'false', NUXT_SESSION_PASSWORD: 'x'.repeat(32) },
-  })
-
+describe('shop endpoints', () => {
   it('rejects unauthenticated access', async () => {
     const response = await fetch('/api/v1/shop')
     expect(response.status).toBe(401)

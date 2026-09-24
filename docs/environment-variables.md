@@ -10,6 +10,7 @@ Variables marked *(Phase N)* are not wired yet; add them to `runtimeConfig`, the
 | `NUXT_PUBLIC_SITE_URL` | yes | Public base URL (e.g. `http://localhost:3000`) |
 | `NUXT_SESSION_PASSWORD` | yes | ≥ 32 chars, seals the session cookie (nuxt-auth-utils). Auto-generated in `nuxt dev` if left empty |
 | `NUXT_HUB_DB_DIALECT` | build | `sqlite` (default) or `postgresql`. Read directly in `nuxt.config.ts` (`hub.db`), not part of `runtimeConfig` |
+| `NUXT_AUTH_RATE_LIMIT_TOKENS` | build | `/api/auth/**` rate limit, tokens per 5 min (default `30`). Read directly in `nuxt.config.ts` (`routeRules`), not part of `runtimeConfig`. `tests/integration/global-setup.ts` raises it for the shared test server (docs/testing.md) |
 | `DATABASE_URL` | postgres | PostgreSQL connection string, read by `@nuxthub/core`'s postgres-js driver |
 | `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT` | prod/docker | Blob storage (MinIO locally); leave empty to use the local `fs` driver (`.data/blob`) |
 | `E2E_PORT` | no | Port for the Playwright test server (default `3100`) |

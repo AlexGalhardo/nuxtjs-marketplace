@@ -2,6 +2,10 @@ import { eq } from 'drizzle-orm'
 
 // PUT /api/v1/shop/branding/logo or /banner — multipart upload (form key "file") of the
 // shop's public branding image.
+//
+// Validates and uploads the file manually (not via blob.handleUpload()) because that helper
+// wraps ensureBlob()'s 400 validation error in a generic 500 "Storage error" (@nuxthub/core@0.10.8,
+// blob/lib/storage.mjs) — sellers need a real 400 when they pick an oversized or non-image file.
 export default defineEventHandler(async (event) => {
   const kind = getRouterParam(event, 'kind')
   if (kind !== 'logo' && kind !== 'banner') {
@@ -14,15 +18,17 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Shop not found' })
   }
 
-  const [uploaded] = await blob.handleUpload(event, {
-    formKey: 'file',
-    multiple: false,
-    ensure: { maxSize: '4MB', types: ['image'] },
-    put: { prefix: `images/shops/${shop.id}/${kind}`, addRandomSuffix: true },
-  })
-  if (!uploaded) {
+  const form = await readFormData(event)
+  const file = form.get('file')
+  if (!(file instanceof File)) {
     throw createError({ statusCode: 400, statusMessage: 'No file uploaded' })
   }
+  ensureBlob(file, { maxSize: '4MB', types: ['image'] })
+
+  const uploaded = await blob.put(file.name, file, {
+    prefix: `images/shops/${shop.id}/${kind}`,
+    addRandomSuffix: true,
+  })
 
   const previousPath = kind === 'logo' ? shop.logoPath : shop.bannerPath
   const [updated] =

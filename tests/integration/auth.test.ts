@@ -1,5 +1,4 @@
-import { fileURLToPath } from 'node:url'
-import { $fetch, fetch, setup } from '@nuxt/test-utils/e2e'
+import { $fetch, fetch } from '@nuxt/test-utils/e2e'
 import { describe, expect, it } from 'vitest'
 import { issueResetToken } from './helpers/reset-token'
 
@@ -17,16 +16,7 @@ function extractSessionCookie(response: Response) {
   return setCookie.split(';')[0] as string
 }
 
-describe('auth flows', async () => {
-  await setup({
-    rootDir: fileURLToPath(new URL('../..', import.meta.url)),
-    server: true,
-    browser: false,
-    // The production build used by @nuxt/test-utils/e2e never hits nuxt-auth-utils' dev-only
-    // auto-generated session password, so it must be supplied explicitly here.
-    env: { NUXT_STRICT_ENV: 'false', NUXT_SESSION_PASSWORD: 'x'.repeat(32) },
-  })
-
+describe('auth flows', () => {
   // @nuxt/test-utils' built server dynamic-imports each route's chunk lazily on first request.
   // Reset-password is otherwise requested only once, near the end of this file's long run, and
   // that very first hit intermittently threw a transient ENOENT before the chunk resolved (never

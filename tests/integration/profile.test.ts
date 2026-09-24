@@ -1,5 +1,4 @@
-import { fileURLToPath } from 'node:url'
-import { $fetch, fetch, setup } from '@nuxt/test-utils/e2e'
+import { $fetch, fetch } from '@nuxt/test-utils/e2e'
 import { describe, expect, it } from 'vitest'
 
 interface AddressResponse {
@@ -37,14 +36,7 @@ const address = {
   phone: '+1 555-0100',
 }
 
-describe('profile endpoints', async () => {
-  await setup({
-    rootDir: fileURLToPath(new URL('../..', import.meta.url)),
-    server: true,
-    browser: false,
-    env: { NUXT_STRICT_ENV: 'false', NUXT_SESSION_PASSWORD: 'x'.repeat(32) },
-  })
-
+describe('profile endpoints', () => {
   it('rejects unauthenticated access', async () => {
     const response = await fetch('/api/profile')
     expect(response.status).toBe(401)

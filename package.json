@@ -18,7 +18,7 @@
     "check:fix": "biome check --write .",
     "test": "bun run test:unit && bun run test:integration && bun run test:smoke && bun run test:e2e",
     "test:unit": "vitest run --project unit --project nuxt",
-    "test:integration": "vitest run --project integration",
+    "test:integration": "NITRO_PRESET=bun vitest run --project integration",
     "test:coverage": "vitest run --project unit --coverage",
     "test:watch": "vitest --project unit --project nuxt",
     "test:smoke": "playwright test --project smoke",
