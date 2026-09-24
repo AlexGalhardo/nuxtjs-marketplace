@@ -268,13 +268,13 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (explain 
 - **4.5 UI audit** — [x] `web-design-guidelines` run on all new pages/layouts; fixed: missing `autocomplete` on every password/email/name field, missing page `<h1>` (auth pages use a visually-hidden one, `UAuthForm`'s title isn't one), vague "Continue" submit labels → "Log in"/"Create account", delete-address had no confirmation (added a confirm modal), a few straight apostrophes
 - **4.6 OWASP touchpoints (§5.1)** — [x] A04 (scrypt hashing, sealed `Secure`/`HttpOnly`/`SameSite=Lax` cookies verified via response headers, reset tokens as SHA-256 hashes), A07 (password policy, generic login/forgot-password responses, single-use expiring reset tokens, password change invalidates other sessions), A01 (ownership test: another user's address → 404), A06 (rate limit + abuse-case tests: wrong password, duplicate signup, reused reset token)
 
-### Phase 5 — UI shell & static pages
-- [ ] App layout (`UHeader`, `UFooter`, nav, color mode), `default` / `auth` / `dashboard` layouts
-- [ ] Brand theme in `app.config.ts` + Tailwind v4 tokens in `main.css`
-- [ ] Landing page `/` (hero, categories, featured products, how selling works, CTA)
-- [ ] `/contact` (form → `contact_messages` + email), `/terms`, `/privacy`
-- [ ] `error.vue`, SEO meta defaults, `robots`/sitemap-ready
-- [ ] web-design-guidelines audit + e2e smoke for each page
+### Phase 5 — UI shell & static pages ✅
+- [x] App layout (`UHeader`, `UFooter`, nav, color mode), `default` / `auth` / `dashboard` layouts
+- [x] Brand theme in `app.config.ts` + Tailwind v4 tokens in `main.css`
+- [x] Landing page `/` (hero, categories, featured products, how selling works, CTA)
+- [x] `/contact` (form → `contact_messages` + email), `/terms`, `/privacy`
+- [x] `error.vue`, SEO meta defaults, `robots`/sitemap-ready
+- [x] web-design-guidelines audit + e2e smoke for each page
 
 ### Phase 6 — Shops & products (seller)
 - **6.1 Shop**
@@ -359,3 +359,4 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (explain 
 | 2026-09-24 | zod and nuxt-security approved; OWASP Top 10:2025 checklist added (§5.1). Phase 1 complete: Biome, Husky/commitlint, env validation, nuxt-security baseline, Vitest/Playwright harness (unit, nuxt, integration, smoke, e2e green), changelogen. |
 | 2026-09-24 | Phase 2 complete: multi-stage Dockerfile (non-root, healthcheck), full and dev-only docker-compose stacks (postgres, minio, stripe-cli), 6 idempotent setup scripts (`setups/`) sharing `setups/lib.sh`, `docs/infra-and-setup.md` updated. ShellCheck-in-CI item deferred to Phase 13's `ci.yml`. |
 | 2026-09-24 | Phase 3 complete: verified NuxtHub natively supports dual dialect-suffixed schema files (§7 risk resolved, no fallback needed); `@nuxthub/core` wired with `hub.db`/`hub.blob`; 19-table Drizzle schema for sqlite+postgresql with a parity test; migrations generated for both dialects; idempotent `server/db/seed.ts` (product types only — admin/demo data waits on Phase 4 auth); public `images/` blob route. `db:*` scripts added. `vitest.config.ts`: `fileParallelism: false` for the `integration` project (files share `.data`/SQLite, must run sequentially). |
+| 2026-09-24 | Phase 5 complete: rebranded from the Nuxt starter template (`app.config.ts` primary color, dropped the leftover custom green `@theme` tokens now that Nuxt UI ships the full Tailwind palette natively); added `dashboard` layout (`UDashboardGroup`/`Sidebar`/`Panel`, nav switches between `/my-shop` and `/admin` items ahead of Phases 6/11); rebuilt the landing page (hero, categories fetched live from `/api/product-types`, an honest "no products yet" empty state instead of fake data since the catalog lands in Phase 7, how-it-works, CTA); `/contact` (`shared/schemas/contact.ts`, `POST /api/contact` writes to `contact_messages` and emails `NUXT_CONTACT_EMAIL` via the existing `sendMail` helper, rate-limited 5/15min via `routeRules`), `/terms`, `/privacy`; `app/error.vue` (`UError`); `titleTemplate` in `app.vue`, `public/robots.txt`, `server/routes/sitemap.xml.get.ts` (static public routes; Phase 7 adds DB-driven entries). web-design-guidelines audit run on every new/changed file: fixed two icon-only controls in the collapsed dashboard sidebar missing `aria-label`, and straight apostrophes in new copy plus one pre-existing one in `forget-password.vue` missed in the Phase 4 audit. Tests: unit (contact schema), integration (`/api/contact`), smoke (`/contact`, `/terms`, `/privacy`), e2e (contact form submission). Fixed a `bun run test:integration` regression uncovered while closing this phase: Nitro's runtime env merge (unjs `destr`) auto-parses a purely numeric env var into a JS number, which broke `stripe.secretKey`/`stripe.webhookSecret`/`public.stripe.publishableKey` validation ("expected string, received number") for every built-server integration test; `server/utils/env.ts`'s `optionalString` now uses `z.coerce.string()` (docs/environment-variables.md documents why), with a unit regression test. |

@@ -1,6 +1,13 @@
 <script setup lang="ts">
+import type { NavigationMenuItem } from '@nuxt/ui'
+
 const { loggedIn, user, logout } = useAuth()
 const router = useRouter()
+const route = useRoute()
+
+const navItems = computed<NavigationMenuItem[]>(() => [
+  { label: 'Contact', to: '/contact', active: route.path === '/contact' },
+])
 
 const userMenuItems = computed(() => [
   [{ label: 'Profile', icon: 'i-lucide-user', to: '/profile' }],
@@ -25,6 +32,8 @@ const userMenuItems = computed(() => [
           <AppLogo class="w-auto h-6 shrink-0" />
         </NuxtLink>
       </template>
+
+      <UNavigationMenu :items="navItems" />
 
       <template #right>
         <UColorModeButton />
@@ -63,10 +72,13 @@ const userMenuItems = computed(() => [
 
     <UFooter>
       <template #left>
-        <p class="text-sm text-muted">Built with Nuxt UI • © {{ new Date().getFullYear() }}</p>
+        <p class="text-sm text-muted">© {{ new Date().getFullYear() }} Marketplace</p>
       </template>
 
       <template #right>
+        <UButton to="/terms" color="neutral" variant="link">Terms</UButton>
+        <UButton to="/privacy" color="neutral" variant="link">Privacy</UButton>
+        <UButton to="/contact" color="neutral" variant="link">Contact</UButton>
         <UButton
           to="https://github.com/AlexGalhardo/nuxtjs-marketplace"
           target="_blank"

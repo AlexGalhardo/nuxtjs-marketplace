@@ -61,6 +61,15 @@ describe('validateRuntimeEnv', () => {
     expect(result.errors[0]).toMatch(/^platformFeeBps:/)
   })
 
+  it("coerces a numeric env value back to a string (Nitro's destr-based env merge can turn a purely numeric secret into a number)", () => {
+    const result = validateRuntimeEnv(
+      { ...withStripe, stripe: { secretKey: 123456, webhookSecret: 'whsec_123' } },
+      true,
+    )
+
+    expect(result.errors).toEqual([])
+  })
+
   it('rejects an invalid site URL and contact email', () => {
     const result = validateRuntimeEnv(
       {

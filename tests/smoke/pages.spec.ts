@@ -1,7 +1,12 @@
 import { expect, test } from '@nuxt/test-utils/playwright'
 
 // Every public page must load, hydrate and render without console errors (CSP violations included)
-const publicPages = [{ path: '/', heading: /./ }]
+const publicPages = [
+  { path: '/', heading: /./ },
+  { path: '/contact', heading: /./ },
+  { path: '/terms', heading: /./ },
+  { path: '/privacy', heading: /./ },
+]
 
 for (const { path, heading } of publicPages) {
   test(`${path} renders without errors`, async ({ page, goto }) => {

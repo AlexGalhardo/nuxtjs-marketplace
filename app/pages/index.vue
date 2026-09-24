@@ -1,75 +1,98 @@
+<script setup lang="ts">
+import type { ProductType } from '#shared/types/db'
+
+useSeoMeta({
+  title: 'Marketplace — buy and sell physical and digital products',
+})
+
+const { loggedIn } = useAuth()
+const { data: productTypes, status: productTypesStatus } =
+  await useFetch<ProductType[]>('/api/product-types')
+
+const sellCta = computed(() => (loggedIn.value ? '/my-shop' : '/signup'))
+
+const howItWorks = [
+  {
+    icon: 'i-lucide-store',
+    title: 'Open your shop',
+    description: 'Create a shop, add your branding, and connect Stripe to get paid.',
+  },
+  {
+    icon: 'i-lucide-package-plus',
+    title: 'List your products',
+    description: 'Physical or digital — set a price, stock or files, and publish when ready.',
+  },
+  {
+    icon: 'i-lucide-banknote',
+    title: 'Get paid',
+    description: 'Buyers pay once at checkout; funds transfer straight to your Stripe account.',
+  },
+]
+</script>
+
 <template>
   <div>
     <UPageHero
-      title="Nuxt Starter Template"
-      description="A production-ready starter template powered by Nuxt UI. Build beautiful, accessible, and performant applications in minutes, not hours."
-      :links="[{
-        label: 'Get started',
-        to: 'https://ui.nuxt.com/docs/getting-started/installation/nuxt',
-        target: '_blank',
-        trailingIcon: 'i-lucide-arrow-right',
-        size: 'xl'
-      }, {
-        label: 'Use this template',
-        to: 'https://github.com/nuxt-ui-templates/starter',
-        target: '_blank',
-        icon: 'i-simple-icons-github',
-        size: 'xl',
-        color: 'neutral',
-        variant: 'subtle'
-      }]"
+      title="Buy and sell anything, physical or digital"
+      description="A marketplace for individual sellers: list products, accept payments with Stripe, and ship or deliver — all from one shop."
+      :links="[
+        { label: 'Browse the marketplace', to: '/marketplace', trailingIcon: 'i-lucide-arrow-right', size: 'xl' },
+        { label: 'Start selling', to: sellCta, size: 'xl', color: 'neutral', variant: 'subtle', icon: 'i-lucide-store' },
+      ]"
     />
 
     <UPageSection
-      id="features"
-      title="Everything you need to build modern Nuxt apps"
-      description="Start with a solid foundation. This template includes all the essentials for building production-ready applications with Nuxt UI's powerful component system."
-      :features="[{
-        icon: 'i-lucide-rocket',
-        title: 'Production-ready from day one',
-        description: 'Pre-configured with TypeScript, ESLint, Tailwind CSS, and all the best practices. Focus on building features, not setting up tooling.'
-      }, {
-        icon: 'i-lucide-palette',
-        title: 'Beautiful by default',
-        description: 'Leveraging Nuxt UI\'s design system with automatic dark mode, consistent spacing, and polished components that look great out of the box.'
-      }, {
-        icon: 'i-lucide-zap',
-        title: 'Lightning fast',
-        description: 'Optimized for performance with SSR/SSG support, automatic code splitting, and edge-ready deployment. Your users will love the speed.'
-      }, {
-        icon: 'i-lucide-blocks',
-        title: '100+ components included',
-        description: 'Access Nuxt UI\'s comprehensive component library. From forms to navigation, everything is accessible, responsive, and customizable.'
-      }, {
-        icon: 'i-lucide-code-2',
-        title: 'Developer experience first',
-        description: 'Auto-imports, hot module replacement, and TypeScript support. Write less boilerplate and ship more features.'
-      }, {
-        icon: 'i-lucide-shield-check',
-        title: 'Built for scale',
-        description: 'Enterprise-ready architecture with proper error handling, SEO optimization, and security best practices built-in.'
-      }]"
+      id="categories"
+      title="Shop by category"
+      description="Every product on the marketplace belongs to a category."
+    >
+      <div v-if="productTypesStatus === 'pending'" class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <USkeleton v-for="n in 4" :key="n" class="h-24 w-full" />
+      </div>
+      <div v-else-if="productTypes?.length" class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <UPageCard
+          v-for="type in productTypes"
+          :key="type.id"
+          :title="type.name"
+          :to="`/marketplace?type=${type.slug}`"
+          :icon="type.kind === 'digital' ? 'i-lucide-download' : 'i-lucide-box'"
+          spotlight
+        />
+      </div>
+      <UAlert
+        v-else
+        icon="i-lucide-info"
+        title="No categories yet"
+        description="Categories will appear here once they are seeded."
+      />
+    </UPageSection>
+
+    <UPageSection
+      id="featured-products"
+      title="Featured products"
+      description="Products from sellers will show up here once the catalog launches."
+    >
+      <UAlert
+        icon="i-lucide-sparkles"
+        title="No products yet"
+        description="Be the first to list a product on the marketplace."
+        :actions="[{ label: 'Start selling', to: sellCta, color: 'primary' }]"
+      />
+    </UPageSection>
+
+    <UPageSection
+      id="how-it-works"
+      title="How selling works"
+      description="Three steps from signup to your first sale."
+      :features="howItWorks"
     />
 
     <UPageSection>
       <UPageCTA
-        title="Ready to build your next Nuxt app?"
-        description="Join thousands of developers building with Nuxt and Nuxt UI. Get this template and start shipping today."
+        title="Ready to start selling?"
+        description="Open your shop for free and list your first product in minutes."
         variant="subtle"
-        :links="[{
-          label: 'Start building',
-          to: 'https://ui.nuxt.com/docs/getting-started/installation/nuxt',
-          target: '_blank',
-          trailingIcon: 'i-lucide-arrow-right',
-          color: 'neutral'
-        }, {
-          label: 'View on GitHub',
-          to: 'https://github.com/nuxt-ui-templates/starter',
-          target: '_blank',
-          icon: 'i-simple-icons-github',
-          color: 'neutral',
-          variant: 'outline'
-        }]"
+        :links="[{ label: 'Start selling', to: sellCta, trailingIcon: 'i-lucide-arrow-right', color: 'primary' }]"
       />
     </UPageSection>
   </div>

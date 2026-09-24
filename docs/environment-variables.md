@@ -21,3 +21,8 @@ Variables marked *(Phase N)* are not wired yet; add them to `runtimeConfig`, the
 | `NUXT_RESEND_API_KEY` | no | Without it, emails are logged instead of sent |
 | `NUXT_EMAIL_FROM` | no | Sender address |
 | `NUXT_CONTACT_EMAIL` | no | Destination for `/contact` messages |
+
+> Nitro's runtime env merge auto-parses a purely numeric env var value into a JS number (via unjs
+> `destr`) before it reaches `runtimeEnvSchema`. Every string-typed key in `server/utils/env.ts`
+> therefore uses `z.coerce.string()`, not `z.string()`, so a numeric-looking secret doesn't fail
+> validation with "expected string, received number".

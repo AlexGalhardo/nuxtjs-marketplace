@@ -10,11 +10,16 @@ useHead({
 const title = 'Marketplace'
 const description = 'Buy and sell physical and digital products.'
 
+useHead({
+  titleTemplate: (pageTitle) => (pageTitle && pageTitle !== title ? pageTitle : title),
+})
+
 useSeoMeta({
   title,
   description,
   ogTitle: title,
   ogDescription: description,
+  ogType: 'website',
   twitterCard: 'summary_large_image',
 })
 </script>

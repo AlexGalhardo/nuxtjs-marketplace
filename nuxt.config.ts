@@ -54,6 +54,8 @@ export default defineNuxtConfig({
     // 30/5min per IP across signup+login+forgot/reset-password+me: tight enough to slow brute
     // force, loose enough for a real user's retries (mistyped password, forgot email, etc.).
     '/api/auth/**': { security: { rateLimiter: { tokensPerInterval: 30, interval: 300_000 } } },
+    // Tighter than auth: the contact form has no account behind it to slow down repeat abuse.
+    '/api/contact': { security: { rateLimiter: { tokensPerInterval: 5, interval: 900_000 } } },
   },
 
   compatibilityDate: '2026-06-30',

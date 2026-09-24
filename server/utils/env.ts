@@ -1,6 +1,9 @@
 import { z } from 'zod'
 
-const optionalString = z.string().trim().default('')
+// Nitro's runtime env merge (unjs `destr`) auto-parses a numeric-looking env var value into a
+// JS number before it reaches this schema, so a purely numeric secret (e.g. a placeholder Stripe
+// key) would otherwise fail as "expected string, received number". Coerce back to a string.
+const optionalString = z.coerce.string().trim().default('')
 
 export const runtimeEnvSchema = z.object({
   strictEnv: z.stringbool().or(z.boolean()).default(true),

@@ -42,7 +42,7 @@ async function onSubmit(event: FormSubmitEvent<ForgotPasswordInput>) {
       v-else
       :schema="forgotPasswordSchema"
       title="Forgot your password?"
-      description="Enter your email and we'll send you a reset link."
+      description="Enter your email and we’ll send you a reset link."
       icon="i-lucide-key-round"
       :fields="fields"
       :loading="pending"
