@@ -6,6 +6,10 @@ export default defineNuxtConfig({
     enabled: true,
   },
 
+  // Disabled: the first-run consent prompt needs a real TTY and crashes non-interactive
+  // callers (CI, git hooks) with ERR_TTY_INIT_FAILED on Windows. See docs/git-workflow.md.
+  telemetry: false,
+
   css: ['~/assets/css/main.css'],
 
   // Every key can be overridden at runtime with a NUXT_* env var (see docs/environment-variables.md)
