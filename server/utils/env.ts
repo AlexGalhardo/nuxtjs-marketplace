@@ -1,0 +1,49 @@
+import { z } from 'zod'
+
+const optionalString = z.string().trim().default('')
+
+export const runtimeEnvSchema = z.object({
+  strictEnv: z.stringbool().or(z.boolean()).default(true),
+  platformFeeBps: z.coerce.number().int().min(0).max(10_000),
+  contactEmail: z.union([z.literal(''), z.email()]),
+  stripe: z.object({
+    secretKey: optionalString,
+    webhookSecret: optionalString,
+  }),
+  resend: z.object({ apiKey: optionalString }),
+  email: z.object({ from: optionalString }),
+  public: z.object({
+    siteUrl: z.url(),
+    stripe: z.object({ publishableKey: optionalString }),
+  }),
+})
+
+export type RuntimeEnv = z.infer<typeof runtimeEnvSchema>
+
+// Secrets that must exist before the app can serve real traffic
+const productionRequired = [
+  ['stripe.secretKey', (env: RuntimeEnv) => env.stripe.secretKey],
+  ['stripe.webhookSecret', (env: RuntimeEnv) => env.stripe.webhookSecret],
+  ['public.stripe.publishableKey', (env: RuntimeEnv) => env.public.stripe.publishableKey],
+] as const
+
+export interface EnvValidationResult {
+  errors: string[]
+  warnings: string[]
+}
+
+export function validateRuntimeEnv(config: unknown, strict: boolean): EnvValidationResult {
+  const parsed = runtimeEnvSchema.safeParse(config)
+  if (!parsed.success) {
+    return {
+      errors: parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`),
+      warnings: [],
+    }
+  }
+
+  const missing = productionRequired
+    .filter(([, read]) => !read(parsed.data))
+    .map(([key]) => `${key} is not set`)
+
+  return strict ? { errors: missing, warnings: [] } : { errors: [], warnings: missing }
+}
