@@ -25,3 +25,9 @@ logs
 
 # Agent local settings
 .claude/settings.local.json
+
+# Tests
+coverage
+playwright-report
+test-results
+blob-report
