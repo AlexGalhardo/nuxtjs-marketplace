@@ -9,9 +9,9 @@ Variables marked *(Phase N)* are not wired yet; add them to `runtimeConfig`, the
 | `NUXT_STRICT_ENV` | no | Default `true`: missing production secrets abort startup. Set `false` only for tests/CI |
 | `NUXT_PUBLIC_SITE_URL` | yes | Public base URL (e.g. `http://localhost:3000`) |
 | `NUXT_SESSION_PASSWORD` | yes *(Phase 4)* | ≥ 32 chars, seals the session cookie (nuxt-auth-utils) |
-| `NUXT_HUB_DB_DIALECT` | build *(Phase 3)* | `sqlite` (default) or `postgresql` |
-| `DATABASE_URL` | postgres *(Phase 3)* | PostgreSQL connection string |
-| `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT` | prod/docker *(Phase 3)* | Blob storage (MinIO locally) |
+| `NUXT_HUB_DB_DIALECT` | build | `sqlite` (default) or `postgresql`. Read directly in `nuxt.config.ts` (`hub.db`), not part of `runtimeConfig` |
+| `DATABASE_URL` | postgres | PostgreSQL connection string, read by `@nuxthub/core`'s postgres-js driver |
+| `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT` | prod/docker | Blob storage (MinIO locally); leave empty to use the local `fs` driver (`.data/blob`) |
 | `E2E_PORT` | no | Port for the Playwright test server (default `3100`) |
 | `PLAYWRIGHT_SKIP_BUILD` | no | `1` = Playwright reuses the existing `.output` build |
 | `NUXT_STRIPE_SECRET_KEY` | yes | Stripe secret key (test mode in dev) |

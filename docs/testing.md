@@ -4,7 +4,7 @@
 |------|------|----------|------|
 | Unit | Vitest project `unit` (node env) | `tests/unit/` | Pure functions in `shared/` and `server/utils/` (env, pricing, money, schemas). Use relative imports. |
 | Component | Vitest project `nuxt` (nuxt env) | `tests/nuxt/` | Vue components/composables with `mountSuspended` from `@nuxt/test-utils/runtime`; `~` aliases work |
-| Integration | Vitest project `integration` + `@nuxt/test-utils/e2e` | `tests/integration/` | Builds the app once per file and calls the real server with `$fetch`/`fetch` (DB-backed from Phase 3; SQLite and Postgres in CI) |
+| Integration | Vitest project `integration` + `@nuxt/test-utils/e2e` | `tests/integration/` | Builds the app once per file and calls the real server with `$fetch`/`fetch` (DB-backed from Phase 3; SQLite and Postgres in CI). Files share the on-disk NuxtHub dir (`.data`) and SQLite file, so `fileParallelism: false` runs them sequentially — a DB-backed test expects `bun run db:migrate && bun run db:seed` to have already run |
 | Smoke | Playwright project `smoke` | `tests/smoke/` | Every page loads, hydrates, shows its `h1` and logs **no console errors** (catches CSP violations) |
 | E2E | Playwright project `e2e` via `@nuxt/test-utils/playwright` | `tests/e2e/` | Full user journeys: signup/login, sell, buy (Stripe test card), refund, admin |
 

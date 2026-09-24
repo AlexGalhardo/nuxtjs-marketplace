@@ -233,20 +233,21 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (explain 
   - [~] ShellCheck them in CI — no `shellcheck` binary available locally; scripts pass `bash -n`, wiring into `ci.yml` deferred to Phase 13 (ubuntu-latest ships ShellCheck)
 - **2.3 Docs** — [x] `docs/infra-and-setup.md` updated with real commands
 
-### Phase 3 — Data layer
+### Phase 3 — Data layer ✅ (admin/demo seed data deferred to Phase 4)
 - **3.1 NuxtHub DB**
-  - [ ] Install `@nuxthub/core`, `drizzle-orm`, `drizzle-kit`; `hub.db` dialect from `NUXT_HUB_DB_DIALECT` (D5)
-  - [ ] Verify NuxtHub dialect-specific schema file support; otherwise conditional re-export in `server/db/schema.ts`
-  - [ ] `server/db/schema.sqlite.ts` + `server/db/schema.postgresql.ts` (all tables §3.4)
-  - [ ] Shared inferred types in `shared/types/db.ts`; a test asserting both schemas expose identical tables/columns
+  - [x] Install `@nuxthub/core`, `drizzle-orm`, `drizzle-kit` (+ `@libsql/client`, `postgres` drivers, `aws4fetch` for blob S3); `hub.db` dialect from `NUXT_HUB_DB_DIALECT` (D5)
+  - [x] Verified NuxtHub natively globs `server/db/schema.ts` + `server/db/schema.${dialect}.ts` — no fallback needed, §7 risk resolved
+  - [x] `server/db/schema.sqlite.ts` + `server/db/schema.postgresql.ts` (all 19 tables §3.4)
+  - [x] Shared inferred types in `shared/types/db.ts`; `tests/unit/db-schema-parity.test.ts` asserts both schemas expose identical tables/columns/nullability
 - **3.2 Migrations & seed**
-  - [ ] Generate migrations for both dialects (`server/db/migrations/{sqlite,postgresql}`)
-  - [ ] Seed task (`server/tasks/db/seed.ts`): product types, admin user, demo shops/products (dev only)
-  - [ ] Scripts: `db:generate`, `db:migrate`, `db:seed`, `db:reset`
+  - [x] Generated migrations for both dialects (`server/db/migrations/{sqlite,postgresql}`)
+  - [x] Seed script (`server/db/seed.ts`, run via `bun run db:seed`) — product types (D13) always, idempotent via `onConflictDoNothing()`. **Not** a Nitro task: `nitro task run` requires an already-running dev server, which doesn't fit idempotent one-shot setup scripts (documented in docs/database.md). Admin user + demo shops/products deferred to Phase 4 (needs `nuxt-auth-utils` password hashing)
+  - [x] Scripts: `db:generate`, `db:migrate`, `db:seed`, `db:reset`
 - **3.3 Blob**
-  - [ ] `hub.blob` fs (dev) / s3 (prod) config; public `images/` vs private `files/` prefixes
-  - [ ] `server/routes/images/[...pathname].get.ts` serving only public prefix
-- **3.4 Tests** — [ ] integration tests run against SQLite and Postgres (CI matrix)
+  - [x] `hub.blob: true` — auto-detects `fs` driver (dev) / `s3` driver when `S3_ACCESS_KEY_ID`+`S3_SECRET_ACCESS_KEY`+`S3_BUCKET` are set (docker-compose/prod)
+  - [x] `server/routes/images/[...pathname].get.ts` serving only the public `images/` prefix; private `files/` prefix has no route (Phase 9 adds signed download grants)
+- **3.4 Tests** — [~] `tests/integration/product-types.test.ts` validates the DB layer end-to-end against SQLite; PostgreSQL migrations verified via `drizzle-kit generate` (SQL inspected) but not live-tested (Docker Desktop wasn't running locally) — full SQLite+Postgres CI matrix lands in Phase 13
+- **3.5 OWASP touchpoints (§5.1)** — [x] A05: only Drizzle's parameterized query builder is used (no raw/interpolated SQL anywhere in the schema or seed script); `/api/product-types` has no user input to validate yet
 
 ### Phase 4 — Authentication
 - **4.1 Server**
@@ -355,3 +356,4 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (explain 
 | 2026-09-24 | Phase 0 complete: research, grill-me decisions, skills/MCP, Nuxt 4.5.2 scaffold, docs, first commit. |
 | 2026-09-24 | zod and nuxt-security approved; OWASP Top 10:2025 checklist added (§5.1). Phase 1 complete: Biome, Husky/commitlint, env validation, nuxt-security baseline, Vitest/Playwright harness (unit, nuxt, integration, smoke, e2e green), changelogen. |
 | 2026-09-24 | Phase 2 complete: multi-stage Dockerfile (non-root, healthcheck), full and dev-only docker-compose stacks (postgres, minio, stripe-cli), 6 idempotent setup scripts (`setups/`) sharing `setups/lib.sh`, `docs/infra-and-setup.md` updated. ShellCheck-in-CI item deferred to Phase 13's `ci.yml`. |
+| 2026-09-24 | Phase 3 complete: verified NuxtHub natively supports dual dialect-suffixed schema files (§7 risk resolved, no fallback needed); `@nuxthub/core` wired with `hub.db`/`hub.blob`; 19-table Drizzle schema for sqlite+postgresql with a parity test; migrations generated for both dialects; idempotent `server/db/seed.ts` (product types only — admin/demo data waits on Phase 4 auth); public `images/` blob route. `db:*` scripts added. `vitest.config.ts`: `fileParallelism: false` for the `integration` project (files share `.data`/SQLite, must run sequentially). |

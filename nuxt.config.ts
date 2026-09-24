@@ -1,9 +1,17 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ['@nuxt/ui', 'nuxt-security'],
+  modules: ['@nuxt/ui', 'nuxt-security', '@nuxthub/core'],
 
   devtools: {
     enabled: true,
+  },
+
+  // Dialect fixed at build time (D5, docs/database.md). Postgres reads DATABASE_URL;
+  // sqlite defaults to a local file at .data/db/sqlite.db. Blob: fs locally, S3 when
+  // S3_ACCESS_KEY_ID/S3_SECRET_ACCESS_KEY/S3_BUCKET are set (docker-compose/prod).
+  hub: {
+    db: process.env.NUXT_HUB_DB_DIALECT === 'postgresql' ? 'postgresql' : 'sqlite',
+    blob: true,
   },
 
   // Disabled: the first-run consent prompt needs a real TTY and crashes non-interactive
@@ -41,6 +49,15 @@ export default defineNuxtConfig({
   },
 
   compatibilityDate: '2026-06-30',
+
+  // Bun.randomUUIDv7() (shared/utils/id.ts) needs Bun's global type declarations.
+  typescript: {
+    tsConfig: {
+      compilerOptions: {
+        types: ['bun'],
+      },
+    },
+  },
 
   // OWASP A02/A05: secure headers, CSP with nonces, request size limits, rate limiting
   security: {
