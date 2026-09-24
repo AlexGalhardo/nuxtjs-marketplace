@@ -12,26 +12,26 @@ import * as sqliteSchema from './schema.sqlite'
 export type SeedDialect = 'sqlite' | 'postgresql'
 
 export async function createSeedClient() {
-  execSync('bunx nuxt prepare', { stdio: 'inherit', cwd: process.cwd() })
+	execSync('bunx nuxt prepare', { stdio: 'inherit', cwd: process.cwd() })
 
-  const configPath = join(process.cwd(), '.nuxt/hub/db/config.json')
-  const hubConfig = JSON.parse(await readFile(configPath, 'utf-8'))
-  const dialect = hubConfig.db.dialect as SeedDialect
-  const db = await createDrizzleClient(hubConfig.db, hubConfig.dir)
-  const schema = dialect === 'postgresql' ? postgresqlSchema : sqliteSchema
+	const configPath = join(process.cwd(), '.nuxt/hub/db/config.json')
+	const hubConfig = JSON.parse(await readFile(configPath, 'utf-8'))
+	const dialect = hubConfig.db.dialect as SeedDialect
+	const db = await createDrizzleClient(hubConfig.db, hubConfig.dir)
+	const schema = dialect === 'postgresql' ? postgresqlSchema : sqliteSchema
 
-  return { db, dialect, schema }
+	return { db, dialect, schema }
 }
 
 export async function closeSeedClient(db: Awaited<ReturnType<typeof createDrizzleClient>>) {
-  // postgres-js exposes `end()`; the libsql client (sqlite) only has `close()`. Closing properly
-  // matters here: unlike a short-lived CLI process (where process exit releases the file lock
-  // regardless), this is called from long-lived processes (tests) where a leaked libsql
-  // connection keeps a lock on the sqlite file for the rest of the run.
-  const client = db.$client as { end?: () => Promise<void>; close?: () => void } | undefined
-  if (typeof client?.end === 'function') {
-    await client.end()
-  } else if (typeof client?.close === 'function') {
-    client.close()
-  }
+	// postgres-js exposes `end()`; the libsql client (sqlite) only has `close()`. Closing properly
+	// matters here: unlike a short-lived CLI process (where process exit releases the file lock
+	// regardless), this is called from long-lived processes (tests) where a leaked libsql
+	// connection keeps a lock on the sqlite file for the rest of the run.
+	const client = db.$client as { end?: () => Promise<void>; close?: () => void } | undefined
+	if (typeof client?.end === 'function') {
+		await client.end()
+	} else if (typeof client?.close === 'function') {
+		client.close()
+	}
 }

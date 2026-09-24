@@ -7,18 +7,18 @@ useSeoMeta({ title: 'Reconnecting — Marketplace' })
 const toast = useToast()
 
 onMounted(async () => {
-  toast.add({
-    title: 'That link expired',
-    description: 'Start onboarding again below.',
-    color: 'warning',
-  })
-  await navigateTo('/my-shop/payouts')
+	toast.add({
+		title: 'That link expired',
+		description: 'Start onboarding again below.',
+		color: 'warning',
+	})
+	await navigateTo('/my-shop/payouts')
 })
 </script>
 
 <template>
-  <UContainer class="max-w-2xl py-10">
-    <h1 class="sr-only">Reconnecting to Stripe</h1>
-    <p class="text-sm text-muted">Redirecting…</p>
-  </UContainer>
+	<UContainer class="max-w-2xl py-10">
+		<h1 class="sr-only">Reconnecting to Stripe</h1>
+		<p class="text-sm text-muted">Redirecting…</p>
+	</UContainer>
 </template>

@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process'
 // shop's Stripe onboarding complete, without needing real Stripe test-mode credentials.
 // Subprocess rationale: see issueResetToken in ./reset-token.ts.
 export function markShopChargesEnabled(shopId: string): void {
-  const script = `
+	const script = `
     import { eq } from 'drizzle-orm'
     import { closeSeedClient, createSeedClient } from './server/db/client'
 
@@ -16,5 +16,5 @@ export function markShopChargesEnabled(shopId: string): void {
     await closeSeedClient(db)
   `
 
-  execFileSync('bun', ['-e', script], { cwd: process.cwd(), encoding: 'utf-8' })
+	execFileSync('bun', ['-e', script], { cwd: process.cwd(), encoding: 'utf-8' })
 }

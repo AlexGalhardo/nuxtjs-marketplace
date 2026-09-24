@@ -10,12 +10,18 @@ import { eq } from 'drizzle-orm'
 // (verified in nuxt-auth-utils@0.5.30's source). server/utils/auth.ts's requireUser() carries the
 // equivalent check for that path; this plugin covers client rehydration on another device/browser.
 export default defineNitroPlugin(() => {
-  sessionHooks.hook('fetch', async (session) => {
-    if (!session.user) return
+	sessionHooks.hook('fetch', async (session) => {
+		if (!session.user) return
 
-    const [user] = await db.select().from(schema.users).where(eq(schema.users.id, session.user.id))
-    if (!user || hashToken(user.passwordHash) !== session.passwordVersion) {
-      throw createError({ statusCode: 401, statusMessage: 'Session expired, please log in again' })
-    }
-  })
+		const [user] = await db
+			.select()
+			.from(schema.users)
+			.where(eq(schema.users.id, session.user.id))
+		if (!user || hashToken(user.passwordHash) !== session.passwordVersion) {
+			throw createError({
+				statusCode: 401,
+				statusMessage: 'Session expired, please log in again',
+			})
+		}
+	})
 })

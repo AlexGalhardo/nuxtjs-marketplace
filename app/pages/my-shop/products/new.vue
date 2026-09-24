@@ -10,65 +10,68 @@ const router = useRouter()
 const { data: productTypes } = await useFetch<ProductType[]>('/api/product-types')
 
 const state = reactive<ProductInput>({
-  productTypeId: '',
-  title: '',
-  slug: '',
-  description: '',
-  priceCents: 0,
-  shippingCents: 0,
-  stock: 0,
+	productTypeId: '',
+	title: '',
+	slug: '',
+	description: '',
+	priceCents: 0,
+	shippingCents: 0,
+	stock: 0,
 })
 
 const slugEditedManually = ref(false)
 watch(
-  () => state.title,
-  (title) => {
-    if (!slugEditedManually.value) state.slug = slugify(title)
-  },
+	() => state.title,
+	(title) => {
+		if (!slugEditedManually.value) state.slug = slugify(title)
+	},
 )
 watch(
-  () => state.slug,
-  () => {
-    slugEditedManually.value = true
-  },
+	() => state.slug,
+	() => {
+		slugEditedManually.value = true
+	},
 )
 
 const pending = ref(false)
 async function onSubmit(data: ProductInput) {
-  pending.value = true
-  try {
-    const product = await $fetch<Product>('/api/v1/shop/products', { method: 'POST', body: data })
-    toast.add({
-      title: 'Product created',
-      description: 'Add photos before publishing.',
-      color: 'success',
-    })
-    await router.push(`/my-shop/products/${product.id}/edit`)
-  } catch (error) {
-    const statusMessage =
-      (error as { data?: { statusMessage?: string } })?.data?.statusMessage ??
-      'Something went wrong'
-    toast.add({ title: 'Could not create product', description: statusMessage, color: 'error' })
-  } finally {
-    pending.value = false
-  }
+	pending.value = true
+	try {
+		const product = await $fetch<Product>('/api/v1/shop/products', {
+			method: 'POST',
+			body: data,
+		})
+		toast.add({
+			title: 'Product created',
+			description: 'Add photos before publishing.',
+			color: 'success',
+		})
+		await router.push(`/my-shop/products/${product.id}/edit`)
+	} catch (error) {
+		const statusMessage =
+			(error as { data?: { statusMessage?: string } })?.data?.statusMessage ??
+			'Something went wrong'
+		toast.add({ title: 'Could not create product', description: statusMessage, color: 'error' })
+	} finally {
+		pending.value = false
+	}
 }
 </script>
 
 <template>
-  <UContainer class="max-w-2xl py-10 space-y-6">
-    <h1 class="text-2xl font-semibold">New product</h1>
+	<UContainer class="max-w-2xl py-10 space-y-6">
+		<h1 class="text-2xl font-semibold">New product</h1>
 
-    <UPageCard>
-      <ProductForm
-        :schema="productSchema"
-        :state="state"
-        :product-types="productTypes ?? []"
-        show-slug
-        :loading="pending"
-        submit-label="Create product"
-        @submit="onSubmit"
-      />
-    </UPageCard>
-  </UContainer>
+		<UPageCard>
+			<ProductForm
+				:schema="productSchema"
+				:state="state"
+				:product-types="productTypes ?? []"
+				show-slug
+				:loading="pending"
+				submit-label="Create product"
+				@submit="onSubmit"
+			/>
+		</UPageCard>
+	</UContainer>
 </template>

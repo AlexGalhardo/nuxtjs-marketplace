@@ -24,79 +24,79 @@ const ENTRY = '.output/server/index.mjs'
 // production 30/5min auth rate limit — raise it for this build. It is read at build time (routeRules
 // are baked into the Nitro build), so it must be set on the build step too, not just the server.
 const TEST_ENV = {
-  NUXT_STRICT_ENV: 'false',
-  NUXT_SESSION_PASSWORD: 'x'.repeat(32),
-  NUXT_AUTH_RATE_LIMIT_TOKENS: '1000',
+	NUXT_STRICT_ENV: 'false',
+	NUXT_SESSION_PASSWORD: 'x'.repeat(32),
+	NUXT_AUTH_RATE_LIMIT_TOKENS: '1000',
 }
 
 let server: ChildProcess | undefined
 
 async function runBuild(): Promise<void> {
-  await new Promise<void>((resolve, reject) => {
-    // No `shell: true`: on Windows that spawns cmd.exe as an intermediary, and killing the
-    // returned ChildProcess only kills that shell, orphaning the real `bun` process underneath
-    // (the cause of repeated `EADDRINUSE` on this port across otherwise-independent runs).
-    // `bun` resolves directly via PATH without a shell.
-    const build = spawn('bun', ['run', 'build'], {
-      stdio: 'inherit',
-      env: { ...process.env, ...TEST_ENV },
-    })
-    build.on('error', reject)
-    build.on('exit', (code) => {
-      if (code === 0) resolve()
-      else reject(new Error(`bun run build exited with code ${code}`))
-    })
-  })
+	await new Promise<void>((resolve, reject) => {
+		// No `shell: true`: on Windows that spawns cmd.exe as an intermediary, and killing the
+		// returned ChildProcess only kills that shell, orphaning the real `bun` process underneath
+		// (the cause of repeated `EADDRINUSE` on this port across otherwise-independent runs).
+		// `bun` resolves directly via PATH without a shell.
+		const build = spawn('bun', ['run', 'build'], {
+			stdio: 'inherit',
+			env: { ...process.env, ...TEST_ENV },
+		})
+		build.on('error', reject)
+		build.on('exit', (code) => {
+			if (code === 0) resolve()
+			else reject(new Error(`bun run build exited with code ${code}`))
+		})
+	})
 }
 
 function startServer(): ChildProcess {
-  const child = spawn('bun', [ENTRY], {
-    stdio: 'pipe',
-    env: {
-      ...process.env,
-      PORT: String(PORT),
-      HOST: '127.0.0.1',
-      NODE_ENV: 'test',
-      ...TEST_ENV,
-    },
-  })
-  let output = ''
-  child.stdout?.on('data', (chunk) => {
-    output += chunk.toString()
-  })
-  child.stderr?.on('data', (chunk) => {
-    output += chunk.toString()
-  })
-  child.on('exit', (code) => {
-    if (code !== null && code !== 0) {
-      console.error(
-        `[tests/integration/global-setup] server exited early (code ${code})\n${output}`,
-      )
-    }
-  })
-  return child
+	const child = spawn('bun', [ENTRY], {
+		stdio: 'pipe',
+		env: {
+			...process.env,
+			PORT: String(PORT),
+			HOST: '127.0.0.1',
+			NODE_ENV: 'test',
+			...TEST_ENV,
+		},
+	})
+	let output = ''
+	child.stdout?.on('data', (chunk) => {
+		output += chunk.toString()
+	})
+	child.stderr?.on('data', (chunk) => {
+		output += chunk.toString()
+	})
+	child.on('exit', (code) => {
+		if (code !== null && code !== 0) {
+			console.error(
+				`[tests/integration/global-setup] server exited early (code ${code})\n${output}`,
+			)
+		}
+	})
+	return child
 }
 
 async function waitForHealth(child: ChildProcess, deadline: number): Promise<void> {
-  while (Date.now() < deadline) {
-    // Fail fast instead of polling until the deadline (and possibly getting a healthy response
-    // from an unrelated stale process still squatting on the port — see EADDRINUSE note above).
-    if (child.exitCode !== null || child.signalCode !== null) {
-      throw new Error(
-        `Integration test server exited before becoming healthy (code ${child.exitCode}, signal ${child.signalCode})`,
-      )
-    }
-    try {
-      const response = await fetch(new URL('/api/health', BASE_URL))
-      if (response.ok) return
-    } catch {
-      // Server not accepting connections yet — retry.
-    }
-    await new Promise((resolve) => setTimeout(resolve, 200))
-  }
-  throw new Error(
-    `Integration test server did not become healthy within the deadline (${BASE_URL})`,
-  )
+	while (Date.now() < deadline) {
+		// Fail fast instead of polling until the deadline (and possibly getting a healthy response
+		// from an unrelated stale process still squatting on the port — see EADDRINUSE note above).
+		if (child.exitCode !== null || child.signalCode !== null) {
+			throw new Error(
+				`Integration test server exited before becoming healthy (code ${child.exitCode}, signal ${child.signalCode})`,
+			)
+		}
+		try {
+			const response = await fetch(new URL('/api/health', BASE_URL))
+			if (response.ok) return
+		} catch {
+			// Server not accepting connections yet — retry.
+		}
+		await new Promise((resolve) => setTimeout(resolve, 200))
+	}
+	throw new Error(
+		`Integration test server did not become healthy within the deadline (${BASE_URL})`,
+	)
 }
 
 // Nitro lazily dynamic-imports each route handler's chunk on its first request. Hitting one
@@ -106,37 +106,37 @@ async function waitForHealth(child: ChildProcess, deadline: number): Promise<voi
 // Skips /api/contact: its rate limit is tight (5/15min, shared with contact.test.ts's own 3
 // calls) and it isn't the route that showed this flake, unlike product-types/shop/auth.
 async function warmUpRoutes(): Promise<void> {
-  await Promise.all([
-    fetch(new URL('/api/product-types', BASE_URL)),
-    fetch(new URL('/api/v1/shop', BASE_URL)),
-    fetch(new URL('/api/auth/reset-password', BASE_URL), {
-      method: 'POST',
-      body: JSON.stringify({ token: 'warmup', password: 'Ab1!Ab1!' }),
-      headers: { 'content-type': 'application/json' },
-    }),
-  ])
+	await Promise.all([
+		fetch(new URL('/api/product-types', BASE_URL)),
+		fetch(new URL('/api/v1/shop', BASE_URL)),
+		fetch(new URL('/api/auth/reset-password', BASE_URL), {
+			method: 'POST',
+			body: JSON.stringify({ token: 'warmup', password: 'Ab1!Ab1!' }),
+			headers: { 'content-type': 'application/json' },
+		}),
+	])
 }
 
 export async function setup() {
-  await runBuild()
-  server = startServer()
-  await waitForHealth(server, Date.now() + 60_000)
-  await warmUpRoutes()
+	await runBuild()
+	server = startServer()
+	await waitForHealth(server, Date.now() + 60_000)
+	await warmUpRoutes()
 
-  // `server: false` / `build: false` / `browser: false` make this purely a defaults object —
-  // no build, spawn or browser launch happens here (that already happened above by hand).
-  const ctx = createTestContext({ server: false, build: false, browser: false })
-  ctx.url = BASE_URL
-  setTestContext(ctx)
-  exposeContextToEnv()
+	// `server: false` / `build: false` / `browser: false` make this purely a defaults object —
+	// no build, spawn or browser launch happens here (that already happened above by hand).
+	const ctx = createTestContext({ server: false, build: false, browser: false })
+	ctx.url = BASE_URL
+	setTestContext(ctx)
+	exposeContextToEnv()
 }
 
 export async function teardown() {
-  if (!server || server.exitCode !== null || server.signalCode !== null) return
-  await new Promise<void>((resolve) => {
-    server?.once('exit', () => resolve())
-    server?.kill()
-    // Belt and braces: don't let a stuck child process hang the whole Vitest run.
-    setTimeout(resolve, 5000)
-  })
+	if (!server || server.exitCode !== null || server.signalCode !== null) return
+	await new Promise<void>((resolve) => {
+		server?.once('exit', () => resolve())
+		server?.kill()
+		// Belt and braces: don't let a stuck child process hang the whole Vitest run.
+		setTimeout(resolve, 5000)
+	})
 }

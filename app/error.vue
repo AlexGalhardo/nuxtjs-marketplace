@@ -7,7 +7,7 @@ useHead({ htmlAttrs: { lang: 'en' } })
 </script>
 
 <template>
-  <UApp>
-    <UError :error="props.error" />
-  </UApp>
+	<UApp>
+		<UError :error="props.error" />
+	</UApp>
 </template>

@@ -1,6 +1,138 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+/* resell.sh design tokens — docs/design-system.md is the source of truth. */
 @theme static {
-  --font-sans: "Public Sans", sans-serif;
+	--font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+	--font-display: "Big Shoulders Display", "Figtree", ui-sans-serif, sans-serif;
+	--font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+	/* matrix: brand green. 800 = pine (light CTAs), 400 = phosphor (dark CTAs, promo bar). */
+	--color-matrix-50: #edfff2;
+	--color-matrix-100: #d4ffe0;
+	--color-matrix-200: #bdf5cc;
+	--color-matrix-300: #7dfba4;
+	--color-matrix-400: #3dff7a;
+	--color-matrix-500: #14d95a;
+	--color-matrix-600: #06ac45;
+	--color-matrix-700: #0a8a38;
+	--color-matrix-800: #0b6c30;
+	--color-matrix-900: #0a5228;
+	--color-matrix-950: #022e14;
+
+	/* ink: green-tinted neutrals, so greys never read cold next to the brand green. */
+	--color-ink-50: #f5f8f6;
+	--color-ink-100: #eef2ef;
+	--color-ink-200: #e0e6e2;
+	--color-ink-300: #c3ccc6;
+	--color-ink-400: #909c94;
+	--color-ink-500: #6a766e;
+	--color-ink-600: #505b54;
+	--color-ink-700: #37413b;
+	--color-ink-800: #1d2821;
+	--color-ink-900: #13201a;
+	--color-ink-950: #06100b;
+}
+
+:root {
+	--ui-radius: 0.5rem;
+	--ui-container: 75rem;
+	--ui-header-height: 4.5rem;
+
+	--ui-primary: var(--ui-color-primary-800);
+	--ui-text: var(--ui-color-neutral-900);
+	--ui-text-toned: var(--ui-color-neutral-700);
+	--ui-text-muted: var(--ui-color-neutral-600);
+	--ui-text-dimmed: var(--ui-color-neutral-500);
+	--ui-bg-muted: var(--ui-color-neutral-100);
+	--ui-border: var(--ui-color-neutral-200);
+
+	/* Enjoei's lime/lavender roles, re-cast in green. */
+	--rs-signal: var(--color-matrix-400);
+	--rs-signal-ink: var(--color-ink-950);
+	--rs-selected: var(--color-matrix-200);
+	--rs-selected-ink: var(--color-matrix-900);
+}
+
+.dark {
+	--ui-primary: var(--ui-color-primary-400);
+	--ui-text: var(--color-matrix-100);
+	--ui-text-highlighted: var(--color-matrix-50);
+	--ui-text-toned: var(--color-matrix-200);
+	--ui-text-muted: #8fbf9c;
+	--ui-text-dimmed: #5f8a6b;
+	--ui-text-inverted: var(--color-ink-950);
+	--ui-bg: #040a06;
+	--ui-bg-muted: #0a140d;
+	--ui-bg-elevated: #0e1b12;
+	--ui-bg-accented: #13261a;
+	--ui-border: #173020;
+	--ui-border-muted: #11241a;
+	--ui-border-accented: #1f4029;
+
+	--rs-selected: #0f2e1a;
+	--rs-selected-ink: var(--color-matrix-300);
+}
+
+@layer base {
+	html {
+		-webkit-font-smoothing: antialiased;
+		accent-color: var(--ui-primary);
+	}
+
+	/* Lowercase is visual only (PRODUCT.md): form values, passwords and codes keep their real case. */
+	body {
+		text-transform: lowercase;
+	}
+
+	input,
+	textarea,
+	select,
+	code,
+	kbd,
+	.normal-case {
+		text-transform: none;
+	}
+
+	h1,
+	h2,
+	h3 {
+		text-wrap: balance;
+	}
+
+	p {
+		text-wrap: pretty;
+	}
+
+	::selection {
+		background: var(--rs-signal);
+		color: var(--rs-signal-ink);
+	}
+
+	:focus-visible {
+		outline: 2px solid var(--ui-primary);
+		outline-offset: 2px;
+	}
+}
+
+@utility rs-container {
+	width: 100%;
+	max-width: calc(var(--ui-container) + 3rem);
+	margin-inline: auto;
+	padding-inline: 1.5rem;
+}
+
+/* The wordmark cursor: the one authored motion that runs without user input. */
+@keyframes rs-blink {
+	50% {
+		opacity: 0;
+	}
+}
+
+@utility rs-cursor {
+	animation: rs-blink 1.1s steps(1) infinite;
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+	}
 }

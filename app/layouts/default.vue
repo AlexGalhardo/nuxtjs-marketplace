@@ -1,93 +1,15 @@
-<script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
-
-const { loggedIn, user, logout } = useAuth()
-const router = useRouter()
-const route = useRoute()
-
-const navItems = computed<NavigationMenuItem[]>(() => [
-  { label: 'Contact', to: '/contact', active: route.path === '/contact' },
-])
-
-const userMenuItems = computed(() => [
-  [{ label: 'Profile', icon: 'i-lucide-user', to: '/profile' }],
-  [
-    {
-      label: 'Log out',
-      icon: 'i-lucide-log-out',
-      onSelect: async () => {
-        await logout()
-        await router.push('/')
-      },
-    },
-  ],
-])
-</script>
-
 <template>
-  <div>
-    <UHeader>
-      <template #left>
-        <NuxtLink to="/" class="focus-visible:outline-3 outline-primary/25 rounded-md p-1 -ms-1">
-          <AppLogo class="w-auto h-6 shrink-0" />
-        </NuxtLink>
-      </template>
-
-      <UNavigationMenu :items="navItems" />
-
-      <template #right>
-        <UColorModeButton />
-
-        <template v-if="loggedIn">
-          <UDropdownMenu :items="userMenuItems">
-            <UButton
-              :label="user?.name"
-              trailing-icon="i-lucide-chevron-down"
-              color="neutral"
-              variant="ghost"
-            />
-          </UDropdownMenu>
-        </template>
-        <template v-else>
-          <UButton to="/login" color="neutral" variant="ghost">Log in</UButton>
-          <UButton to="/signup" color="primary">Sign up</UButton>
-        </template>
-
-        <UButton
-          to="https://github.com/AlexGalhardo/nuxtjs-marketplace"
-          target="_blank"
-          icon="i-simple-icons-github"
-          aria-label="GitHub"
-          color="neutral"
-          variant="ghost"
-        />
-      </template>
-    </UHeader>
-
-    <UMain>
-      <slot />
-    </UMain>
-
-    <USeparator icon="i-simple-icons-nuxtdotjs" />
-
-    <UFooter>
-      <template #left>
-        <p class="text-sm text-muted">© {{ new Date().getFullYear() }} Marketplace</p>
-      </template>
-
-      <template #right>
-        <UButton to="/terms" color="neutral" variant="link">Terms</UButton>
-        <UButton to="/privacy" color="neutral" variant="link">Privacy</UButton>
-        <UButton to="/contact" color="neutral" variant="link">Contact</UButton>
-        <UButton
-          to="https://github.com/AlexGalhardo/nuxtjs-marketplace"
-          target="_blank"
-          icon="i-simple-icons-github"
-          aria-label="GitHub"
-          color="neutral"
-          variant="ghost"
-        />
-      </template>
-    </UFooter>
-  </div>
+	<div class="flex min-h-svh flex-col">
+		<a
+			href="#main"
+			class="sr-only z-50 rounded-full bg-primary px-4 py-2 font-bold text-inverted focus:not-sr-only focus:fixed focus:start-4 focus:top-4"
+		>
+			skip to content
+		</a>
+		<AppHeader />
+		<main id="main" class="flex-1">
+			<slot />
+		</main>
+		<AppFooter />
+	</div>
 </template>

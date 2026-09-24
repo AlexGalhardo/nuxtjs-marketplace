@@ -1,6 +1,12 @@
 <template>
-  <span class="inline-flex items-center gap-2 font-semibold text-highlighted">
-    <UIcon name="i-lucide-store" class="size-6 text-primary" aria-hidden="true" />
-    <span class="text-lg">Marketplace</span>
-  </span>
+	<!-- The blinking block is drawn, not typed, so screen readers and copy-paste get "resell.sh". -->
+	<span
+		class="inline-flex items-baseline font-mono text-[1.35rem] font-bold tracking-tight text-highlighted"
+	>
+		<span>resell</span><span class="text-primary">.sh</span>
+		<span
+			class="rs-cursor ms-1 inline-block h-[0.95em] w-[0.5em] translate-y-[0.12em] bg-primary"
+			aria-hidden="true"
+		/>
+	</span>
 </template>
