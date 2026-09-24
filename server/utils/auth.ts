@@ -39,6 +39,23 @@ export async function requireShopOwner(event: H3Event, shopId: string) {
   return shop
 }
 
+// Verifies the current session user owns the shop that a product belongs to (or is an admin).
+export async function requireProductOwner(event: H3Event, productId: string) {
+  const user = await requireUser(event)
+  const [product] = await db.select().from(schema.products).where(eq(schema.products.id, productId))
+  if (!product) {
+    throw createError({ statusCode: 404, statusMessage: 'Product not found' })
+  }
+  const [shop] = await db.select().from(schema.shops).where(eq(schema.shops.id, product.shopId))
+  if (!shop) {
+    throw createError({ statusCode: 404, statusMessage: 'Product not found' })
+  }
+  if (shop.ownerId !== user.id && user.role !== 'admin') {
+    throw createError({ statusCode: 403, statusMessage: 'Forbidden' })
+  }
+  return { product, shop }
+}
+
 // Bearer API token auth (D14, Phase 10 UI). Tokens are stored hashed; the raw value is only
 // ever shown once at creation time.
 export async function requireApiToken(event: H3Event, requiredScopes: string[] = []) {

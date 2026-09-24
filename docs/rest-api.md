@@ -1,8 +1,11 @@
-# REST API (planned — Phase 10)
+# REST API
 
-- Base path: `/api/v1`. Shop management under `/api/v1/shop/**` (shop, products, images, files,
-  orders, fulfillment, refunds, reviews).
-- Auth: session cookie (UI) **or** `Authorization: Bearer <api token>`, resolved in `server/middleware`.
+- Base path: `/api/v1`. Shop management under `/api/v1/shop/**` (shop, products, images, files —
+  done, Phase 6; orders, fulfillment, refunds, reviews — planned, Phase 9).
+- Auth today (Phase 6): session cookie only, checked directly in each handler via `requireUser`/
+  `requireShopOwner`/`requireProductOwner` (`server/utils/auth.ts`) — no `server/middleware/` yet.
+  Bearer API tokens (`requireApiToken`, already implemented) get their own UI and are wired into
+  these same routes in Phase 10.
 - Conventions: plural nouns, JSON bodies, `camelCase` fields, money as `*Cents` integers,
   pagination `?page=&perPage=` → `{ data, meta: { page, perPage, total } }`,
   errors `{ statusCode, statusMessage, data? }`.
