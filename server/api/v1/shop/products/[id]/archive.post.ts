@@ -14,6 +14,12 @@ export default defineEventHandler(async (event) => {
 	}
 
 	const { product } = await requireProductOwner(event, id)
+	if (product.status === 'suspended') {
+		throw createError({
+			statusCode: 409,
+			statusMessage: 'This product was suspended by a moderator. Contact support',
+		})
+	}
 
 	const [updated] = await db
 		.update(schema.products)

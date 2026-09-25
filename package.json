@@ -27,6 +27,7 @@
 		"db:generate": "nuxt db generate",
 		"db:migrate": "nuxt db migrate",
 		"db:seed": "bun run server/db/seed.ts",
+		"db:make-admin": "bun run server/db/make-admin.ts",
 		"db:reset": "nuxt db drop-all --force && bun run db:migrate && bun run db:seed"
 	},
 	"dependencies": {

@@ -69,3 +69,25 @@ All return 404 for a seller order that isn’t your shop’s (`requireOwnSellerO
 - `POST /api/v1/shop/orders/:id/deliver` — `shipped` → `delivered`, else 409.
 - `POST /api/v1/shop/orders/:id/refund` — full refund of this seller’s part (docs/payments-stripe.md step 5).
   409 unless `paid|shipped|delivered`, 502 if Stripe refuses (nothing changes).
+
+## Admin (Phase 11, session cookie, `role = admin`, outside `/api/v1`)
+
+Every route calls `requireAdmin` (401 signed out, 403 non-admin). Lists take `?q=&page=&perPage=` (≤100, default
+25) and return `{ data, meta }`; queries validated by `shared/schemas/admin.ts`. Search is a parameterized
+case-insensitive substring (`searchAny`, `server/utils/admin.ts`).
+
+- `GET /api/admin/stats` — users, shops (+ suspended), published/suspended products, paid orders, gross paid cents.
+- `GET /api/admin/users?role=` — accounts with their shop slug/status.
+- `GET /api/admin/shops?status=` — shops with owner and product count. `PATCH /api/admin/shops/:id`
+  `{ status: 'active'|'suspended', reason }` — a suspended shop vanishes from catalog, cart and checkout at once
+  (`publicProductConditions`); its products keep their own status. 409 if already in that status.
+- `GET /api/admin/products?status=` — every product in every status. `PATCH /api/admin/products/:id`
+  `{ status: 'suspended'|'archived', reason }` — suspend, or reinstate as unpublished (`archived`); sellers get 409
+  on publish/archive of a suspended product.
+- `GET /api/admin/transaction-logs?type=&status=&orderId=&shopId=&from=&to=` (`YYYY-MM-DD`, UTC, `to` inclusive)
+  → `{ data, types, meta }`. `GET /api/admin/transaction-logs/export` — same filters as CSV (≤50,000 rows,
+  `shared/utils/csv.ts` neutralizes spreadsheet formulas).
+- `GET /api/admin/audit-logs` — admin actions, newest first, with the actor’s name.
+- Every moderation change and every export writes an `audit_logs` row (`logAudit`, `server/utils/audit.ts`), in
+  the same transaction as the change. Admins are made with `bun run db:make-admin <email>`, never via the API.
+

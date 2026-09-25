@@ -27,7 +27,7 @@ test('seller can create a shop, create a product, and publish it once onboarded'
 	const slug = uniqueSlug('e2e-shop')
 	await page.getByLabel('Shop URL').fill(slug)
 	await page.getByRole('button', { name: /create shop/i }).click()
-	await expect(page.getByRole('heading', { name: 'E2E Test Shop' })).toBeVisible()
+	await expect(page.getByText('E2E Test Shop', { exact: true })).toBeVisible()
 
 	// Simulates the Stripe `account.updated` webhook completing onboarding (Phase 8 wires the real
 	// checkout flow; this test focuses on the product create/publish gate, not Stripe Connect
@@ -39,6 +39,8 @@ test('seller can create a shop, create a product, and publish it once onboarded'
 	await goto('/my-shop/products/new', { waitUntil: 'hydration' })
 	await page.getByLabel('Category').click()
 	await page.getByRole('option').first().click()
+	// The menu keeps focus trapped until its close animation ends; typing earlier is lost.
+	await expect(page.getByRole('listbox')).toBeHidden()
 	await page.getByLabel('Title').fill('E2E Wireless Mouse')
 	const productSlug = uniqueSlug('e2e-mouse')
 	await page.getByLabel('Product URL').fill(productSlug)
@@ -51,5 +53,5 @@ test('seller can create a shop, create a product, and publish it once onboarded'
 	await goto('/my-shop/products', { waitUntil: 'hydration' })
 	await expect(page.getByText('E2E Wireless Mouse')).toBeVisible()
 	await page.getByRole('button', { name: /publish/i }).click()
-	await expect(page.getByText('published')).toBeVisible()
+	await expect(page.getByText('published', { exact: true })).toBeVisible()
 })

@@ -29,6 +29,9 @@ const userMenuItems = computed(() => [
 		{ label: 'orders', icon: 'i-lucide-receipt', to: '/orders' },
 		{ label: 'profile', icon: 'i-lucide-user', to: '/profile' },
 		{ label: 'my shop', icon: 'i-lucide-store', to: '/my-shop' },
+		...(user.value?.role === 'admin'
+			? [{ label: 'admin', icon: 'i-lucide-shield', to: '/admin' }]
+			: []),
 	],
 	[
 		{

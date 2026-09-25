@@ -1,6 +1,24 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import type { Nuxt } from 'nuxt/schema'
+
+// Workaround (PLAN.md §7, hydration mismatch): production builds strip onServerPrefetch() from
+// the client bundle, but Vue marks an async boundary for every component that registers it
+// (each @nuxt/icon <Icon> does). So ~12 dashboard icons shifted useId() on the server only, and
+// every label `for` stopped matching its input after hydration. Keeping the (never-called)
+// client hook makes both sides count the same boundaries. Drop once Nuxt stops tree-shaking it.
+function keepServerPrefetchOnClient(_options: unknown, nuxt: Nuxt): void {
+	const client = nuxt.options.optimization.treeShake.composables.client
+	if (client.vue) client.vue = client.vue.filter((name) => name !== 'onServerPrefetch')
+}
+
 export default defineNuxtConfig({
-	modules: ['@nuxt/ui', 'nuxt-security', '@nuxthub/core', 'nuxt-auth-utils'],
+	modules: [
+		'@nuxt/ui',
+		'nuxt-security',
+		'@nuxthub/core',
+		'nuxt-auth-utils',
+		keepServerPrefetchOnClient,
+	],
 
 	devtools: {
 		enabled: true,

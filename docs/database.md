@@ -30,8 +30,9 @@
 - Seed: `bun run db:seed` runs `server/db/seed.ts` (a plain Bun script, not a Nitro task — Nitro's
   `task run` requires an already-running dev server, which doesn't fit idempotent one-shot setup
   scripts). It always seeds the fixed `product_types` list (D13) using `onConflictDoNothing()`
-  for idempotency. Seeding an admin user and demo shops/products starts in Phase 4, once
-  `nuxt-auth-utils` provides password hashing (`users.password_hash` is `NOT NULL`).
+  for idempotency; outside production it also seeds the fake catalog.
+- `bun run db:make-admin <email>` (`server/db/make-admin.ts`) promotes an existing account to `admin`
+  (Phase 11). The role is read into the session at login, so the user logs in again afterwards.
 - `bun run db:reset` drops every table (`nuxt db drop-all --force`), re-migrates, then re-seeds.
 - Shared inferred types: `shared/types/db.ts` (from the SQLite schema; parity test keeps
   PostgreSQL in sync).

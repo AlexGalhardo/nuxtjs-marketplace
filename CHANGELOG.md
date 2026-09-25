@@ -19,8 +19,11 @@ Entries are generated with `bun run release` (changelogen).
 - **reviews:** verified-buyer reviews (`POST /api/reviews`, one per product) with recomputed rating aggregates; reviews listed on product pages.
 - **api:** personal API tokens at `/my-shop/api-tokens` (scoped `shop|products|orders` × `read|write`, shown once, expiring, revocable); every `/api/v1/shop/**` route accepts `Authorization: Bearer`, rate-limited 120 req/min per token.
 - **api:** public OpenAPI 3.1 spec at `GET /api/v1/openapi.json` (from `defineRouteMeta` + shared Zod schemas) and Scalar API reference at `/my-shop/api-docs`.
+- **admin:** `/admin` dashboard (marketplace stats, audit log), users, shops and products with suspend/reinstate (reason required), transaction logs with filters and CSV export; every admin action written to `audit_logs`; `bun run db:make-admin <email>`.
 
 ### Fixes
+- **ui:** form labels on every dashboard page (`/my-shop/**`, `/admin/**`) lost their inputs after hydration: `@nuxt/icon`'s server-only prefetch hooks shifted `useId()` between SSR and client.
+- **shop:** sellers could republish a product an admin suspended (via archive → publish).
 - **ui:** product pages and `/checkout/success` scrolled sideways on phones with a long unbroken title or shop name.
 - **payments:** Stripe webhook signatures never verified under Bun (sync crypto API); now async.
 - **payments:** a webhook handler error no longer marks the event as processed, so Stripe retries it.

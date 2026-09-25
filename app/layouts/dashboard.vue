@@ -4,8 +4,6 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 const route = useRoute()
 const isAdmin = computed(() => route.path.startsWith('/admin'))
 
-// Placeholder items: /my-shop/** lands in Phase 6, /admin/** in Phase 11. Linking to them
-// ahead of the pages matches the incremental phase rollout (PLAN.md §6).
 const shopItems: NavigationMenuItem[] = [
 	{ label: 'Overview', icon: 'i-lucide-layout-dashboard', to: '/my-shop' },
 	{ label: 'Products', icon: 'i-lucide-package', to: '/my-shop/products' },
