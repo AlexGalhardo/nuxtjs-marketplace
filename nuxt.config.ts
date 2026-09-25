@@ -96,6 +96,18 @@ export default defineNuxtConfig({
 
 	compatibilityDate: '2026-06-30',
 
+	// D14/Phase 10: collect every handler's defineRouteMeta() so server/api/v1/openapi.json.get.ts can
+	// build the public seller API spec. Nitro's own /_openapi.json, /_scalar and /_swagger routes stay
+	// off in production (they'd list every internal route, admin included).
+	nitro: {
+		experimental: { openAPI: true },
+		openAPI: {
+			production: false,
+			meta: { title: 'resell.sh seller API', version: '1.0.0' },
+			ui: { scalar: false, swagger: false },
+		},
+	},
+
 	// No hardcoded nitro.preset here: Nitro reads the standard NITRO_PRESET env var itself.
 	// `bun run build` sets NITRO_PRESET=bun for the deploy runtime (`bun .output/server/index.mjs`,
 	// infra/docker/Dockerfile); `test:smoke`/`test:e2e` inherit it because Playwright's `webServer`
@@ -115,7 +127,9 @@ export default defineNuxtConfig({
 	// OWASP A02/A05: secure headers, CSP with nonces, request size limits, rate limiting
 	security: {
 		rateLimiter: {
-			tokensPerInterval: 1000,
+			// NUXT_RATE_LIMIT_TOKENS (build time): the integration suite shares one server/IP for
+			// every file, so it raises this like NUXT_AUTH_RATE_LIMIT_TOKENS.
+			tokensPerInterval: Number(process.env.NUXT_RATE_LIMIT_TOKENS) || 1000,
 			interval: 300_000,
 		},
 		headers: {

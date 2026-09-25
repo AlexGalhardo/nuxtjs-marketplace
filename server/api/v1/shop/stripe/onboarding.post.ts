@@ -1,5 +1,13 @@
 import { eq } from 'drizzle-orm'
 
+defineRouteMeta({
+	openAPI: {
+		tags: ['shop'],
+		summary: 'Start Stripe Connect onboarding',
+		description: 'Session cookie only. Returns a one-time Stripe account link `url`.',
+	},
+})
+
 // Creates (or reuses) the shop's Stripe Express account and returns a fresh Account Link URL
 // to redirect the seller to. D12: publishing a product requires `charges_enabled`, set by the
 // `account.updated` webhook once onboarding completes (server/api/stripe/webhook.post.ts).

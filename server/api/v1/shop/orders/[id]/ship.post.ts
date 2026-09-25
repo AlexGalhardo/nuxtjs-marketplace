@@ -1,6 +1,15 @@
 import { and, eq, inArray } from 'drizzle-orm'
 import { shipSellerOrderSchema } from '#shared/schemas/order'
 
+defineRouteMeta({
+	openAPI: {
+		tags: ['orders'],
+		summary: 'Mark an order shipped',
+		description:
+			'Sets carrier and tracking code and emails the buyer. Call again while `shipped` to correct tracking.',
+	},
+})
+
 // POST /api/v1/shop/orders/:id/ship — D11: the seller marks a paid order shipped with a carrier and
 // tracking code. Calling it again while `shipped` corrects the tracking details.
 export default defineEventHandler(async (event) => {

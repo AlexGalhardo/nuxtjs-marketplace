@@ -1,5 +1,13 @@
 import { eq } from 'drizzle-orm'
 
+defineRouteMeta({
+	openAPI: {
+		tags: ['products'],
+		summary: 'Upload product images',
+		description: 'Multipart form, one or more `files` images.',
+	},
+})
+
 // POST /api/v1/shop/products/:id/images — multipart upload (form key "files", multiple allowed)
 // of public product photos.
 //

@@ -1,3 +1,10 @@
+defineRouteMeta({
+	openAPI: {
+		tags: ['products'],
+		summary: 'Get one of your products',
+	},
+})
+
 export default defineEventHandler(async (event) => {
 	const id = getRouterParam(event, 'id')
 	if (!id) {

@@ -1,5 +1,13 @@
 import { eq } from 'drizzle-orm'
 
+defineRouteMeta({
+	openAPI: {
+		tags: ['shop'],
+		summary: 'Get your shop',
+		description: 'Returns `null` when you have no shop yet.',
+	},
+})
+
 export default defineEventHandler(async (event) => {
 	const user = await requireUser(event)
 

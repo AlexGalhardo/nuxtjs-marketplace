@@ -1,6 +1,13 @@
 import { eq, or } from 'drizzle-orm'
 import { shopSchema } from '#shared/schemas/shop'
 
+defineRouteMeta({
+	openAPI: {
+		tags: ['shop'],
+		summary: 'Create your shop',
+	},
+})
+
 export default defineEventHandler(async (event) => {
 	const user = await requireUser(event)
 	const body = await readValidatedBody(event, shopSchema.parse)

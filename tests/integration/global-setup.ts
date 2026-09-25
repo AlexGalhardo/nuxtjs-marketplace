@@ -29,6 +29,7 @@ const TEST_ENV = {
 	NUXT_STRICT_ENV: 'false',
 	NUXT_SESSION_PASSWORD: 'x'.repeat(32),
 	NUXT_AUTH_RATE_LIMIT_TOKENS: '1000',
+	NUXT_RATE_LIMIT_TOKENS: '100000',
 	// Checkout/webhook tests: Stripe SDK talks to ./helpers/fake-stripe.ts; payloads are signed with
 	// this secret by the tests (tests/integration/helpers/webhook.ts).
 	NUXT_STRIPE_SECRET_KEY: 'sk_test_fake',

@@ -1,5 +1,13 @@
 import { and, eq } from 'drizzle-orm'
 
+defineRouteMeta({
+	openAPI: {
+		tags: ['orders'],
+		summary: 'Mark an order delivered',
+		description: 'Only from `shipped`.',
+	},
+})
+
 // POST /api/v1/shop/orders/:id/deliver — the seller confirms a shipped order arrived.
 export default defineEventHandler(async (event) => {
 	const sellerOrder = await requireOwnSellerOrder(event)

@@ -1,6 +1,13 @@
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 
+defineRouteMeta({
+	openAPI: {
+		tags: ['products'],
+		summary: 'Set an image’s alt text',
+	},
+})
+
 const bodySchema = z.object({ alt: z.string().trim().max(200) })
 
 export default defineEventHandler(async (event) => {

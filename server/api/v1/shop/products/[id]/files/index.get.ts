@@ -1,5 +1,12 @@
 import { eq } from 'drizzle-orm'
 
+defineRouteMeta({
+	openAPI: {
+		tags: ['products'],
+		summary: 'List a digital product’s files',
+	},
+})
+
 export default defineEventHandler(async (event) => {
 	const id = getRouterParam(event, 'id')
 	if (!id) {

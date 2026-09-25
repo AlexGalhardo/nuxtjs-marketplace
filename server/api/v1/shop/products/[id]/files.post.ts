@@ -1,3 +1,12 @@
+defineRouteMeta({
+	openAPI: {
+		tags: ['products'],
+		summary: 'Upload digital product files',
+		description:
+			'Multipart form, one or more `files`. Private: buyers only get signed download links.',
+	},
+})
+
 // POST /api/v1/shop/products/:id/files — multipart upload (form key "files", multiple allowed)
 // of the private digital files delivered to buyers after purchase (D8/D9: never publicly
 // routable; served only through signed download grants, added in Phase 9).

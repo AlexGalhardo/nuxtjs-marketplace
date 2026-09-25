@@ -1,5 +1,12 @@
 import { and, eq } from 'drizzle-orm'
 
+defineRouteMeta({
+	openAPI: {
+		tags: ['products'],
+		summary: 'Delete a product image',
+	},
+})
+
 export default defineEventHandler(async (event) => {
 	const id = getRouterParam(event, 'id')
 	const imageId = getRouterParam(event, 'imageId')

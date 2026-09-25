@@ -1,6 +1,15 @@
 import { desc, eq, inArray } from 'drizzle-orm'
 import type { ShopOrder } from '#shared/types/order'
 
+defineRouteMeta({
+	openAPI: {
+		tags: ['orders'],
+		summary: 'List your sales',
+		description:
+			'Paid (or later) seller orders, newest first, with items, payout and the shipping address when something physical is in it.',
+	},
+})
+
 // GET /api/v1/shop/orders — the seller's orders, newest first. Unpaid checkouts (`pending`,
 // `canceled`) are not sales yet, so they stay hidden. The buyer's address is shared only because
 // the seller has to ship to it.

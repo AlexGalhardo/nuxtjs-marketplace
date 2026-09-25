@@ -17,6 +17,8 @@ Entries are generated with `bun run release` (changelogen).
 - **downloads:** `GET /downloads/:grantId` streams private files behind 10-minute HMAC-signed links; 5 downloads / 30 days per grant.
 - **fulfilment:** seller `/my-shop/orders`: mark shipped (carrier + tracking, buyer emailed), mark delivered, full refund (Stripe refund + transfer reversal, downloads revoked, logged).
 - **reviews:** verified-buyer reviews (`POST /api/reviews`, one per product) with recomputed rating aggregates; reviews listed on product pages.
+- **api:** personal API tokens at `/my-shop/api-tokens` (scoped `shop|products|orders` × `read|write`, shown once, expiring, revocable); every `/api/v1/shop/**` route accepts `Authorization: Bearer`, rate-limited 120 req/min per token.
+- **api:** public OpenAPI 3.1 spec at `GET /api/v1/openapi.json` (from `defineRouteMeta` + shared Zod schemas) and Scalar API reference at `/my-shop/api-docs`.
 
 ### Fixes
 - **ui:** product pages and `/checkout/success` scrolled sideways on phones with a long unbroken title or shop name.

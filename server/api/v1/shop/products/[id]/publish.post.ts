@@ -1,5 +1,13 @@
 import { eq } from 'drizzle-orm'
 
+defineRouteMeta({
+	openAPI: {
+		tags: ['products'],
+		summary: 'Publish a product',
+		description: '409 until your shop finished Stripe onboarding (`chargesEnabled`).',
+	},
+})
+
 // D12: publishing requires completed Stripe onboarding (shop.chargesEnabled).
 export default defineEventHandler(async (event) => {
 	const id = getRouterParam(event, 'id')

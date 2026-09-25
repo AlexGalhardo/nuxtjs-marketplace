@@ -1,0 +1,33 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`openapi > documents every seller API operation with its token scope 1`] = `
+[
+  "DELETE /api/v1/shop/products/{id} products:write",
+  "DELETE /api/v1/shop/products/{id}/files/{fileId} products:write",
+  "DELETE /api/v1/shop/products/{id}/images/{imageId} products:write",
+  "DELETE /api/v1/shop/tokens/{id} session-only",
+  "GET /api/v1/shop shop:read",
+  "GET /api/v1/shop/orders orders:read",
+  "GET /api/v1/shop/products products:read",
+  "GET /api/v1/shop/products/{id} products:read",
+  "GET /api/v1/shop/products/{id}/files products:read",
+  "GET /api/v1/shop/products/{id}/images products:read",
+  "GET /api/v1/shop/tokens session-only",
+  "PATCH /api/v1/shop shop:write",
+  "PATCH /api/v1/shop/products/{id} products:write",
+  "PATCH /api/v1/shop/products/{id}/images/{imageId} products:write",
+  "POST /api/v1/shop shop:write",
+  "POST /api/v1/shop/orders/{id}/deliver orders:write",
+  "POST /api/v1/shop/orders/{id}/refund orders:write",
+  "POST /api/v1/shop/orders/{id}/ship orders:write",
+  "POST /api/v1/shop/products products:write",
+  "POST /api/v1/shop/products/{id}/archive products:write",
+  "POST /api/v1/shop/products/{id}/files products:write",
+  "POST /api/v1/shop/products/{id}/images products:write",
+  "POST /api/v1/shop/products/{id}/images/reorder products:write",
+  "POST /api/v1/shop/products/{id}/publish products:write",
+  "POST /api/v1/shop/stripe/onboarding session-only",
+  "POST /api/v1/shop/tokens session-only",
+  "PUT /api/v1/shop/branding/{kind} shop:write",
+]
+`;

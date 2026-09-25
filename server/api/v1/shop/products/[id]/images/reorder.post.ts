@@ -1,6 +1,14 @@
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 
+defineRouteMeta({
+	openAPI: {
+		tags: ['products'],
+		summary: 'Reorder product images',
+		description: '`order` lists every image id in the new order.',
+	},
+})
+
 const bodySchema = z.object({ order: z.array(z.string().min(1)).min(1) })
 
 // POST /api/v1/shop/products/:id/images/reorder — body { order: [imageId, ...] }, full list of

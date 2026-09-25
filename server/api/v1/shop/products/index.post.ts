@@ -1,6 +1,15 @@
 import { eq } from 'drizzle-orm'
 import { productSchema } from '#shared/schemas/product'
 
+defineRouteMeta({
+	openAPI: {
+		tags: ['products'],
+		summary: 'Create a product (draft)',
+		description:
+			'`kind` comes from the product type. Digital products ignore `stock` and `shippingCents`.',
+	},
+})
+
 export default defineEventHandler(async (event) => {
 	const user = await requireUser(event)
 	const body = await readValidatedBody(event, productSchema.parse)

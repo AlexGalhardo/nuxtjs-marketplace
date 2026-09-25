@@ -10,7 +10,9 @@
   update) invalidates every other session immediately — no server-side session store needed.
 - Server helpers (`server/utils/auth.ts`): `requireUser`, `requireAdmin`, `requireShopOwner(event, shopId)`
   (ownership check, admin bypass), `requireApiToken(event, scopes)` (Bearer token, hashed lookup,
-  revoked/expired checks, scope check, bumps `last_used_at`) — ready for Phase 6/10.
+  revoked/expired checks, per-token rate limit, scope check, bumps `last_used_at`). `requireUser` itself
+  accepts a Bearer token on `/api/v1/shop/**`: the scope comes from `apiTokenScopeFor(method, route)`
+  (matched route pattern; GET/HEAD = `:read`, else `:write`), so every seller handler works with either.
 - Type augmentation for `#auth-utils` lives in `shared/types/auth.d.ts` (both `.d.ts` files under
   `shared/types/` are auto-imported/ambient in app AND server, per Nuxt 4 defaults).
 
@@ -26,6 +28,9 @@
 - Forgot password → always returns 200; token = 32 random bytes, stored **hashed**, 1h expiry, single use,
   emailed as `/reset-password?token=...`. A successful reset invalidates other sessions.
 - Roles: `user` (buyer + seller) and `admin`. Route middleware: `auth`, `guest`, `admin`.
-- API tokens (Phase 10): `mkt_<prefix>_<secret>`, stored hashed, scoped (`products:read`, `products:write`,
-  `orders:read`, `orders:write`), revocable. Sent as `Authorization: Bearer <token>`.
+- API tokens (Phase 10, `/my-shop/api-tokens`): `rs_<prefix>_<secret>` (secret = 24 random bytes), shown
+  once, stored as SHA-256, scoped (`shop|products|orders` × `read|write`, `shared/schemas/api-token.ts`),
+  expiry 30/90/365 days or never, revocable, max 20 active per user, a shop is required. Sent as
+  `Authorization: Bearer <token>`; only accepted on `/api/v1/shop/**` except token management and Stripe
+  onboarding (403). 120 requests/min per token (in-memory, per process; `x-ratelimit-*`, `retry-after`).
 - Rate-limit login, signup and forgot-password.

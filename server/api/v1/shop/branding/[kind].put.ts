@@ -1,5 +1,14 @@
 import { eq } from 'drizzle-orm'
 
+defineRouteMeta({
+	openAPI: {
+		tags: ['shop'],
+		summary: 'Upload the shop logo or banner',
+		description:
+			'`kind` is `logo` or `banner`. Multipart form with one `file` image (JPEG, PNG, WebP or GIF).',
+	},
+})
+
 // PUT /api/v1/shop/branding/logo or /banner — multipart upload (form key "file") of the
 // shop's public branding image.
 //

@@ -1,6 +1,14 @@
 import { eq } from 'drizzle-orm'
 import { shopUpdateSchema } from '#shared/schemas/shop'
 
+defineRouteMeta({
+	openAPI: {
+		tags: ['shop'],
+		summary: 'Update shop name and description',
+		description: 'The slug is immutable.',
+	},
+})
+
 export default defineEventHandler(async (event) => {
 	const user = await requireUser(event)
 	const body = await readValidatedBody(event, shopUpdateSchema.parse)

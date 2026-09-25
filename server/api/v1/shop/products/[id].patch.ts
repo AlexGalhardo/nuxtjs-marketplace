@@ -1,6 +1,14 @@
 import { eq } from 'drizzle-orm'
 import { productSchema } from '#shared/schemas/product'
 
+defineRouteMeta({
+	openAPI: {
+		tags: ['products'],
+		summary: 'Update a product',
+		description: 'The slug is immutable.',
+	},
+})
+
 // Slug is immutable after creation (like shops); this schema omits it.
 const updateSchema = productSchema.omit({ slug: true })
 

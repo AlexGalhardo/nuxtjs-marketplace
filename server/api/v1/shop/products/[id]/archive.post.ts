@@ -1,5 +1,12 @@
 import { eq } from 'drizzle-orm'
 
+defineRouteMeta({
+	openAPI: {
+		tags: ['products'],
+		summary: 'Unpublish (archive) a product',
+	},
+})
+
 export default defineEventHandler(async (event) => {
 	const id = getRouterParam(event, 'id')
 	if (!id) {
