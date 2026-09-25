@@ -4,11 +4,12 @@ import type { ProductType } from '../../shared/types/db'
 import { FAKE_STRIPE_PORT, type RecordedRequest } from '../integration/helpers/fake-stripe'
 import { markShopChargesEnabled } from '../integration/helpers/shop'
 
-test('buyer adds to cart, checks out on Stripe and lands on a paid order', async ({
+test('buyer checks out, reviews the order; seller ships it', async ({
 	page,
 	goto,
 	request,
 	playwright,
+	browser,
 }) => {
 	const run = `${Date.now()}${Math.random().toString(36).slice(2, 8)}`
 
@@ -132,4 +133,36 @@ test('buyer adds to cart, checks out on Stripe and lands on a paid order', async
 	await goto(`/checkout/success?order=${orderId}`, { waitUntil: 'hydration' })
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText('paid. nice find.')
 	await expect(page.getByRole('link', { name: 'cart', exact: true })).toBeVisible()
+
+	// Phase 9: the order page, and a verified-buyer review.
+	await page.getByRole('link', { name: 'get your downloads' }).click()
+	await expect(page).toHaveURL(`/orders/${orderId}`)
+	await expect(page.getByText('seller is preparing it')).toBeVisible()
+	const review = page.locator('form', { has: page.getByRole('group', { name: /^rate tee/ }) })
+	await review.locator('label', { hasText: '5 stars' }).click()
+	await expect(review.getByRole('radio', { name: '5 stars' })).toBeChecked()
+	await review.getByRole('button', { name: 'post review' }).click()
+	await expect(page.getByText(/you rated it\s*5\/5/)).toBeVisible()
+	await goto(`/products/${slugs[0]}`, { waitUntil: 'hydration' })
+	await expect(page.getByRole('heading', { name: 'what buyers said' })).toBeVisible()
+	await expect(page.getByText('1 review')).toBeVisible()
+
+	// The seller marks the physical part shipped; the buyer sees the tracking code.
+	const sellerContext = await browser.newContext({ baseURL: test.info().project.use.baseURL })
+	await sellerContext.request.post('/api/auth/login', {
+		data: { email: `seller-${run}@example.com`, password: 'Ab1!Ab1!' },
+	})
+	const sellerPage = await sellerContext.newPage()
+	await sellerPage.goto('/my-shop/orders')
+	await expect(sellerPage.getByText('1 to ship')).toBeVisible()
+	await sellerPage.getByRole('button', { name: 'mark shipped' }).click()
+	const dialog = sellerPage.getByRole('dialog')
+	await dialog.getByRole('textbox', { name: 'carrier' }).fill('usps')
+	await dialog.getByRole('textbox', { name: 'tracking code' }).fill('9400E2E')
+	await dialog.getByRole('button', { name: 'save' }).click()
+	await expect(sellerPage.getByRole('button', { name: 'mark delivered' })).toBeVisible()
+	await sellerContext.close()
+
+	await goto(`/orders/${orderId}`, { waitUntil: 'hydration' })
+	await expect(page.getByText('9400E2E')).toBeVisible()
 })

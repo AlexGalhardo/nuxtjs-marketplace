@@ -1,19 +1,12 @@
 <script setup lang="ts">
-import type { OrderStatus, ProductKind } from '#shared/types/enums'
-
-interface OrderSummary {
-	id: string
-	status: OrderStatus
-	totalCents: number
-	items: { title: string; quantity: number; kind: ProductKind; shopName: string }[]
-}
+import type { BuyerOrder } from '#shared/types/order'
 
 definePageMeta({ middleware: 'auth' })
 useSeoMeta({ title: 'thanks!' })
 
 const route = useRoute()
 const orderId = computed(() => (typeof route.query.order === 'string' ? route.query.order : ''))
-const { data: order, refresh } = await useFetch<OrderSummary>(() => `/api/orders/${orderId.value}`)
+const { data: order, refresh } = await useFetch<BuyerOrder>(() => `/api/orders/${orderId.value}`)
 
 // Stripe redirects here before (or right after) its webhook lands: poll briefly while pending.
 const { refresh: refreshCart } = useCart()
@@ -30,8 +23,14 @@ async function poll() {
 }
 onBeforeUnmount(() => clearInterval(timer))
 
-const hasDigital = computed(() => order.value?.items.some((item) => item.kind === 'digital'))
-const hasPhysical = computed(() => order.value?.items.some((item) => item.kind === 'physical'))
+const items = computed(
+	() =>
+		order.value?.sellers.flatMap((seller) =>
+			seller.items.map((item) => ({ ...item, shopName: seller.shopName })),
+		) ?? [],
+)
+const hasDigital = computed(() => items.value.some((item) => item.kind === 'digital'))
+const hasPhysical = computed(() => items.value.some((item) => item.kind === 'physical'))
 </script>
 
 <template>
@@ -77,15 +76,17 @@ const hasPhysical = computed(() => order.value?.items.some((item) => item.kind =
 
 			<ul class="mt-8 divide-y divide-default border-y border-default">
 				<li
-					v-for="item in order.items"
-					:key="item.title"
-					class="flex justify-between gap-4 py-3"
+					v-for="item in items"
+					:key="item.id"
+					class="flex flex-wrap justify-between gap-x-4 gap-y-1 py-3"
 				>
 					<span class="font-medium text-highlighted"
 						>{{ item.quantity }}
 						× {{ item.title }}</span
 					>
-					<span class="shrink-0 text-sm text-muted">{{ item.shopName }}</span>
+					<span class="min-w-0 text-sm wrap-break-word text-muted">{{
+						item.shopName
+					}}</span>
 				</li>
 			</ul>
 
@@ -93,9 +94,10 @@ const hasPhysical = computed(() => order.value?.items.some((item) => item.kind =
 				<UButton v-if="order.status !== 'paid' && order.status !== 'pending'" to="/cart"
 					>back to cart</UButton
 				>
-				<UButton :variant="order.status === 'paid' ? 'solid' : 'outline'" to="/marketplace"
-					>keep browsing</UButton
-				>
+				<UButton v-if="order.status === 'paid'" :to="`/orders/${order.id}`">
+					{{ hasDigital ? 'get your downloads' : 'track your order' }}
+				</UButton>
+				<UButton variant="outline" to="/marketplace">keep browsing</UButton>
 			</div>
 		</template>
 	</div>

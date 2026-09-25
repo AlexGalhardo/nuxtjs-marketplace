@@ -6,6 +6,10 @@ export type TransactionType =
 	| 'transfer.created'
 	| 'transfer.failed'
 	| 'dispute.created'
+	| 'refund.created'
+	| 'refund.failed'
+	| 'transfer.reversed'
+	| 'transfer.reversal_failed'
 
 export interface TransactionEntry {
 	type: TransactionType

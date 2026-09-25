@@ -17,6 +17,8 @@ export default defineConfig({
 					name: 'nuxt',
 					include: ['tests/nuxt/**/*.test.ts'],
 					environment: 'nuxt',
+					// setupNuxt() boots a whole Nuxt app in beforeAll: ~15 s cold on Windows, past the 10 s default.
+					hookTimeout: 120_000,
 				},
 			}),
 			{

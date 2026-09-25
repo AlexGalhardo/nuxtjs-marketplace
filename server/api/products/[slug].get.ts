@@ -1,4 +1,4 @@
-import { and, asc, eq } from 'drizzle-orm'
+import { and, asc, desc, eq } from 'drizzle-orm'
 
 // GET /api/products/:slug — public product page data. 404 for anything not publicly visible
 // (draft, archived, suspended, or its shop can't take payments) — never a 403 that leaks existence.
@@ -42,5 +42,28 @@ export default defineEventHandler(async (event) => {
 		.where(eq(schema.productImages.productId, product.id))
 		.orderBy(asc(schema.productImages.position))
 
-	return { ...product, images }
+	// Only the buyer's first name is public (no ids or emails).
+	// ponytail: latest 20 only; paginate when a product outgrows it.
+	const reviews = await db
+		.select({
+			id: schema.reviews.id,
+			rating: schema.reviews.rating,
+			comment: schema.reviews.comment,
+			buyerName: schema.users.name,
+			createdAt: schema.reviews.createdAt,
+		})
+		.from(schema.reviews)
+		.innerJoin(schema.users, eq(schema.reviews.buyerId, schema.users.id))
+		.where(eq(schema.reviews.productId, product.id))
+		.orderBy(desc(schema.reviews.createdAt))
+		.limit(20)
+
+	return {
+		...product,
+		images,
+		reviews: reviews.map(({ buyerName, ...review }) => ({
+			...review,
+			buyerName: buyerName.split(' ')[0] ?? '',
+		})),
+	}
 })

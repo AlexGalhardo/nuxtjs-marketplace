@@ -1,7 +1,7 @@
 # REST API
 
 - Base path: `/api/v1`. Shop management under `/api/v1/shop/**` (shop, products, images, files —
-  done, Phase 6; orders, fulfillment, refunds, reviews — planned, Phase 9).
+  done, Phase 6; orders, fulfillment, refunds — done, Phase 9).
 - Auth today (Phase 6): session cookie only, checked directly in each handler via `requireUser`/
   `requireShopOwner`/`requireProductOwner` (`server/utils/auth.ts`) — no `server/middleware/` yet.
   Bearer API tokens (`requireApiToken`, already implemented) get their own UI and are wired into
@@ -25,8 +25,8 @@ products of `active` shops with `chargesEnabled`. Anything else is a 404, never 
   to cents server-side), `sort` (`newest` default, `price-asc`, `price-desc`), `page`, `perPage`
   (≤48, default 24). Invalid query → 400. Returns `{ data: CatalogItem[], meta }`; `CatalogItem`
   (`shared/types/catalog.ts`) carries the first image as `coverPath`.
-- `GET /api/products/:slug` — product with `type`, public `shop` fields (never `ownerId`/Stripe ids)
-  and ordered `images`.
+- `GET /api/products/:slug` — product with `type`, public `shop` fields (never `ownerId`/Stripe ids),
+  ordered `images` and the latest 20 `reviews` (`rating`, `comment`, buyer first name only, `createdAt`).
 - `GET /api/shops/:slug` — public shop header; its products come from `GET /api/products?shop=:slug`.
 - `/sitemap.xml` lists the same public products and active shops.
 
@@ -40,5 +40,27 @@ products of `active` shops with `chargesEnabled`. Anything else is a 404, never 
 - `POST /api/checkout` `{ addressId? }` → `{ orderId, url }` (redirect the browser to `url`, Stripe Checkout).
   400 empty cart / missing address, 404 address not yours, 409 cart changed, 501 Stripe not configured,
   502 Stripe unavailable. Rate-limited 20/15 min.
-- `GET /api/orders/:id` → the buyer’s own order (status, totals, items). Phase 9 adds the list and details.
+- `GET /api/orders` → `BuyerOrderSummary[]` (`shared/types/order.ts`), the buyer’s orders newest first, without
+  `expired`/`canceled` checkouts.
+- `GET /api/orders/:id` → `BuyerOrder`: totals, address snapshot and `sellers[]` (status, carrier, tracking, items).
+  Each item carries its `downloads` (a freshly signed `url`, or `null` once used up/expired/refunded), the buyer’s
+  `review` and `canReview`. Someone else’s order → 404.
+- `GET /downloads/:grantId?expires&signature` (server route, no session needed) — streams the private file (D8).
+  The HMAC link (`server/utils/downloads.ts`) lives 10 minutes; the grant itself allows 5 downloads in 30 days.
+  Bad/expired signature → 403, grant used up/expired/refunded → 410. Counting is one conditional `UPDATE`.
+- `POST /api/reviews` `{ orderItemId, rating 1–5, comment? }` → 201. Only for an item of your own paid, unrefunded
+  order (404/409 otherwise), one per product (409). Recomputes `products.rating_avg`/`rating_count` in the same
+  transaction.
 - `POST /api/stripe/webhook` — Stripe only (signature required); see docs/payments-stripe.md.
+
+## Seller orders (Phase 9, session cookie)
+
+All return 404 for a seller order that isn’t your shop’s (`requireOwnSellerOrder`, `server/utils/orders.ts`).
+
+- `GET /api/v1/shop/orders` → `ShopOrder[]`: paid-or-later seller orders, newest first, with items, buyer name,
+  payout and the shipping address (only when something physical is in it).
+- `POST /api/v1/shop/orders/:id/ship` `{ carrier, trackingCode }` — `paid|shipped` → `shipped` (again to fix
+  tracking). 400 digital-only or invalid body, 409 wrong status. Emails the buyer on the first ship.
+- `POST /api/v1/shop/orders/:id/deliver` — `shipped` → `delivered`, else 409.
+- `POST /api/v1/shop/orders/:id/refund` — full refund of this seller’s part (docs/payments-stripe.md step 5).
+  409 unless `paid|shipped|delivered`, 502 if Stripe refuses (nothing changes).

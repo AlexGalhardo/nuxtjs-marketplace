@@ -3,6 +3,7 @@ import { createServer, type Server } from 'node:http'
 // Just enough of the Stripe REST API for the checkout → webhook → transfer flow, so integration
 // tests run without network or real keys (the server gets NUXT_STRIPE_API_BASE pointing here).
 // Test files read what the app sent via GET /__requests. Destination `acct_fail` fails transfers.
+// A refund for a payment intent containing `refund_fail` fails.
 export const FAKE_STRIPE_PORT = 12_111
 
 export interface RecordedRequest {
@@ -59,6 +60,31 @@ export function startFakeStripe(): Server {
 				return send(200, {
 					id: `tr_test_fake_${sequence}`,
 					object: 'transfer',
+					amount: Number(body.amount),
+				})
+			}
+			if (req.method === 'POST' && path === '/v1/refunds') {
+				if (body.payment_intent?.includes('refund_fail')) {
+					return send(400, {
+						error: {
+							type: 'invalid_request_error',
+							message: 'Charge already refunded',
+						},
+					})
+				}
+				return send(200, {
+					id: `re_test_fake_${sequence}`,
+					object: 'refund',
+					amount: Number(body.amount),
+					status: 'succeeded',
+				})
+			}
+			const reversal = path.match(/^\/v1\/transfers\/([^/]+)\/reversals$/)
+			if (req.method === 'POST' && reversal) {
+				return send(200, {
+					id: `trr_test_fake_${sequence}`,
+					object: 'transfer_reversal',
+					transfer: reversal[1],
 					amount: Number(body.amount),
 				})
 			}

@@ -1,5 +1,8 @@
 import { and, eq, inArray, isNotNull, sql } from 'drizzle-orm'
+import type { H3Event } from 'h3'
 import type Stripe from 'stripe'
+import type { SellerOrder } from '#shared/types/db'
+import type { SellerOrderStatus } from '#shared/types/enums'
 
 // D8: digital purchases get this many downloads within this window (per file).
 export const downloadLimits = { maxDownloads: 5, ttlDays: 30 }
@@ -267,4 +270,178 @@ export async function recordDispute(dispute: Stripe.Dispute): Promise<void> {
 		status: dispute.status,
 		payload: { reason: dispute.reason, charge: dispute.charge },
 	})
+}
+
+// A seller order that was paid and not refunded: it can still be shipped, reviewed or refunded.
+const liveStatuses: SellerOrderStatus[] = ['paid', 'shipped', 'delivered']
+export function isReviewable(status: SellerOrderStatus): boolean {
+	return liveStatuses.includes(status)
+}
+
+// A01: a seller order of the session user's own shop, else 404 (never confirm other shops' orders).
+export async function requireOwnSellerOrder(event: H3Event): Promise<SellerOrder> {
+	const user = await requireUser(event)
+	const id = getRouterParam(event, 'id') ?? ''
+	const [row] = await db
+		.select({ sellerOrder: schema.sellerOrders })
+		.from(schema.sellerOrders)
+		.innerJoin(schema.shops, eq(schema.sellerOrders.shopId, schema.shops.id))
+		.where(and(eq(schema.sellerOrders.id, id), eq(schema.shops.ownerId, user.id)))
+	if (!row) {
+		throw createError({ statusCode: 404, statusMessage: 'Order not found' })
+	}
+	return row.sellerOrder
+}
+
+export async function notifyBuyer(orderId: string, subject: string, text: string): Promise<void> {
+	const [buyer] = await db
+		.select({ email: schema.users.email, name: schema.users.name })
+		.from(schema.orders)
+		.innerJoin(schema.users, eq(schema.orders.buyerId, schema.users.id))
+		.where(eq(schema.orders.id, orderId))
+	if (!buyer) return
+	const siteUrl = useRuntimeConfig().public.siteUrl.replace(/\/$/, '')
+	await sendMail({
+		to: buyer.email,
+		subject,
+		text: `hi ${buyer.name},\n\n${text}\n\nyour order: ${siteUrl}/orders/${orderId}\n`,
+	}).catch((error: unknown) => console.error('[orders] email failed', error))
+}
+
+// PLAN.md §3.5 step 3 (D15): full refund of one seller's part of an order. The buyer gets back what
+// they paid that seller (items + shipping); the platform refunds its fee too and reverses the
+// seller's transfer. Stripe idempotency keys make a double click (or a retry after a crash) safe,
+// and the conditional status update means only one request logs and revokes.
+// ponytail: stock is not restocked on refund; the seller re-edits stock if the item came back.
+export async function refundSellerOrder(sellerOrder: SellerOrder): Promise<void> {
+	if (!liveStatuses.includes(sellerOrder.status)) {
+		throw createError({ statusCode: 409, statusMessage: 'Only paid orders can be refunded' })
+	}
+	const [order] = await db
+		.select({
+			id: schema.orders.id,
+			buyerId: schema.orders.buyerId,
+			paymentIntentId: schema.orders.stripePaymentIntentId,
+		})
+		.from(schema.orders)
+		.where(eq(schema.orders.id, sellerOrder.orderId))
+	if (!order?.paymentIntentId) {
+		throw createError({ statusCode: 409, statusMessage: 'This order has no payment to refund' })
+	}
+
+	const stripe = getStripeClient()
+	const amountCents = sellerOrder.subtotalCents + sellerOrder.shippingCents
+	const base = {
+		orderId: order.id,
+		sellerOrderId: sellerOrder.id,
+		shopId: sellerOrder.shopId,
+		userId: order.buyerId,
+	}
+	let refund: Stripe.Refund
+	try {
+		refund = await stripe.refunds.create(
+			{
+				payment_intent: order.paymentIntentId,
+				amount: amountCents,
+				metadata: { orderId: order.id, sellerOrderId: sellerOrder.id },
+			},
+			{ idempotencyKey: `refund-${sellerOrder.id}` },
+		)
+	} catch (error) {
+		await logTransaction({
+			...base,
+			type: 'refund.failed',
+			amountCents,
+			status: 'failed',
+			payload: { message: error instanceof Error ? error.message : String(error) },
+		})
+		throw createError({
+			statusCode: 502,
+			statusMessage: 'Stripe could not process the refund, try again',
+		})
+	}
+
+	const refunded = await db.transaction(async (tx) => {
+		const [updated] = await tx
+			.update(schema.sellerOrders)
+			.set({ status: 'refunded', updatedAt: new Date() })
+			.where(
+				and(
+					eq(schema.sellerOrders.id, sellerOrder.id),
+					inArray(schema.sellerOrders.status, liveStatuses),
+				),
+			)
+			.returning()
+		if (!updated) return false
+
+		// D8: refunded downloads stop working immediately.
+		await tx
+			.update(schema.downloadGrants)
+			.set({ expiresAt: new Date() })
+			.where(
+				inArray(
+					schema.downloadGrants.orderItemId,
+					tx
+						.select({ id: schema.orderItems.id })
+						.from(schema.orderItems)
+						.where(eq(schema.orderItems.sellerOrderId, sellerOrder.id)),
+				),
+			)
+		const siblings = await tx
+			.select({ status: schema.sellerOrders.status })
+			.from(schema.sellerOrders)
+			.where(eq(schema.sellerOrders.orderId, order.id))
+		const fully = siblings.every(
+			(row) => row.status === 'refunded' || row.status === 'canceled',
+		)
+		await tx
+			.update(schema.orders)
+			.set({ status: fully ? 'refunded' : 'partially_refunded', updatedAt: new Date() })
+			.where(eq(schema.orders.id, order.id))
+		await logTransaction(
+			{
+				...base,
+				type: 'refund.created',
+				stripeObjectId: refund.id,
+				amountCents,
+				status: refund.status ?? 'succeeded',
+			},
+			tx,
+		)
+		return true
+	})
+	if (!refunded) return
+
+	if (sellerOrder.stripeTransferId && sellerOrder.payoutCents > 0) {
+		const reversal = { ...base, amountCents: sellerOrder.payoutCents }
+		try {
+			const result = await stripe.transfers.createReversal(
+				sellerOrder.stripeTransferId,
+				{ amount: sellerOrder.payoutCents, metadata: { sellerOrderId: sellerOrder.id } },
+				{ idempotencyKey: `reversal-${sellerOrder.id}` },
+			)
+			await logTransaction({
+				...reversal,
+				type: 'transfer.reversed',
+				stripeObjectId: result.id,
+				status: 'succeeded',
+			})
+		} catch (error) {
+			// The buyer is already refunded; the platform carries the loss until this is settled
+			// by hand (D1: platform bears refund liability first).
+			await logTransaction({
+				...reversal,
+				type: 'transfer.reversal_failed',
+				stripeObjectId: sellerOrder.stripeTransferId,
+				status: 'failed',
+				payload: { message: error instanceof Error ? error.message : String(error) },
+			})
+		}
+	}
+
+	await notifyBuyer(
+		order.id,
+		'you got a refund on resell.sh',
+		`a seller refunded ${formatMoney(amountCents)} of your order. it goes back to your original payment method, usually within 5–10 business days.`,
+	)
 }

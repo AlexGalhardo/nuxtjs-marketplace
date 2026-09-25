@@ -30,8 +30,21 @@ Model: **Stripe Connect Express** + **separate charges and transfers**, USD, int
      (not retried automatically yet — Phase 11 admin tooling). Buyer and seller emails last; a mail failure
      never fails the webhook.
    - `checkout.session.expired` / `async_payment_failed` → order `expired`, seller orders `canceled`, logged.
-   - `charge.dispute.created` → `dispute.created` logged against the order. `charge.refunded` lands in Phase 9.
-5. Refund by seller: `refunds.create` on the charge + `transfers.createReversal` for that seller's transfer.
+   - `charge.dispute.created` → `dispute.created` logged against the order.
+5. Refund by seller (Phase 9, done): `POST /api/v1/shop/orders/:id/refund` → `refundSellerOrder()`
+   (`server/utils/orders.ts`). Full refunds only (D15), per seller order:
+   - `refunds.create` on the payment intent for `subtotal + shipping` of that seller order (what the buyer paid
+     that seller; the platform gives up its fee), idempotency key `refund-<sellerOrderId>`. Stripe failure → 502,
+     `refund.failed` logged, nothing else changes.
+   - In one DB transaction, conditional on the seller order still being `paid|shipped|delivered` (so a double
+     click logs once): seller order `refunded`, its download grants expire now, order `refunded` (every seller
+     order refunded/canceled) or `partially_refunded`, `refund.created` logged.
+   - `transfers.createReversal` of the seller's transfer for the full payout (idempotency key
+     `reversal-<sellerOrderId>`) → `transfer.reversed`, or `transfer.reversal_failed` (buyer already refunded;
+     the platform carries it until settled by hand, D1). Skipped when the original transfer had failed.
+   - Buyer email. Stock is not restocked.
+   Refunds started in the Stripe Dashboard are not synced back (`charge.refunded` is not handled); refund from
+   `/my-shop/orders` so the order, downloads and logs stay consistent.
 
 ## Platform fee
 

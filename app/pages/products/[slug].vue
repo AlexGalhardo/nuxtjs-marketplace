@@ -16,6 +16,13 @@ interface ProductPage {
 	type: { slug: string; name: string }
 	shop: { slug: string; name: string; logoPath: string | null }
 	images: { id: string; blobPath: string; alt: string | null }[]
+	reviews: {
+		id: string
+		rating: number
+		comment: string | null
+		buyerName: string
+		createdAt: string
+	}[]
 }
 
 const route = useRoute()
@@ -94,7 +101,7 @@ useSeoMeta({
 			:ui="{ link: 'text-base font-medium', list: 'min-w-0', item: 'min-w-0', linkLabel: 'truncate' }"
 		/>
 
-		<div class="grid gap-8 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-12">
+		<div class="grid grid-cols-1 gap-8 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-12">
 			<section aria-label="photos" class="flex flex-col-reverse gap-3 sm:flex-row">
 				<ul
 					v-if="item.images.length > 1"
@@ -141,7 +148,7 @@ useSeoMeta({
 				<div>
 					<h1
 						id="product-title"
-						class="text-[2rem] leading-10 font-semibold text-balance text-highlighted"
+						class="text-[2rem] leading-10 font-semibold text-balance wrap-break-word text-highlighted"
 					>
 						{{ item.title }}
 					</h1>
@@ -198,9 +205,9 @@ useSeoMeta({
 				>
 					<UIcon name="i-lucide-star" class="size-5 text-primary" />
 					<span class="tabular-nums">{{ (item.ratingAvg ?? 0).toFixed(1) }}</span>
-					<span class="font-medium text-muted">
+					<a href="#reviews" class="font-medium text-muted hover:text-primary">
 						· {{ item.ratingCount }} {{ item.ratingCount === 1 ? 'review' : 'reviews' }}
-					</span>
+					</a>
 				</p>
 				<p v-else class="font-medium text-muted">no reviews yet.</p>
 
@@ -240,6 +247,36 @@ useSeoMeta({
 					<p class="mt-2 max-w-prose whitespace-pre-line text-toned">
 						{{ item.description }}
 					</p>
+				</div>
+
+				<div v-if="item.reviews.length" id="reviews">
+					<h2 class="text-xl font-semibold text-highlighted">what buyers said</h2>
+					<ul class="mt-2 divide-y divide-default">
+						<li v-for="review in item.reviews" :key="review.id" class="py-3">
+							<p class="flex items-center gap-2 text-sm">
+								<span
+									class="flex gap-0.5"
+									role="img"
+									:aria-label="`${review.rating} out of 5 stars`"
+								>
+									<UIcon
+										v-for="star in 5"
+										:key="star"
+										name="i-lucide-star"
+										class="size-4"
+										:class="star <= review.rating ? 'text-primary' : 'text-dimmed'"
+									/>
+								</span>
+								<span class="font-semibold text-highlighted">{{
+									review.buyerName
+								}}</span>
+								<span class="text-muted">· {{ formatDate(review.createdAt) }}</span>
+							</p>
+							<p v-if="review.comment" class="mt-1 max-w-prose text-toned">
+								{{ review.comment }}
+							</p>
+						</li>
+					</ul>
 				</div>
 			</section>
 		</div>

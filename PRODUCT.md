@@ -26,8 +26,8 @@ digital goods side by side, with a public REST API for sellers.
 
 ## Operating Context
 
-Buyers: home page → search/filter (`/marketplace`) → product page → cart/checkout (Phase 8).
-Sellers: `/my-shop` dashboard (products, payouts, settings, API tokens/docs). Admins moderate at `/admin` (Phase 11).
+Buyers: home page → search/filter (`/marketplace`) → product page → cart/checkout → `/orders` (tracking, downloads, reviews).
+Sellers: `/my-shop` dashboard (products, orders to ship or refund, payouts, settings, API tokens/docs). Admins moderate at `/admin` (Phase 11).
 
 ## Capabilities and Constraints
 
@@ -35,7 +35,7 @@ Sellers: `/my-shop` dashboard (products, payouts, settings, API tokens/docs). Ad
 - Publishing requires completed Stripe Connect onboarding (D12). Physical items: flat shipping + stock; digital:
   private files delivered via expiring download links (D8).
 - Stack fixed: Nuxt 4, Nuxt UI (re-themed, primitives only) + Tailwind v4, Bun. English-only UI copy.
-- Not yet built: cart/checkout (Phase 8), orders/reviews (Phase 9), public API UI (Phase 10), admin (Phase 11).
+- Not yet built: public API UI (Phase 10), admin (Phase 11).
 
 ## Brand Commitments
 
