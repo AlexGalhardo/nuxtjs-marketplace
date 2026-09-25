@@ -5,15 +5,7 @@ definePageMeta({ layout: 'dashboard', middleware: 'admin' })
 useSeoMeta({ title: 'shops — admin' })
 
 const toast = useToast()
-const route = useRoute()
-const filters = reactive({
-	q: '',
-	status: typeof route.query.status === 'string' ? route.query.status : 'all',
-	page: 1,
-})
-watch([() => filters.q, () => filters.status], () => {
-	filters.page = 1
-})
+const filters = useUrlFilters({ q: '', status: 'all', page: 1 })
 const query = computed(() => ({
 	q: filters.q || undefined,
 	status: filters.status === 'all' ? undefined : filters.status,
@@ -76,7 +68,7 @@ async function confirm(reason: string) {
 			<UInput
 				v-model.lazy="filters.q"
 				icon="i-lucide-search"
-				placeholder="name, slug or owner email"
+				placeholder="name, slug or owner email…"
 				aria-label="search shops"
 				class="w-full sm:w-72"
 			/>

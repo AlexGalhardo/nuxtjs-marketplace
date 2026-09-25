@@ -4,7 +4,7 @@ import type { TableColumn } from '@nuxt/ui'
 definePageMeta({ layout: 'dashboard', middleware: 'admin' })
 useSeoMeta({ title: 'transaction logs — admin' })
 
-const filters = reactive({
+const filters = useUrlFilters({
 	type: 'all',
 	status: '',
 	orderId: '',
@@ -13,12 +13,6 @@ const filters = reactive({
 	to: '',
 	page: 1,
 })
-watch(
-	() => [filters.type, filters.status, filters.orderId, filters.shopId, filters.from, filters.to],
-	() => {
-		filters.page = 1
-	},
-)
 // Only set filters go in the query string, so the export link mirrors the table exactly.
 const filterQuery = computed(() => {
 	const { page: _page, type, ...rest } = filters
@@ -82,7 +76,7 @@ function timestamp(iso: string) {
 				<USelect v-model="filters.type" :items="typeItems" class="w-48" />
 			</UFormField>
 			<UFormField label="status" size="sm">
-				<UInput v-model.lazy="filters.status" placeholder="succeeded" class="w-32" />
+				<UInput v-model.lazy="filters.status" placeholder="succeeded…" class="w-32" />
 			</UFormField>
 			<UFormField label="order id" size="sm">
 				<UInput v-model.lazy="filters.orderId" class="w-40" :ui="{ base: 'font-mono' }" />

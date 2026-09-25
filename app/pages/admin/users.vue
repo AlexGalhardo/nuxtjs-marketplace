@@ -4,10 +4,7 @@ import type { TableColumn } from '@nuxt/ui'
 definePageMeta({ layout: 'dashboard', middleware: 'admin' })
 useSeoMeta({ title: 'users — admin' })
 
-const filters = reactive({ q: '', role: 'all', page: 1 })
-watch([() => filters.q, () => filters.role], () => {
-	filters.page = 1
-})
+const filters = useUrlFilters({ q: '', role: 'all', page: 1 })
 const query = computed(() => ({
 	q: filters.q || undefined,
 	role: filters.role === 'all' ? undefined : filters.role,
@@ -35,7 +32,7 @@ const columns: TableColumn<Row>[] = [
 			<UInput
 				v-model.lazy="filters.q"
 				icon="i-lucide-search"
-				placeholder="name or email"
+				placeholder="name or email…"
 				aria-label="search users"
 				class="w-full sm:w-72"
 			/>

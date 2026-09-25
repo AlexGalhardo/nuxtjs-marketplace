@@ -39,6 +39,9 @@ test('admin reviews the marketplace, suspends and reinstates a shop, and sees it
 	await goto('/admin/shops', { waitUntil: 'hydration' })
 	await page.getByRole('textbox', { name: 'search shops' }).fill(`shady-${run}`)
 	await page.getByRole('textbox', { name: 'search shops' }).press('Enter')
+	// Filters live in the URL, so the view is shareable and survives a reload.
+	await expect(page).toHaveURL(new RegExp(`/admin/shops\\?q=shady-${run}$`))
+	await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
 	const row = page.getByRole('row', { name: new RegExp(`Shady Shop ${run}`, 'i') })
 	await expect(row).toBeVisible()
 	await row.getByRole('button', { name: 'suspend' }).click()

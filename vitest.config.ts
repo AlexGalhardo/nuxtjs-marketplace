@@ -36,10 +36,21 @@ export default defineConfig({
 				},
 			},
 		],
+		// `bun run test:coverage` (unit project) enforces ≥ 80% on shared/ + server/utils/ (PLAN.md
+		// Phase 12). The excluded modules are DB/Stripe orchestration that only runs inside the built
+		// server, so the integration suite (a separate process v8 can't instrument) covers them.
 		coverage: {
 			provider: 'v8',
 			include: ['shared/**/*.ts', 'server/utils/**/*.ts'],
+			exclude: [
+				'shared/types/**',
+				'server/utils/auth.ts',
+				'server/utils/cart.ts',
+				'server/utils/catalog.ts',
+				'server/utils/orders.ts',
+			],
 			reporter: ['text', 'html', 'lcov'],
+			thresholds: { statements: 80, branches: 80, functions: 80, lines: 80 },
 		},
 	},
 })

@@ -219,7 +219,7 @@ async function refund() {
 					@submit="ship"
 				>
 					<UFormField label="carrier" name="carrier" required>
-						<UInput v-model="shipState.carrier" placeholder="usps" class="w-full" />
+						<UInput v-model="shipState.carrier" placeholder="usps…" class="w-full" />
 					</UFormField>
 					<UFormField label="tracking code" name="trackingCode" required>
 						<UInput

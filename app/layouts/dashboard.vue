@@ -27,6 +27,12 @@ const panelTitle = computed(() => (isAdmin.value ? 'Admin' : 'My shop'))
 </script>
 
 <template>
+	<a
+		href="#main"
+		class="sr-only z-50 rounded-full bg-primary px-4 py-2 font-bold text-inverted focus:not-sr-only focus:fixed focus:start-4 focus:top-4"
+	>
+		skip to content
+	</a>
 	<UDashboardGroup>
 		<UDashboardSidebar collapsible resizable>
 			<template #header="{ collapsed }">
@@ -65,9 +71,11 @@ const panelTitle = computed(() => (isAdmin.value ? 'Admin' : 'My shop'))
 
 		<UDashboardPanel>
 			<template #header>
-				<UDashboardNavbar :title="panelTitle">
+				<!-- No `title` prop: it renders an <h1>, and every page brings its own. -->
+				<UDashboardNavbar>
 					<template #leading>
 						<UDashboardSidebarCollapse />
+						<span class="font-semibold text-highlighted">{{ panelTitle }}</span>
 					</template>
 					<template #right>
 						<UColorModeButton />
@@ -76,7 +84,9 @@ const panelTitle = computed(() => (isAdmin.value ? 'Admin' : 'My shop'))
 			</template>
 
 			<template #body>
-				<slot />
+				<main id="main" class="contents">
+					<slot />
+				</main>
 			</template>
 		</UDashboardPanel>
 	</UDashboardGroup>

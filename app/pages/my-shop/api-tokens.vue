@@ -233,7 +233,7 @@ async function revoke() {
 						description="so you know where it’s used"
 						required
 					>
-						<UInput v-model="state.name" placeholder="inventory sync" class="w-full" />
+						<UInput v-model="state.name" placeholder="inventory sync…" class="w-full" />
 					</UFormField>
 
 					<UFormField label="scopes" name="scopes" required>

@@ -35,7 +35,7 @@ function onSubmit(event: FormSubmitEvent<unknown>) {
 				v-model="state.productTypeId"
 				:items="categoryItems"
 				value-key="value"
-				placeholder="Select a category"
+				placeholder="Select a category…"
 				class="w-full"
 			/>
 		</UFormField>
