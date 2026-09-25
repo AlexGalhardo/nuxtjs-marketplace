@@ -11,7 +11,7 @@ export function issueResetToken(userId: string): string {
     import { generateToken, hashToken } from './server/utils/token'
 
     const rawToken = generateToken()
-    const { db, schema } = await createSeedClient()
+    const { db, schema } = await createSeedClient({ prepare: false })
     await db.insert(schema.passwordResetTokens).values({
       userId: ${JSON.stringify(userId)},
       tokenHash: hashToken(rawToken),

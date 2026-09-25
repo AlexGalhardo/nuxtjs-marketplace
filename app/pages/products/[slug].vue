@@ -33,6 +33,35 @@ watch(slug, () => {
 const photo = computed(() => item.value.images[active.value] ?? null)
 
 const soldOut = computed(() => item.value.kind === 'physical' && item.value.stock === 0)
+
+const { cart, add } = useCart()
+const toast = useToast()
+const adding = ref(false)
+const inCart = computed(() =>
+	cart.value?.groups.some((group) =>
+		group.lines.some((line) => line.productId === item.value.id),
+	),
+)
+async function addToCart() {
+	adding.value = true
+	try {
+		if (await add(item.value.id)) {
+			toast.add({
+				title: 'added to your cart',
+				color: 'success',
+				icon: 'i-lucide-shopping-bag',
+			})
+		}
+	} catch (error) {
+		toast.add({
+			title: 'could not add it',
+			description: apiErrorMessage(error),
+			color: 'error',
+		})
+	} finally {
+		adding.value = false
+	}
+}
 const shippingLabel = computed(() => {
 	if (item.value.kind === 'digital') return 'instant download after checkout'
 	return item.value.shippingCents === 0
@@ -124,14 +153,23 @@ useSeoMeta({
 
 				<div class="flex flex-col gap-2">
 					<UButton
+						v-if="inCart"
 						size="xl"
 						block
-						disabled
-						:label="soldOut ? 'sold out' : 'add to cart'"
+						variant="outline"
+						to="/cart"
+						trailing-icon="i-lucide-arrow-right"
+						label="in your cart · check out"
 					/>
-					<p v-if="!soldOut" class="text-center text-sm text-muted">
-						the cart opens soon. hang tight.
-					</p>
+					<UButton
+						v-else
+						size="xl"
+						block
+						:disabled="soldOut"
+						:loading="adding"
+						:label="soldOut ? 'sold out' : 'add to cart'"
+						@click="addToCart"
+					/>
 				</div>
 
 				<ul class="flex flex-wrap gap-2 text-sm font-semibold">

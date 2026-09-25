@@ -8,7 +8,7 @@ export function markShopChargesEnabled(shopId: string): void {
     import { eq } from 'drizzle-orm'
     import { closeSeedClient, createSeedClient } from './server/db/client'
 
-    const { db, schema } = await createSeedClient()
+    const { db, schema } = await createSeedClient({ prepare: false })
     await db
       .update(schema.shops)
       .set({ chargesEnabled: true, payoutsEnabled: true })

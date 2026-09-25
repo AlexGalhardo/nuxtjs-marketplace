@@ -1,5 +1,8 @@
 <script setup lang="ts">
 const { loggedIn, user, logout } = useAuth()
+const { count: cartCount, refresh: refreshCart } = useCart()
+// Not awaited: Nuxt still resolves it during SSR, so the badge ships in the first paint.
+useAsyncData('header-cart', () => refreshCart().then(() => true), { watch: [loggedIn] })
 const route = useRoute()
 const router = useRouter()
 
@@ -98,14 +101,37 @@ const userMenuItems = computed(() => [
 						color="neutral"
 						variant="ghost"
 						aria-label="help and contact"
+						class="hidden sm:inline-flex"
 					/>
 					<UColorModeButton />
+					<NuxtLink
+						to="/cart"
+						class="relative flex size-9 items-center justify-center rounded-full text-highlighted hover:bg-muted"
+						:aria-label="cartCount ? `cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}` : 'cart'"
+					>
+						<UIcon name="i-lucide-shopping-bag" class="size-5" />
+						<span
+							v-if="cartCount"
+							class="absolute -end-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-(--rs-signal) px-1 text-[0.7rem] leading-none font-bold text-(--rs-signal-ink) tabular-nums"
+							aria-hidden="true"
+							>{{
+								cartCount > 99 ? '99+' : cartCount
+							}}</span
+						>
+					</NuxtLink>
 					<UDropdownMenu v-if="loggedIn" :items="userMenuItems">
 						<UButton
 							:label="user?.name"
 							trailing-icon="i-lucide-chevron-down"
 							color="neutral"
 							variant="ghost"
+							icon="i-lucide-circle-user"
+							:aria-label="user?.name"
+							:ui="{
+								leadingIcon: 'sm:hidden',
+								label: 'hidden max-w-40 truncate sm:block',
+								trailingIcon: 'hidden sm:inline-flex',
+							}"
 						/>
 					</UDropdownMenu>
 					<NuxtLink

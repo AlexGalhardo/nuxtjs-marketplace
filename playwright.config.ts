@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url'
 import type { ConfigOptions } from '@nuxt/test-utils/playwright'
 import { defineConfig, devices } from '@playwright/test'
+import { FAKE_STRIPE_PORT } from './tests/integration/helpers/fake-stripe'
 
 const isCI = Boolean(process.env.CI)
 const port = Number(process.env.E2E_PORT ?? 3100)
@@ -12,6 +13,7 @@ const startServer = process.env.PLAYWRIGHT_SKIP_BUILD
 	: 'bun run build && bun run start'
 
 export default defineConfig<ConfigOptions>({
+	globalSetup: './tests/e2e/global-setup.ts',
 	fullyParallel: true,
 	forbidOnly: isCI,
 	retries: isCI ? 2 : 0,
@@ -40,6 +42,10 @@ export default defineConfig<ConfigOptions>({
 			// nuxt-auth-utils' dev-only auto-generated password fallback does not apply to this
 			// production build (docs/testing.md).
 			NUXT_SESSION_PASSWORD: 'x'.repeat(32),
+			// Fake Stripe (tests/e2e/global-setup.ts); the webhook secret is shared with checkout.spec.ts.
+			NUXT_STRIPE_SECRET_KEY: 'sk_test_fake',
+			NUXT_STRIPE_WEBHOOK_SECRET: 'whsec_test_integration',
+			NUXT_STRIPE_API_BASE: `http://127.0.0.1:${FAKE_STRIPE_PORT}`,
 		},
 	},
 })

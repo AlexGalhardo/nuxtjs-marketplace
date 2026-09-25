@@ -1,8 +1,9 @@
 import { eq } from 'drizzle-orm'
 import type Stripe from 'stripe'
 
-// Signature-verified, idempotent (stripe_events, A08). `account.updated` is the only event
-// handled so far (Phase 6, seller onboarding); checkout/payment events land in Phase 8.
+// Signature-verified (A08), idempotent via stripe_events. An event only counts as done once
+// processed_at is set: if a handler throws, Stripe retries it and it runs again (handlers are
+// themselves safe to repeat). docs/payments-stripe.md lists the events.
 export default defineEventHandler(async (event) => {
 	const config = useRuntimeConfig()
 	if (!config.stripe.webhookSecret) {
@@ -18,7 +19,9 @@ export default defineEventHandler(async (event) => {
 	const stripe = getStripeClient()
 	let stripeEvent: Stripe.Event
 	try {
-		stripeEvent = stripe.webhooks.constructEvent(
+		// Async on purpose: under Bun, stripe loads its worker build (SubtleCrypto), whose sync
+		// constructEvent always throws, so every event would be rejected as a bad signature.
+		stripeEvent = await stripe.webhooks.constructEventAsync(
 			rawBody,
 			signature,
 			config.stripe.webhookSecret,
@@ -28,28 +31,46 @@ export default defineEventHandler(async (event) => {
 	}
 
 	const [existing] = await db
-		.select()
+		.select({ processedAt: schema.stripeEvents.processedAt })
 		.from(schema.stripeEvents)
 		.where(eq(schema.stripeEvents.id, stripeEvent.id))
-	if (existing) {
+	if (existing?.processedAt) {
 		return { received: true }
 	}
-
-	await db.insert(schema.stripeEvents).values({
-		id: stripeEvent.id,
-		type: stripeEvent.type,
-		payload: stripeEvent as unknown as Record<string, unknown>,
-	})
-
-	if (stripeEvent.type === 'account.updated') {
-		const account = stripeEvent.data.object as Stripe.Account
+	if (!existing) {
 		await db
-			.update(schema.shops)
-			.set({
-				chargesEnabled: Boolean(account.charges_enabled),
-				payoutsEnabled: Boolean(account.payouts_enabled),
+			.insert(schema.stripeEvents)
+			.values({
+				id: stripeEvent.id,
+				type: stripeEvent.type,
+				payload: stripeEvent as unknown as Record<string, unknown>,
 			})
-			.where(eq(schema.shops.stripeAccountId, account.id))
+			.onConflictDoNothing()
+	}
+
+	switch (stripeEvent.type) {
+		case 'checkout.session.completed':
+		case 'checkout.session.async_payment_succeeded':
+			await fulfillCheckout(stripeEvent.data.object)
+			break
+		case 'checkout.session.expired':
+		case 'checkout.session.async_payment_failed':
+			await expireCheckout(stripeEvent.data.object)
+			break
+		case 'charge.dispute.created':
+			await recordDispute(stripeEvent.data.object)
+			break
+		case 'account.updated': {
+			const account = stripeEvent.data.object
+			await db
+				.update(schema.shops)
+				.set({
+					chargesEnabled: Boolean(account.charges_enabled),
+					payoutsEnabled: Boolean(account.payouts_enabled),
+				})
+				.where(eq(schema.shops.stripeAccountId, account.id))
+			break
+		}
 	}
 
 	await db

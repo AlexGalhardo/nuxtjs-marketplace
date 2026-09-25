@@ -50,6 +50,8 @@ export default defineNuxtConfig({
 		stripe: {
 			secretKey: '',
 			webhookSecret: '',
+			// Test-only: points the Stripe SDK at tests/integration/helpers/fake-stripe.ts. Empty = api.stripe.com.
+			apiBase: '',
 		},
 		resend: {
 			apiKey: '',
@@ -86,6 +88,10 @@ export default defineNuxtConfig({
 		},
 		// Tighter than auth: the contact form has no account behind it to slow down repeat abuse.
 		'/api/contact': { security: { rateLimiter: { tokensPerInterval: 5, interval: 900_000 } } },
+		// A06: each call creates an order and a Stripe session; 20/15min covers real retries.
+		'/api/checkout': {
+			security: { rateLimiter: { tokensPerInterval: 20, interval: 900_000 } },
+		},
 	},
 
 	compatibilityDate: '2026-06-30',

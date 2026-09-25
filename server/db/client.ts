@@ -3,6 +3,7 @@
 // internally: refresh `.nuxt/hub/db/config.json` via `nuxt prepare`, then build a Drizzle client
 // from it with the same public `@nuxthub/core/db` API the NuxtHub CLI itself uses.
 import { execSync } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createDrizzleClient } from '@nuxthub/core/db'
@@ -11,10 +12,14 @@ import * as sqliteSchema from './schema.sqlite'
 
 export type SeedDialect = 'sqlite' | 'postgresql'
 
-export async function createSeedClient() {
-	execSync('bunx nuxt prepare', { stdio: 'inherit', cwd: process.cwd() })
-
+// Test helpers pass `prepare: false` to reuse an existing config: parallel test workers running
+// `nuxt prepare` at the same time collide on `.nuxt` (and it costs seconds per call).
+export async function createSeedClient({ prepare = true }: { prepare?: boolean } = {}) {
 	const configPath = join(process.cwd(), '.nuxt/hub/db/config.json')
+	if (prepare || !existsSync(configPath)) {
+		execSync('bunx nuxt prepare', { stdio: 'inherit', cwd: process.cwd() })
+	}
+
 	const hubConfig = JSON.parse(await readFile(configPath, 'utf-8'))
 	const dialect = hubConfig.db.dialect as SeedDialect
 	const db = await createDrizzleClient(hubConfig.db, hubConfig.dir)

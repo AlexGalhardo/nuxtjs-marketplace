@@ -33,6 +33,15 @@ First time only: `bunx playwright install chromium`.
 - Name tests by behavior (`'user can switch to dark mode from the header'`), not implementation.
 - Prefer role/label selectors (`getByRole`, `getByLabel`); `data-testid` only as a last resort.
 - Playwright tests import `test`/`expect` from `@nuxt/test-utils/playwright` and use `goto(path, { waitUntil: 'hydration' })`.
-- Stripe: unit/integration mock the SDK and sign webhook payloads with `stripe.webhooks.generateTestHeaderString`;
-  e2e uses test-mode keys when available (skipped otherwise).
+- Stripe: integration and e2e never call api.stripe.com. `tests/integration/helpers/fake-stripe.ts` is a tiny
+  HTTP fake of the endpoints we use (checkout sessions, payment intents, transfers; `acct_fail` makes a
+  transfer fail), started by `tests/integration/global-setup.ts` and `tests/e2e/global-setup.ts`; the app
+  reaches it through `NUXT_STRIPE_API_BASE`. Tests read what the app sent from `GET /__requests` and sign
+  webhook payloads with `stripe.webhooks.generateTestHeaderStringAsync` (secret `whsec_test_integration`).
+  Use the **async** Stripe webhook APIs: under Bun, stripe loads its SubtleCrypto build, whose sync
+  `constructEvent`/`generateTestHeaderString` always throw. The e2e checkout test intercepts the redirect to
+  Stripe’s hosted page with `page.route` and posts the `checkout.session.completed` webhook itself.
+- DB assertions in integration tests go through `tests/integration/helpers/db.ts` (`dbQuery`), a subprocess
+  using `createSeedClient({ prepare: false })` — never `prepare: true` in tests: parallel `nuxt prepare` runs
+  collide on `.nuxt`.
 - Emails: without `NUXT_RESEND_API_KEY` they are captured/logged; tests assert on the captured payload.

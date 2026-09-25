@@ -12,6 +12,7 @@ export const runtimeEnvSchema = z.object({
 	stripe: z.object({
 		secretKey: optionalString,
 		webhookSecret: optionalString,
+		apiBase: z.union([z.literal(''), z.url()]).default(''),
 	}),
 	resend: z.object({ apiKey: optionalString }),
 	email: z.object({ from: optionalString }),

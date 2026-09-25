@@ -102,7 +102,7 @@ const pill =
 			</p>
 		</div>
 
-		<ul class="mt-5 flex gap-3" aria-label="kind">
+		<ul class="mt-5 flex flex-wrap gap-2 sm:gap-3" aria-label="kind">
 			<li v-for="kind in kinds" :key="kind.label">
 				<button
 					type="button"

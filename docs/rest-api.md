@@ -29,3 +29,16 @@ products of `active` shops with `chargesEnabled`. Anything else is a 404, never 
   and ordered `images`.
 - `GET /api/shops/:slug` — public shop header; its products come from `GET /api/products?shop=:slug`.
 - `/sitemap.xml` lists the same public products and active shops.
+
+## Cart, checkout and orders (Phase 8, session cookie, outside `/api/v1`)
+
+- `GET /api/cart` → `Cart` (`shared/types/cart.ts`): lines grouped by shop, re-priced live, each line’s `problem`
+  (`unavailable`/`out_of_stock`/`not_enough_stock`), totals, `hasPhysical`, `canCheckout`.
+- `POST /api/cart/items` `{ productId, quantity? }` · `PATCH /api/cart/items/:productId` `{ quantity }` ·
+  `DELETE /api/cart/items/:productId` — each returns the updated `Cart`. 404 hidden product, 400 own product or
+  digital quantity ≠ 1, 409 over stock.
+- `POST /api/checkout` `{ addressId? }` → `{ orderId, url }` (redirect the browser to `url`, Stripe Checkout).
+  400 empty cart / missing address, 404 address not yours, 409 cart changed, 501 Stripe not configured,
+  502 Stripe unavailable. Rate-limited 20/15 min.
+- `GET /api/orders/:id` → the buyer’s own order (status, totals, items). Phase 9 adds the list and details.
+- `POST /api/stripe/webhook` — Stripe only (signature required); see docs/payments-stripe.md.

@@ -18,6 +18,7 @@ Variables marked *(Phase N)* are not wired yet; add them to `runtimeConfig`, the
 | `NUXT_STRIPE_SECRET_KEY` | yes | Stripe secret key (test mode in dev) |
 | `NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | yes | Stripe publishable key |
 | `NUXT_STRIPE_WEBHOOK_SECRET` | yes | Webhook signing secret (`whsec_...`) |
+| `NUXT_STRIPE_API_BASE` | no, **tests only** | Points the Stripe SDK at another host (e.g. `http://127.0.0.1:12111`, the test fake in `tests/integration/helpers/fake-stripe.ts`). Leave empty everywhere else (= api.stripe.com) |
 | `NUXT_PLATFORM_FEE_BPS` | no | Platform fee in basis points (default `1000` = 10%) |
 | `NUXT_RESEND_API_KEY` | no | Without it, emails are logged instead of sent |
 | `NUXT_EMAIL_FROM` | no | Sender address |

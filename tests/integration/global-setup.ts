@@ -1,5 +1,7 @@
 import { type ChildProcess, spawn } from 'node:child_process'
+import type { Server } from 'node:http'
 import { createTestContext, exposeContextToEnv, setTestContext } from '@nuxt/test-utils/e2e'
+import { FAKE_STRIPE_PORT, startFakeStripe } from './helpers/fake-stripe'
 
 // Builds and boots the Nuxt server exactly once for the whole `integration` Vitest project,
 // instead of once per test file (each build took ~2-3 minutes; with 8 files that was ~20
@@ -27,9 +29,15 @@ const TEST_ENV = {
 	NUXT_STRICT_ENV: 'false',
 	NUXT_SESSION_PASSWORD: 'x'.repeat(32),
 	NUXT_AUTH_RATE_LIMIT_TOKENS: '1000',
+	// Checkout/webhook tests: Stripe SDK talks to ./helpers/fake-stripe.ts; payloads are signed with
+	// this secret by the tests (tests/integration/helpers/webhook.ts).
+	NUXT_STRIPE_SECRET_KEY: 'sk_test_fake',
+	NUXT_STRIPE_WEBHOOK_SECRET: 'whsec_test_integration',
+	NUXT_STRIPE_API_BASE: `http://127.0.0.1:${FAKE_STRIPE_PORT}`,
 }
 
 let server: ChildProcess | undefined
+let fakeStripe: Server | undefined
 
 async function runBuild(): Promise<void> {
 	await new Promise<void>((resolve, reject) => {
@@ -118,6 +126,7 @@ async function warmUpRoutes(): Promise<void> {
 }
 
 export async function setup() {
+	fakeStripe = startFakeStripe()
 	await runBuild()
 	server = startServer()
 	await waitForHealth(server, Date.now() + 60_000)
@@ -132,6 +141,7 @@ export async function setup() {
 }
 
 export async function teardown() {
+	fakeStripe?.close()
 	if (!server || server.exitCode !== null || server.signalCode !== null) return
 	await new Promise<void>((resolve) => {
 		server?.once('exit', () => resolve())

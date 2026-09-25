@@ -73,7 +73,7 @@ export async function searchCatalog(query: CatalogQuery) {
 	}
 }
 
-async function coverImages(productIds: string[]) {
+export async function coverImages(productIds: string[]) {
 	const covers = new Map<string, string>()
 	if (!productIds.length) return covers
 	const images = await db

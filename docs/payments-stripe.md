@@ -7,22 +7,37 @@ Model: **Stripe Connect Express** + **separate charges and transfers**, USD, int
    `POST /api/stripe/webhook` verifies the signature and, on `account.updated`, stores
    `charges_enabled` / `payouts_enabled` on the shop. `requireProductOwner`'s publish handler
    (`server/api/v1/shop/products/[id]/publish.post.ts`) 409s until `charges_enabled` is true (D12).
-2. Checkout (`POST /api/checkout`, planned — Phase 8): the server recomputes prices, stock and shipping; creates `orders`,
-   `seller_orders` and `order_items` as `pending`; creates a Checkout Session on the platform account with
-   `payment_intent_data.transfer_group = <orderId>` and `metadata.orderId`.
-3. Webhook (`POST /api/stripe/webhook`, raw body, signature verified with `STRIPE_WEBHOOK_SECRET`):
-   - Idempotency: insert the event id into `stripe_events`; skip if already processed (done, Phase 6).
-   - `account.updated` → update the shop's `charges_enabled`/`payouts_enabled` (done, Phase 6).
-   - `checkout.session.completed` → mark paid, decrement stock, create one Transfer per seller order
-     (`subtotal + shipping − platform fee`, `source_transaction = charge id`), grant downloads, send emails (planned — Phase 8).
-   - `checkout.session.expired` → order `expired` (planned — Phase 8).
-   - `charge.refunded`, `charge.dispute.created` → update + log (planned — Phase 8/9).
-4. Refund by seller: `refunds.create` on the charge + `transfers.createReversal` for that seller's transfer.
+2. Cart (Phase 8, done): `/api/cart` + `/api/cart/items[/:productId]` (login required, D2). `loadCart()`
+   (`server/utils/cart.ts`) re-prices every line from the DB on each read and flags lines that became
+   unavailable/out of stock; digital items are always quantity 1; buying from your own shop is a 400.
+3. Checkout (`POST /api/checkout`, Phase 8, done): re-validates the cart, requires one of the buyer’s own
+   addresses when anything is physical (snapshotted into `orders.shipping_address`), creates `orders` +
+   `seller_orders` + `order_items` as `pending` in one DB transaction, then a Checkout Session on the platform
+   account (`payment_intent_data.transfer_group = <orderId>`, `metadata.orderId`, idempotency key
+   `checkout-<orderId>`) and logs `checkout.created`. If Stripe fails, the order is marked `canceled` (A10).
+   Stock is **not reserved** at this point (see the `ponytail:` note in `server/api/checkout.post.ts`).
+4. Webhook (`POST /api/stripe/webhook`, raw body, signature verified with `STRIPE_WEBHOOK_SECRET` via the
+   **async** `constructEventAsync` — the sync one always throws under Bun):
+   - Idempotency: the event id goes into `stripe_events`; an event is skipped only once `processed_at` is set,
+     so a handler that throws gets retried by Stripe. Handlers are themselves safe to repeat.
+   - `account.updated` → shop `charges_enabled`/`payouts_enabled`.
+   - `checkout.session.completed` / `async_payment_succeeded` (only when `payment_status = paid`) →
+     `fulfillCheckout()` (`server/utils/orders.ts`): in one transaction, order + seller orders `paid` (conditional
+     on `pending`, so only the first delivery fulfils), stock decremented (clamped at 0), download grants
+     (5 downloads / 30 days per file, D8), bought items removed from the cart, `payment.succeeded` logged.
+     Then one Transfer per seller order (`payout = subtotal + shipping − fee`, `source_transaction` = the
+     charge, idempotency key `transfer-<sellerOrderId>`) logged as `transfer.created`, or `transfer.failed`
+     (not retried automatically yet — Phase 11 admin tooling). Buyer and seller emails last; a mail failure
+     never fails the webhook.
+   - `checkout.session.expired` / `async_payment_failed` → order `expired`, seller orders `canceled`, logged.
+   - `charge.dispute.created` → `dispute.created` logged against the order. `charge.refunded` lands in Phase 9.
+5. Refund by seller: `refunds.create` on the charge + `transfers.createReversal` for that seller's transfer.
 
 ## Platform fee
 
 `fee = round(itemsSubtotalCents * NUXT_PLATFORM_FEE_BPS / 10000)` per seller order; shipping is not charged a fee.
-The math lives in `shared/utils/pricing.ts` and is unit-tested.
+The math lives in `shared/utils/pricing.ts` and is unit-tested. Shipping is the seller’s flat rate **per
+product line** (not per unit, D11) and goes to the seller in full.
 
 ## Transaction logs (mandatory)
 

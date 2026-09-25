@@ -10,6 +10,15 @@ export function getStripeClient(): Stripe {
 	if (!config.stripe.secretKey) {
 		throw createError({ statusCode: 501, statusMessage: 'Stripe is not configured' })
 	}
-	client ??= new Stripe(config.stripe.secretKey)
+	if (!client) {
+		const base = config.stripe.apiBase ? new URL(config.stripe.apiBase) : undefined
+		client = new Stripe(config.stripe.secretKey, {
+			...(base && {
+				host: base.hostname,
+				port: Number(base.port),
+				protocol: base.protocol.replace(':', '') as 'http' | 'https',
+			}),
+		})
+	}
 	return client
 }
