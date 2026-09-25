@@ -35,7 +35,8 @@ test('buyer can search, filter and open a product and its shop', async ({ page, 
 				},
 			})
 		).json()
-		expect((await api.post(`/api/v1/shop/products/${product.id}/publish`)).ok()).toBe(true)
+		const published = await api.post(`/api/v1/shop/products/${product.id}/publish`)
+		expect(published.status(), await published.text()).toBe(200)
 	}
 
 	await goto('/', { waitUntil: 'hydration' })

@@ -34,7 +34,13 @@ export default defineNuxtConfig({
 	// sqlite defaults to a local file at .data/db/sqlite.db. Blob: fs locally, S3 when
 	// S3_ACCESS_KEY_ID/S3_SECRET_ACCESS_KEY/S3_BUCKET are set (docker-compose/prod).
 	hub: {
-		db: process.env.NUXT_HUB_DB_DIALECT === 'postgresql' ? 'postgresql' : 'sqlite',
+		// libsql pools several connections per process with a 0 ms busy timeout by default, so two
+		// concurrent writes (e.g. a checkout transaction + any other write) failed instantly with
+		// SQLITE_BUSY. Wait up to 5 s for the lock instead.
+		db:
+			process.env.NUXT_HUB_DB_DIALECT === 'postgresql'
+				? 'postgresql'
+				: { dialect: 'sqlite', connection: { timeout: 5000 } },
 		blob: true,
 	},
 
