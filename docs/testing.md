@@ -15,7 +15,7 @@
 | `bun run test:unit` | `unit` + `nuxt` projects (fast, also run on pre-push) |
 | `bun run test:integration` | Builds Nuxt once for the whole run (~2–3 min), via `tests/integration/global-setup.ts`; run on pre-push |
 | `bun run test:smoke` / `bun run test:e2e` | Playwright; builds then starts the server on port 3100 (`E2E_PORT`). With `PLAYWRIGHT_SKIP_BUILD=1` it reuses the existing `.output` |
-| `bun run test:coverage` | Coverage for `shared/` and `server/utils/` |
+| `bun run test:coverage` | Coverage for `shared/` and `server/utils/`; fails below 80% (statements, branches, functions, lines). DB/Stripe orchestration modules (`auth`, `cart`, `catalog`, `orders`) are excluded and covered by `test:integration` instead |
 | `bun run test` | Everything |
 
 First time only: `bunx playwright install chromium`.

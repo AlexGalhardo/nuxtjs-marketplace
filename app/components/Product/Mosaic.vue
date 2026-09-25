@@ -20,6 +20,7 @@ const big = (index: number) => index === 0 || index === 3
 				class="group @container relative block aspect-square overflow-hidden rounded-lg bg-muted"
 			>
 				<ProductPhoto
+					decorative
 					:src="item.coverPath"
 					:title="item.title"
 					:kind="item.kind"

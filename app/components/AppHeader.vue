@@ -72,7 +72,7 @@ const userMenuItems = computed(() => [
 							type="search"
 							name="q"
 							autocomplete="off"
-							placeholder="search “vintage tee”"
+							placeholder="search “vintage tee”…"
 							class="h-12 w-full rounded-2xl bg-muted ps-10 pe-12 text-base font-medium text-highlighted placeholder:text-dimmed focus:outline-2 focus:outline-primary"
 						>
 						<button
@@ -159,7 +159,7 @@ const userMenuItems = computed(() => [
 						type="search"
 						name="q"
 						autocomplete="off"
-						placeholder="$ search “vintage tee”"
+						placeholder="$ search “vintage tee”…"
 						class="h-11 w-full rounded-2xl bg-muted px-4 text-base font-medium text-highlighted placeholder:text-dimmed focus:outline-2 focus:outline-primary"
 					>
 				</form>

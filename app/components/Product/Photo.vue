@@ -9,6 +9,8 @@ const props = defineProps<{
 	kind: ProductKind
 	alt?: string | null
 	eager?: boolean
+	// Set when the surrounding link already names the product, so it isn't announced twice.
+	decorative?: boolean
 }>()
 </script>
 
@@ -16,7 +18,7 @@ const props = defineProps<{
 	<img
 		v-if="props.src"
 		:src="mediaUrl(props.src)"
-		:alt="props.alt || props.title"
+		:alt="props.decorative ? '' : props.alt || props.title"
 		:loading="props.eager ? 'eager' : 'lazy'"
 		width="600"
 		height="600"
@@ -24,8 +26,9 @@ const props = defineProps<{
 	>
 	<div
 		v-else
-		role="img"
-		:aria-label="`${props.title} (no photo yet)`"
+		:role="props.decorative ? undefined : 'img'"
+		:aria-label="props.decorative ? undefined : `${props.title} (no photo yet)`"
+		:aria-hidden="props.decorative || undefined"
 		class="flex size-full flex-col justify-between p-[8%]"
 		:class="props.kind === 'digital' ? 'bg-ink-950 text-matrix-400' : 'bg-(--rs-selected) text-(--rs-selected-ink)'"
 	>

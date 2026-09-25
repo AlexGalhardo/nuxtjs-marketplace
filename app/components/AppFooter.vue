@@ -53,7 +53,12 @@ const columns = computed(() => [
 	<footer class="mt-24 border-t border-default">
 		<div class="rs-container py-12">
 			<div class="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
-				<nav v-for="column in columns" :key="column.title" :aria-label="column.title">
+				<nav
+					v-for="column in columns"
+					:key="column.title"
+					:aria-label="column.title"
+					:class="column.title === 'browse' && 'col-span-2 md:col-span-1'"
+				>
 					<h2 class="mb-4 font-bold text-highlighted">{{ column.title }}</h2>
 					<ul
 						class="space-y-2"

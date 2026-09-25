@@ -85,6 +85,11 @@
 		text-transform: lowercase;
 	}
 
+	/* The UA stylesheet sets `text-transform: none` on buttons, so they'd keep their capitals. */
+	button {
+		text-transform: inherit;
+	}
+
 	input,
 	textarea,
 	select,

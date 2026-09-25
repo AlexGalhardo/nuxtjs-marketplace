@@ -9,6 +9,7 @@ const soldOut = computed(() => props.item.kind === 'physical' && props.item.stoc
 	<NuxtLink :to="`/products/${props.item.slug}`" class="group block rounded-lg">
 		<div class="@container relative aspect-square overflow-hidden rounded-lg bg-muted">
 			<ProductPhoto
+				decorative
 				:src="props.item.coverPath"
 				:title="props.item.title"
 				:kind="props.item.kind"
