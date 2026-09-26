@@ -25,6 +25,8 @@ Entries are generated with `bun run release` (changelogen).
 - **security:** cookie-authenticated API mutations from another origin are refused with 403 (Origin/Referer check on top of `SameSite=Lax`).
 
 ### Fixes
+- **security:** paid digital files could be downloaded without buying them through the public image route with an encoded `../` (`/images/..%2Ffiles/…`, also double-encoded); the route now refuses any path with `.`/`..` segments, backslashes or leftover `%`.
+- **security:** upload filenames went into storage keys verbatim, so `../` could place objects outside their prefix and a `%` in the name crashed the upload; keys are now sanitized (`blobFileName`), the original name is kept for display.
 - **infra:** the Docker image didn't build (`addgroup` missing in `oven/bun`) and never migrated its database; it now builds for PostgreSQL (`DATABASE_URL` read at run time), runs as the image's `bun` user, stores uploads under a writable `/app/.data` volume, and ships a `migrate` target that compose runs before the app.
 - **infra:** `minio/minio` images no longer exist; the dev stack uses SeaweedFS (`chrislusf/seaweedfs:4.47`) for S3. Postgres 18 volumes mount at `/var/lib/postgresql` (the old `/data` path refused to start).
 - **db:** concurrent writes on SQLite failed instantly with `SQLITE_BUSY` (500s): libsql pools several connections with a 0 ms busy timeout; now waits up to 5 s.

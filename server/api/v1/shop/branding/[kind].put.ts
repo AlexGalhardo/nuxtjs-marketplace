@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
 	}
 	ensureBlob(file, { maxSize: '4MB', types: ['image'] })
 
-	const uploaded = await blob.put(file.name, file, {
+	const uploaded = await blob.put(blobFileName(file.name), file, {
 		prefix: `images/shops/${shop.id}/${kind}`,
 		addRandomSuffix: true,
 	})

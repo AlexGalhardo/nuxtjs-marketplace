@@ -28,6 +28,7 @@ interface ProductFile {
 	filename: string
 	size: number
 	contentType: string
+	blobPath: string
 }
 
 function uniqueEmail() {
@@ -205,6 +206,50 @@ describe('shop product file endpoints', () => {
 			body: form,
 		})
 		expect(response.status).toBe(400)
+	})
+
+	it('stores uploads under a sanitized name inside their own prefix', async () => {
+		const { cookie } = await signUpAndCreateShop(uniqueEmail())
+		const product = await createProduct(cookie, 'digital')
+		const form = new FormData()
+		form.append(
+			'files',
+			new File(['x'], '../../images/evil 50% off.pdf', { type: 'application/pdf' }),
+		)
+		const [file] = await $fetch<ProductFile[]>(`/api/v1/shop/products/${product.id}/files`, {
+			method: 'POST',
+			headers: { cookie },
+			body: form,
+		})
+		expect(file?.blobPath).toMatch(
+			new RegExp(`^files/products/${product.id}/images-evil-50-off-[0-9a-f]+\\.pdf$`),
+		)
+		expect(file?.filename).toBe('../../images/evil 50% off.pdf')
+	})
+
+	it('never serves private product files through the public image route', async () => {
+		const { cookie } = await signUpAndCreateShop(uniqueEmail())
+		const product = await createProduct(cookie, 'digital')
+		const form = new FormData()
+		form.append('files', new File(['paid content'], 'ebook.pdf', { type: 'application/pdf' }))
+		const [file] = await $fetch<ProductFile[]>(`/api/v1/shop/products/${product.id}/files`, {
+			method: 'POST',
+			headers: { cookie },
+			body: form,
+		})
+		if (!file) throw new Error('Expected an uploaded file')
+
+		for (const up of [
+			'..%2F',
+			'%2e%2e%2f',
+			'..%5c',
+			'%2E%2E%5C',
+			'..%252F',
+			'%252e%252e%252f',
+		]) {
+			const response = await fetch(`/images/${up}${file.blobPath}`)
+			expect(response.status, up).toBe(404)
+		}
 	})
 
 	it('uploads, lists and deletes digital product files', async () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { cartItemSchema, cartQuantitySchema, checkoutSchema } from '../../../shared/schemas/cart'
 import { newId } from '../../../shared/utils/id'
-import { mediaUrl } from '../../../shared/utils/media'
+import { blobFileName, mediaUrl } from '../../../shared/utils/media'
 import { productTypeIcon } from '../../../shared/utils/product-type-icon'
 
 describe('newId', () => {
@@ -14,6 +14,26 @@ describe('newId', () => {
 		expect(first.slice(0, 13) <= second.slice(0, 13)).toBe(true)
 		const ms = Number.parseInt(first.replace('-', '').slice(0, 12), 16)
 		expect(Math.abs(ms - Date.now())).toBeLessThan(5_000)
+	})
+})
+
+describe('blobFileName', () => {
+	it('keeps a safe name and extension', () => {
+		expect(blobFileName('Summer Dress.JPG')).toBe('summer-dress.jpg')
+	})
+	it('cannot climb out of the upload prefix', () => {
+		expect(blobFileName('../../files/products/x/secret.pdf')).toBe(
+			'files-products-x-secret.pdf',
+		)
+		expect(blobFileName('....evil.png')).toBe('evil.png')
+	})
+	it('neutralizes percent signs that used to crash decodeURIComponent', () => {
+		expect(blobFileName('50% off.png')).toBe('50-off.png')
+		expect(blobFileName('%2e%2e%2fx.png')).toBe('2e-2e-2fx.png')
+	})
+	it('falls back to a name when nothing usable is left', () => {
+		expect(blobFileName('.png')).toBe('file.png')
+		expect(blobFileName('???')).toBe('file')
 	})
 })
 

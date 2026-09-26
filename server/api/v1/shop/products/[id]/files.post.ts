@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
 
 	const rows = []
 	for (const file of files) {
-		const object = await blob.put(file.name, file, {
+		const object = await blob.put(blobFileName(file.name), file, {
 			access: 'private',
 			prefix: `files/products/${product.id}`,
 			addRandomSuffix: true,
