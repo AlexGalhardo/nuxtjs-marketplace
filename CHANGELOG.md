@@ -5,6 +5,11 @@ The format follows [Conventional Commits](https://www.conventionalcommits.org/en
 
 Entries are generated with `bun run release` (changelogen).
 
+## Unreleased
+
+### Features
+- **setup:** every `setups/*.sh` script now starts the app at the end with its logs on screen, saves the whole session to `logs/<script>-<timestamp>.log`, and keeps the Git Bash window open (press Enter to close) on success, error or Ctrl+C.
+
 ## v1.0.0 (2026-09-26)
 
 ### Features

@@ -7,6 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 # shellcheck source=setups/lib.sh
 source "$SCRIPT_DIR/lib.sh"
+start_session_log "$ROOT_DIR"
 
 log "Nuxt Marketplace — Unix setup (PostgreSQL + SeaweedFS S3 via Docker)"
 
@@ -34,3 +35,4 @@ done
 install_deps
 prepare_db postgresql
 print_next_steps
+run_app "$ROOT_DIR"

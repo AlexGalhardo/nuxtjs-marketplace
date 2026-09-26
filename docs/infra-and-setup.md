@@ -42,9 +42,13 @@ Stripe/Resend keys, `bun run dev`).
 - `infra/docker-compose.dev.yml`: services only (`postgres`, `s3`, `stripe-cli`); the app runs
   on the host with `bun run dev`. `stripe-cli` forwards to `host.docker.internal:3000`.
 - `setups/lib.sh`: shared helpers (`log`, `require_command`, `ensure_env_file`, `set_env_var`,
-  `install_deps`, `prepare_db`, `print_next_steps`) sourced by every `setups/*.sh` script.
+  `install_deps`, `prepare_db`, `print_next_steps`, `start_session_log`, `run_app`) sourced by every `setups/*.sh` script.
 - `setups/*.sh`: idempotent Bash scripts, one per environment. Windows versions target **Git
   Bash** (winget-installed Bun, Docker Desktop with WSL2 integration, `psql.exe` on `PATH`).
+  Each one ends by starting the app (`bun run dev`) in the foreground, so its logs stay on screen (Ctrl+C
+  stops it); everything the script and the app print is also saved to `logs/<script>-<timestamp>.log`
+  (gitignored), and the window waits for Enter before closing, on success, error or Ctrl+C, instead of
+  vanishing as Git Bash does when a double-clicked script exits.
 
 ## Production requirement: TLS reverse proxy
 

@@ -8,6 +8,39 @@ die() {
   exit 1
 }
 
+# start_session_log <root_dir> — mirrors everything the script and the app print to
+# logs/<script>-<timestamp>.log, and keeps the terminal open when the script ends. Double-clicking a
+# .sh on Windows opens Git Bash, which closes its window as soon as the script exits (or fails), so
+# without this the output was lost. Call it right after sourcing this file.
+start_session_log() {
+  local root_dir="$1"
+  mkdir -p "$root_dir/logs"
+  SESSION_LOG="$root_dir/logs/$(basename "$0" .sh)-$(date +%Y%m%d-%H%M%S).log"
+  # tee ignores Ctrl+C so it keeps writing after the app is stopped.
+  exec > >(
+    trap '' INT
+    tee -a "$SESSION_LOG"
+  ) 2>&1
+  # A no-op handler (not `trap '' INT`, which children would inherit): Ctrl+C stops the app,
+  # then the EXIT trap below still runs.
+  trap ':' INT
+  trap 'end_session $?' EXIT
+  log "Logging to $SESSION_LOG"
+}
+
+end_session() {
+  local status="$1"
+  echo
+  if [ "$status" -eq 0 ] || [ "$status" -eq 130 ]; then
+    log "Finished. Full log: $SESSION_LOG"
+  else
+    printf '\033[1;31mSetup failed (exit code %s).\033[0m Full log: %s\n' "$status" "$SESSION_LOG"
+  fi
+  if [ -t 0 ]; then
+    read -r -p "Press Enter to close this window..." _ || true
+  fi
+}
+
 require_command() {
   command -v "$1" >/dev/null 2>&1 || die "$1 is required but not installed. $2"
 }
@@ -51,8 +84,16 @@ prepare_db() {
 }
 
 print_next_steps() {
-  log "Setup complete. Next steps:"
-  echo "  1. Review the generated .env file and fill in Stripe/Resend keys."
-  echo "  2. Start the dev server: bun run dev"
-  echo "  3. Open http://localhost:3000"
+  log "Setup complete."
+  echo "  - Review the generated .env file and fill in Stripe/Resend keys (restart this script after)."
+  echo "  - The app starts below: open http://localhost:3000 once it says it's listening."
+  echo "  - Its logs stream here and into $SESSION_LOG. Press Ctrl+C to stop it."
+}
+
+# run_app <root_dir> — starts the dev server in the foreground so its logs stay on screen (and in
+# the log file).
+run_app() {
+  log "Starting the app (bun run dev)"
+  cd "$1" || die "Cannot enter $1"
+  bun run dev
 }
