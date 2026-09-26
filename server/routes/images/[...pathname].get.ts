@@ -14,5 +14,7 @@ export default defineEventHandler(async (event) => {
 		throw createError({ statusCode: 404, statusMessage: 'Image not found' })
 	}
 
+	// Keys carry a random suffix and are never overwritten (a new upload gets a new key).
+	setHeader(event, 'cache-control', 'public, max-age=31536000, immutable')
 	return blob.serve(event, `images/${pathname}`)
 })

@@ -1,5 +1,6 @@
 import {
 	boolean,
+	index,
 	integer,
 	jsonb,
 	pgTable,
@@ -40,23 +41,27 @@ export const users = pgTable('users', {
 	updatedAt: updatedAt(),
 })
 
-export const addresses = pgTable('addresses', {
-	id: id(),
-	userId: text('user_id')
-		.notNull()
-		.references(() => users.id),
-	fullName: text('full_name').notNull(),
-	line1: text('line1').notNull(),
-	line2: text('line2'),
-	city: text('city').notNull(),
-	state: text('state').notNull(),
-	postalCode: text('postal_code').notNull(),
-	country: text('country').notNull(),
-	phone: text('phone').notNull(),
-	isDefault: boolean('is_default').notNull().default(false),
-	createdAt: createdAt(),
-	updatedAt: updatedAt(),
-})
+export const addresses = pgTable(
+	'addresses',
+	{
+		id: id(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => users.id),
+		fullName: text('full_name').notNull(),
+		line1: text('line1').notNull(),
+		line2: text('line2'),
+		city: text('city').notNull(),
+		state: text('state').notNull(),
+		postalCode: text('postal_code').notNull(),
+		country: text('country').notNull(),
+		phone: text('phone').notNull(),
+		isDefault: boolean('is_default').notNull().default(false),
+		createdAt: createdAt(),
+		updatedAt: updatedAt(),
+	},
+	(table) => [index('addresses_user_idx').on(table.userId)],
+)
 
 export const passwordResetTokens = pgTable('password_reset_tokens', {
 	id: id(),
@@ -88,23 +93,27 @@ export const shops = pgTable('shops', {
 	updatedAt: updatedAt(),
 })
 
-export const apiTokens = pgTable('api_tokens', {
-	id: id(),
-	userId: text('user_id')
-		.notNull()
-		.references(() => users.id),
-	shopId: text('shop_id')
-		.notNull()
-		.references(() => shops.id),
-	name: text('name').notNull(),
-	prefix: text('prefix').notNull(),
-	tokenHash: text('token_hash').notNull().unique(),
-	scopes: jsonb('scopes').$type<string[]>().notNull(),
-	lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
-	expiresAt: timestamp('expires_at', { withTimezone: true }),
-	revokedAt: timestamp('revoked_at', { withTimezone: true }),
-	createdAt: createdAt(),
-})
+export const apiTokens = pgTable(
+	'api_tokens',
+	{
+		id: id(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => users.id),
+		shopId: text('shop_id')
+			.notNull()
+			.references(() => shops.id),
+		name: text('name').notNull(),
+		prefix: text('prefix').notNull(),
+		tokenHash: text('token_hash').notNull().unique(),
+		scopes: jsonb('scopes').$type<string[]>().notNull(),
+		lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+		expiresAt: timestamp('expires_at', { withTimezone: true }),
+		revokedAt: timestamp('revoked_at', { withTimezone: true }),
+		createdAt: createdAt(),
+	},
+	(table) => [index('api_tokens_user_idx').on(table.userId)],
+)
 
 export const productTypes = pgTable('product_types', {
 	id: id(),
@@ -113,48 +122,64 @@ export const productTypes = pgTable('product_types', {
 	kind: text('kind').$type<ProductKind>().notNull(),
 })
 
-export const products = pgTable('products', {
-	id: id(),
-	shopId: text('shop_id')
-		.notNull()
-		.references(() => shops.id),
-	productTypeId: text('product_type_id')
-		.notNull()
-		.references(() => productTypes.id),
-	kind: text('kind').$type<ProductKind>().notNull(),
-	title: text('title').notNull(),
-	slug: text('slug').notNull().unique(),
-	description: text('description').notNull(),
-	priceCents: integer('price_cents').notNull(),
-	shippingCents: integer('shipping_cents').notNull().default(0),
-	stock: integer('stock'),
-	status: text('status').$type<ProductStatus>().notNull().default('draft'),
-	ratingAvg: real('rating_avg').notNull().default(0),
-	ratingCount: integer('rating_count').notNull().default(0),
-	createdAt: createdAt(),
-	updatedAt: updatedAt(),
-})
+export const products = pgTable(
+	'products',
+	{
+		id: id(),
+		shopId: text('shop_id')
+			.notNull()
+			.references(() => shops.id),
+		productTypeId: text('product_type_id')
+			.notNull()
+			.references(() => productTypes.id),
+		kind: text('kind').$type<ProductKind>().notNull(),
+		title: text('title').notNull(),
+		slug: text('slug').notNull().unique(),
+		description: text('description').notNull(),
+		priceCents: integer('price_cents').notNull(),
+		shippingCents: integer('shipping_cents').notNull().default(0),
+		stock: integer('stock'),
+		status: text('status').$type<ProductStatus>().notNull().default('draft'),
+		ratingAvg: real('rating_avg').notNull().default(0),
+		ratingCount: integer('rating_count').notNull().default(0),
+		createdAt: createdAt(),
+		updatedAt: updatedAt(),
+	},
+	(table) => [
+		index('products_shop_created_idx').on(table.shopId, table.createdAt),
+		index('products_type_idx').on(table.productTypeId),
+		index('products_status_created_idx').on(table.status, table.createdAt),
+	],
+)
 
-export const productImages = pgTable('product_images', {
-	id: id(),
-	productId: text('product_id')
-		.notNull()
-		.references(() => products.id),
-	blobPath: text('blob_path').notNull(),
-	alt: text('alt'),
-	position: integer('position').notNull().default(0),
-})
+export const productImages = pgTable(
+	'product_images',
+	{
+		id: id(),
+		productId: text('product_id')
+			.notNull()
+			.references(() => products.id),
+		blobPath: text('blob_path').notNull(),
+		alt: text('alt'),
+		position: integer('position').notNull().default(0),
+	},
+	(table) => [index('product_images_product_idx').on(table.productId)],
+)
 
-export const productFiles = pgTable('product_files', {
-	id: id(),
-	productId: text('product_id')
-		.notNull()
-		.references(() => products.id),
-	blobPath: text('blob_path').notNull(),
-	filename: text('filename').notNull(),
-	size: integer('size').notNull(),
-	contentType: text('content_type').notNull(),
-})
+export const productFiles = pgTable(
+	'product_files',
+	{
+		id: id(),
+		productId: text('product_id')
+			.notNull()
+			.references(() => products.id),
+		blobPath: text('blob_path').notNull(),
+		filename: text('filename').notNull(),
+		size: integer('size').notNull(),
+		contentType: text('content_type').notNull(),
+	},
+	(table) => [index('product_files_product_idx').on(table.productId)],
+)
 
 export const cartItems = pgTable(
 	'cart_items',
@@ -173,76 +198,98 @@ export const cartItems = pgTable(
 	(table) => [uniqueIndex('cart_items_user_product_unique').on(table.userId, table.productId)],
 )
 
-export const orders = pgTable('orders', {
-	id: id(),
-	buyerId: text('buyer_id')
-		.notNull()
-		.references(() => users.id),
-	status: text('status').$type<OrderStatus>().notNull().default('pending'),
-	subtotalCents: integer('subtotal_cents').notNull(),
-	shippingCents: integer('shipping_cents').notNull(),
-	feeCents: integer('fee_cents').notNull(),
-	totalCents: integer('total_cents').notNull(),
-	currency: text('currency').notNull().default('usd'),
-	stripeCheckoutSessionId: text('stripe_checkout_session_id'),
-	stripePaymentIntentId: text('stripe_payment_intent_id'),
-	shippingAddress: jsonb('shipping_address').$type<Record<string, unknown> | null>(),
-	createdAt: createdAt(),
-	updatedAt: updatedAt(),
-})
+export const orders = pgTable(
+	'orders',
+	{
+		id: id(),
+		buyerId: text('buyer_id')
+			.notNull()
+			.references(() => users.id),
+		status: text('status').$type<OrderStatus>().notNull().default('pending'),
+		subtotalCents: integer('subtotal_cents').notNull(),
+		shippingCents: integer('shipping_cents').notNull(),
+		feeCents: integer('fee_cents').notNull(),
+		totalCents: integer('total_cents').notNull(),
+		currency: text('currency').notNull().default('usd'),
+		stripeCheckoutSessionId: text('stripe_checkout_session_id'),
+		stripePaymentIntentId: text('stripe_payment_intent_id'),
+		shippingAddress: jsonb('shipping_address').$type<Record<string, unknown> | null>(),
+		createdAt: createdAt(),
+		updatedAt: updatedAt(),
+	},
+	(table) => [
+		index('orders_buyer_created_idx').on(table.buyerId, table.createdAt),
+		index('orders_checkout_session_idx').on(table.stripeCheckoutSessionId),
+	],
+)
 
-export const sellerOrders = pgTable('seller_orders', {
-	id: id(),
-	orderId: text('order_id')
-		.notNull()
-		.references(() => orders.id),
-	shopId: text('shop_id')
-		.notNull()
-		.references(() => shops.id),
-	status: text('status').$type<SellerOrderStatus>().notNull().default('pending'),
-	subtotalCents: integer('subtotal_cents').notNull(),
-	shippingCents: integer('shipping_cents').notNull(),
-	feeCents: integer('fee_cents').notNull(),
-	payoutCents: integer('payout_cents').notNull(),
-	stripeTransferId: text('stripe_transfer_id'),
-	carrier: text('carrier'),
-	trackingCode: text('tracking_code'),
-	shippedAt: timestamp('shipped_at', { withTimezone: true }),
-	createdAt: createdAt(),
-	updatedAt: updatedAt(),
-})
+export const sellerOrders = pgTable(
+	'seller_orders',
+	{
+		id: id(),
+		orderId: text('order_id')
+			.notNull()
+			.references(() => orders.id),
+		shopId: text('shop_id')
+			.notNull()
+			.references(() => shops.id),
+		status: text('status').$type<SellerOrderStatus>().notNull().default('pending'),
+		subtotalCents: integer('subtotal_cents').notNull(),
+		shippingCents: integer('shipping_cents').notNull(),
+		feeCents: integer('fee_cents').notNull(),
+		payoutCents: integer('payout_cents').notNull(),
+		stripeTransferId: text('stripe_transfer_id'),
+		carrier: text('carrier'),
+		trackingCode: text('tracking_code'),
+		shippedAt: timestamp('shipped_at', { withTimezone: true }),
+		createdAt: createdAt(),
+		updatedAt: updatedAt(),
+	},
+	(table) => [
+		index('seller_orders_order_idx').on(table.orderId),
+		index('seller_orders_shop_created_idx').on(table.shopId, table.createdAt),
+	],
+)
 
-export const orderItems = pgTable('order_items', {
-	id: id(),
-	sellerOrderId: text('seller_order_id')
-		.notNull()
-		.references(() => sellerOrders.id),
-	productId: text('product_id')
-		.notNull()
-		.references(() => products.id),
-	title: text('title').notNull(),
-	priceCents: integer('price_cents').notNull(),
-	quantity: integer('quantity').notNull(),
-	kind: text('kind').$type<ProductKind>().notNull(),
-	createdAt: createdAt(),
-})
+export const orderItems = pgTable(
+	'order_items',
+	{
+		id: id(),
+		sellerOrderId: text('seller_order_id')
+			.notNull()
+			.references(() => sellerOrders.id),
+		productId: text('product_id')
+			.notNull()
+			.references(() => products.id),
+		title: text('title').notNull(),
+		priceCents: integer('price_cents').notNull(),
+		quantity: integer('quantity').notNull(),
+		kind: text('kind').$type<ProductKind>().notNull(),
+		createdAt: createdAt(),
+	},
+	(table) => [index('order_items_seller_order_idx').on(table.sellerOrderId)],
+)
 
-export const downloadGrants = pgTable('download_grants', {
-	id: id(),
-	orderItemId: text('order_item_id')
-		.notNull()
-		.references(() => orderItems.id),
-	buyerId: text('buyer_id')
-		.notNull()
-		.references(() => users.id),
-	productFileId: text('product_file_id')
-		.notNull()
-		.references(() => productFiles.id),
-	downloadCount: integer('download_count').notNull().default(0),
-	maxDownloads: integer('max_downloads').notNull(),
-	expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
-	createdAt: createdAt(),
-})
+export const downloadGrants = pgTable(
+	'download_grants',
+	{
+		id: id(),
+		orderItemId: text('order_item_id')
+			.notNull()
+			.references(() => orderItems.id),
+		buyerId: text('buyer_id')
+			.notNull()
+			.references(() => users.id),
+		productFileId: text('product_file_id')
+			.notNull()
+			.references(() => productFiles.id),
+		downloadCount: integer('download_count').notNull().default(0),
+		maxDownloads: integer('max_downloads').notNull(),
+		expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+		createdAt: createdAt(),
+	},
+	(table) => [index('download_grants_order_item_idx').on(table.orderItemId)],
+)
 
 export const reviews = pgTable(
 	'reviews',
@@ -266,20 +313,27 @@ export const reviews = pgTable(
 )
 
 // Append-only: insert only, never update or delete (docs/database.md).
-export const transactionLogs = pgTable('transaction_logs', {
-	id: id(),
-	type: text('type').notNull(),
-	orderId: text('order_id').references(() => orders.id),
-	sellerOrderId: text('seller_order_id').references(() => sellerOrders.id),
-	shopId: text('shop_id').references(() => shops.id),
-	userId: text('user_id').references(() => users.id),
-	stripeObjectId: text('stripe_object_id'),
-	amountCents: integer('amount_cents').notNull(),
-	currency: text('currency').notNull().default('usd'),
-	status: text('status').notNull(),
-	payload: jsonb('payload').$type<Record<string, unknown>>().notNull(),
-	createdAt: createdAt(),
-})
+export const transactionLogs = pgTable(
+	'transaction_logs',
+	{
+		id: id(),
+		type: text('type').notNull(),
+		orderId: text('order_id').references(() => orders.id),
+		sellerOrderId: text('seller_order_id').references(() => sellerOrders.id),
+		shopId: text('shop_id').references(() => shops.id),
+		userId: text('user_id').references(() => users.id),
+		stripeObjectId: text('stripe_object_id'),
+		amountCents: integer('amount_cents').notNull(),
+		currency: text('currency').notNull().default('usd'),
+		status: text('status').notNull(),
+		payload: jsonb('payload').$type<Record<string, unknown>>().notNull(),
+		createdAt: createdAt(),
+	},
+	(table) => [
+		index('transaction_logs_order_idx').on(table.orderId),
+		index('transaction_logs_created_idx').on(table.createdAt),
+	],
+)
 
 export const stripeEvents = pgTable('stripe_events', {
 	id: text('id').primaryKey(),
@@ -301,12 +355,16 @@ export const contactMessages = pgTable('contact_messages', {
 })
 
 // Append-only: insert only, never update or delete (docs/database.md).
-export const auditLogs = pgTable('audit_logs', {
-	id: id(),
-	actorId: text('actor_id').references(() => users.id),
-	action: text('action').notNull(),
-	targetType: text('target_type').notNull(),
-	targetId: text('target_id'),
-	metadata: jsonb('metadata').$type<Record<string, unknown> | null>(),
-	createdAt: createdAt(),
-})
+export const auditLogs = pgTable(
+	'audit_logs',
+	{
+		id: id(),
+		actorId: text('actor_id').references(() => users.id),
+		action: text('action').notNull(),
+		targetType: text('target_type').notNull(),
+		targetId: text('target_id'),
+		metadata: jsonb('metadata').$type<Record<string, unknown> | null>(),
+		createdAt: createdAt(),
+	},
+	(table) => [index('audit_logs_created_idx').on(table.createdAt)],
+)

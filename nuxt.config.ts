@@ -127,6 +127,8 @@ export default defineNuxtConfig({
 				},
 			},
 		},
+		// Fixed list (D13), only changed by the seed script: let browsers reuse it for an hour.
+		'/api/product-types': { headers: { 'cache-control': 'public, max-age=3600' } },
 		// Tighter than auth: the contact form has no account behind it to slow down repeat abuse.
 		'/api/contact': { security: { rateLimiter: { tokensPerInterval: 5, interval: 900_000 } } },
 		// A06: each call creates an order and a Stripe session; 20/15min covers real retries.

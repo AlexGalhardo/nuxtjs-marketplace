@@ -50,6 +50,36 @@ test('seller can create a shop, create a product, and publish it once onboarded'
 
 	await expect(page).toHaveURL(/\/my-shop\/products\/.+\/edit/)
 
+	// Photos are downscaled in the browser before upload (app/utils/shrink-image.ts).
+	const productId = page.url().match(/products\/([^/]+)\/edit/)?.[1]
+	const hugePng = await page.evaluate(async () => {
+		const canvas = new OffscreenCanvas(3000, 2000)
+		const context = canvas.getContext('2d')
+		for (let x = 0; x < 3000; x += 50) {
+			if (!context) break
+			context.fillStyle = `hsl(${x % 360} 80% 50%)`
+			context.fillRect(x, 0, 50, 2000)
+		}
+		const blob = await canvas.convertToBlob({ type: 'image/png' })
+		return Array.from(new Uint8Array(await blob.arrayBuffer()))
+	})
+	await page
+		.locator('input[type="file"]')
+		.first()
+		.setInputFiles({ name: 'huge.png', mimeType: 'image/png', buffer: Buffer.from(hugePng) })
+	const imagesUrl = `/api/v1/shop/products/${productId}/images`
+	type Image = { blobPath: string }
+	await expect
+		.poll(async () => ((await (await page.request.get(imagesUrl)).json()) as Image[]).length)
+		.toBe(1)
+	const [image] = (await (await page.request.get(imagesUrl)).json()) as Image[]
+	expect(image?.blobPath).toMatch(/huge-[0-9a-f]+\.webp$/)
+	const longestEdge = await page.evaluate(async (src) => {
+		const bitmap = await createImageBitmap(await (await fetch(src)).blob())
+		return Math.max(bitmap.width, bitmap.height)
+	}, `/${image?.blobPath}`)
+	expect(longestEdge).toBe(1600)
+
 	await goto('/my-shop/products', { waitUntil: 'hydration' })
 	await expect(page.getByText('E2E Wireless Mouse')).toBeVisible()
 	await page.getByRole('button', { name: /publish/i }).click()

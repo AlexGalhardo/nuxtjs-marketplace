@@ -63,7 +63,9 @@ async function onImagesSelected(files: File[] | null | undefined) {
 	imagesUploading.value = true
 	try {
 		const formData = new FormData()
-		for (const file of list) formData.append('files', file)
+		for (const file of await Promise.all(list.map((file) => shrinkImage(file)))) {
+			formData.append('files', file)
+		}
 		await $fetch(`/api/v1/shop/products/${productId}/images`, {
 			method: 'POST',
 			body: formData,

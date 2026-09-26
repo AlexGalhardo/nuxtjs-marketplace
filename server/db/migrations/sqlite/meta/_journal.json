@@ -8,6 +8,20 @@
       "when": 1790259934436,
       "tag": "0000_common_lady_bullseye",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1790390436162,
+      "tag": "0001_hesitant_kronos",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790390486629,
+      "tag": "0002_perfect_prima",
+      "breakpoints": true
     }
   ]
 }

@@ -38,7 +38,7 @@ async function uploadBranding(kind: 'logo' | 'banner', file: File | null) {
 	pendingRef.value = true
 	try {
 		const formData = new FormData()
-		formData.append('file', file)
+		formData.append('file', await shrinkImage(file, kind === 'logo' ? 512 : 2400))
 		await $fetch(`/api/v1/shop/branding/${kind}`, { method: 'PUT', body: formData })
 		toast.add({ title: kind === 'logo' ? 'Logo updated' : 'Banner updated', color: 'success' })
 		await refresh()
