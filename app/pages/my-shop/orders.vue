@@ -3,7 +3,7 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 import { type ShipSellerOrderInput, shipSellerOrderSchema } from '#shared/schemas/order'
 import type { ShopOrder } from '#shared/types/order'
 
-definePageMeta({ layout: 'dashboard', middleware: 'auth' })
+definePageMeta({ layout: 'my-shop', middleware: 'auth' })
 useSeoMeta({ title: 'orders — my shop' })
 
 const toast = useToast()

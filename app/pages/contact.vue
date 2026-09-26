@@ -38,6 +38,7 @@ async function onSubmit(event: FormSubmitEvent<ContactInput>) {
 	<UContainer class="max-w-2xl py-10">
 		<h1 class="sr-only">Contact us</h1>
 		<UPageCard
+			class="rounded-none"
 			title="Contact us"
 			description="Questions, feedback or issues — we’d love to hear from you."
 		>
@@ -60,7 +61,9 @@ async function onSubmit(event: FormSubmitEvent<ContactInput>) {
 				<UFormField label="Message" name="message" required>
 					<UTextarea v-model="state.message" :rows="6" class="w-full" />
 				</UFormField>
-				<UButton type="submit" :loading="pending">Send message</UButton>
+				<UButton type="submit" :loading="pending" class="rounded-none"
+					>Send message</UButton
+				>
 			</UForm>
 		</UPageCard>
 	</UContainer>

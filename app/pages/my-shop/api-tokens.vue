@@ -18,7 +18,7 @@ interface ApiTokenRow {
 	createdAt: string
 }
 
-definePageMeta({ layout: 'dashboard', middleware: 'auth' })
+definePageMeta({ layout: 'my-shop', middleware: 'auth' })
 useSeoMeta({ title: 'api tokens — my shop' })
 
 const toast = useToast()

@@ -5,7 +5,6 @@ import { newPasswordSchema } from '#shared/schemas/auth'
 // No `guest` middleware here on purpose: a reset link operates on its own token, not the
 // current session, so it must stay reachable even for a visitor who happens to be logged in
 // (e.g. an old session in another tab, or someone re-authenticating before discovering the link).
-definePageMeta({ layout: 'auth' })
 
 const route = useRoute()
 const router = useRouter()
@@ -56,24 +55,26 @@ async function onSubmit(event: FormSubmitEvent<{ password: string }>) {
 </script>
 
 <template>
-	<UPageCard class="w-full max-w-md">
-		<h1 class="sr-only">Set a new password</h1>
-		<UAlert
-			v-if="!token"
-			color="error"
-			icon="i-lucide-triangle-alert"
-			title="Invalid link"
-			description="This password reset link is missing its token. Request a new one."
-		/>
-		<UAuthForm
-			v-else
-			:schema="newPasswordSchema"
-			title="Set a new password"
-			icon="i-lucide-key-round"
-			:fields="fields"
-			:loading="pending"
-			:submit="{ label: 'Update password' }"
-			@submit="onSubmit"
-		/>
-	</UPageCard>
+	<div class="rs-container flex justify-center py-12 sm:py-16">
+		<UPageCard class="w-full max-w-md rounded-none">
+			<h1 class="sr-only">Set a new password</h1>
+			<UAlert
+				v-if="!token"
+				color="error"
+				icon="i-lucide-triangle-alert"
+				title="Invalid link"
+				description="This password reset link is missing its token. Request a new one."
+			/>
+			<UAuthForm
+				v-else
+				:schema="newPasswordSchema"
+				title="Set a new password"
+				icon="i-lucide-key-round"
+				:fields="fields"
+				:loading="pending"
+				:submit="{ label: 'Update password', class: 'rounded-none' }"
+				@submit="onSubmit"
+			/>
+		</UPageCard>
+	</div>
 </template>

@@ -6,7 +6,7 @@ Product voice and principles: [PRODUCT.md](../PRODUCT.md).
 ## Identity
 
 - Enjoei-inspired structure (photo grids, row mosaics, lowercase playful copy) re-cast as a terminal:
-  wordmark `resell.sh` in mono with a blinking block cursor (`AppLogo`, the only idle animation).
+  wordmark `resell.sh` in mono (`AppLogo`), static: no blinking cursor (owner request, 2026-09-26).
 - **Lowercase is visual only**: `body { text-transform: lowercase }`; inputs, code and `.normal-case` keep real case.
 - Light theme default; dark "terminal" theme via `UColorModeButton` (`.dark` overrides in `main.css`).
 
@@ -18,7 +18,10 @@ Product voice and principles: [PRODUCT.md](../PRODUCT.md).
   `--rs-selected`/`--rs-selected-ink` (soft green: active filters, photo-less tiles).
 - Type: `Figtree` (UI), `Big Shoulders Display` (`font-display`, typographic product tiles), `JetBrains Mono`
   (wordmark, slugs, code — never as decoration).
-- Shape: `--ui-radius` 0.5rem; buttons `rounded-full`, fields `rounded-xl`, photos `rounded-lg`.
+- Shape: `--ui-radius` 0.5rem; buttons `rounded-full`, form fields **square** (`rounded-none`, `app.config.ts`), photos `rounded-lg`.
+  Form pages (`/login`, `/signup`, `/contact`, `/profile`, password reset) also use square cards and submit buttons.
+- Layouts: `default` (header + footer) for every public, buyer and seller page; `/my-shop/**` adds a section nav
+  (`layouts/my-shop.vue`); only `/admin/**` keeps the `dashboard` layout.
 - Layout: `rs-container` (75rem + 1.5rem gutters), header height `--ui-header-height` 4.5rem.
 
 ## Components

@@ -11,24 +11,25 @@ export default defineAppConfig({
 				base: 'rounded-full font-bold active:scale-[0.97] transition-[color,background-color,transform]',
 			},
 		},
+		// Form fields are square everywhere (owner request, 2026-09-26): terminal prompts, not pills.
 		input: {
 			slots: {
-				base: 'rounded-xl',
+				base: 'rounded-none',
 			},
 		},
 		textarea: {
 			slots: {
-				base: 'rounded-xl',
+				base: 'rounded-none',
 			},
 		},
 		selectMenu: {
 			slots: {
-				base: 'rounded-xl',
+				base: 'rounded-none',
 			},
 		},
 		select: {
 			slots: {
-				base: 'rounded-xl',
+				base: 'rounded-none',
 			},
 		},
 		badge: {

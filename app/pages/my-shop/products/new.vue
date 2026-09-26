@@ -2,7 +2,7 @@
 import { type ProductInput, productSchema } from '#shared/schemas/product'
 import type { Product, ProductType } from '#shared/types/db'
 
-definePageMeta({ layout: 'dashboard', middleware: 'auth' })
+definePageMeta({ layout: 'my-shop', middleware: 'auth' })
 useSeoMeta({ title: 'New product — Marketplace' })
 
 const toast = useToast()

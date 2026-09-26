@@ -2,7 +2,7 @@
 import type { AuthFormField, FormSubmitEvent } from '@nuxt/ui'
 import { type LoginInput, loginSchema } from '#shared/schemas/auth'
 
-definePageMeta({ layout: 'auth', middleware: 'guest' })
+definePageMeta({ middleware: 'guest' })
 
 const { login } = useAuth()
 const toast = useToast()
@@ -48,31 +48,33 @@ async function onSubmit(event: FormSubmitEvent<LoginInput>) {
 </script>
 
 <template>
-	<UPageCard class="w-full max-w-md">
-		<h1 class="sr-only">Log in</h1>
-		<UAuthForm
-			:schema="loginSchema"
-			title="Log in"
-			description="Enter your credentials to access your account."
-			icon="i-lucide-user"
-			:fields="fields"
-			:loading="pending"
-			:submit="{ label: 'Log in' }"
-			@submit="onSubmit"
-		>
-			<template #footer>
-				<div class="space-y-2 text-center text-sm text-muted">
-					<p>
-						<ULink to="/forget-password" class="font-medium text-primary"
-							>Forgot your password?</ULink
-						>
-					</p>
-					<p>
-						Don’t have an account?
-						<ULink to="/signup" class="font-medium text-primary">Sign up</ULink>
-					</p>
-				</div>
-			</template>
-		</UAuthForm>
-	</UPageCard>
+	<div class="rs-container flex justify-center py-12 sm:py-16">
+		<UPageCard class="w-full max-w-md rounded-none">
+			<h1 class="sr-only">Log in</h1>
+			<UAuthForm
+				:schema="loginSchema"
+				title="Log in"
+				description="Enter your credentials to access your account."
+				icon="i-lucide-user"
+				:fields="fields"
+				:loading="pending"
+				:submit="{ label: 'Log in', class: 'rounded-none' }"
+				@submit="onSubmit"
+			>
+				<template #footer>
+					<div class="space-y-2 text-center text-sm text-muted">
+						<p>
+							<ULink to="/forget-password" class="font-medium text-primary"
+								>Forgot your password?</ULink
+							>
+						</p>
+						<p>
+							Don’t have an account?
+							<ULink to="/signup" class="font-medium text-primary">Sign up</ULink>
+						</p>
+					</div>
+				</template>
+			</UAuthForm>
+		</UPageCard>
+	</div>
 </template>

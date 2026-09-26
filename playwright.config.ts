@@ -8,9 +8,10 @@ const port = Number(process.env.E2E_PORT ?? 3100)
 const baseURL = `http://localhost:${port}`
 
 // Set PLAYWRIGHT_SKIP_BUILD=1 when `.output` is already built (CI builds once for smoke + e2e)
+// The test database (`.data-test`, see webServer.env) gets the product types before the server starts.
 const startServer = process.env.PLAYWRIGHT_SKIP_BUILD
-	? 'bun run start'
-	: 'bun run build && bun run start'
+	? 'bun run db:seed && bun run start'
+	: 'bun run build && bun run db:seed && bun run start'
 
 export default defineConfig<ConfigOptions>({
 	globalSetup: './tests/e2e/global-setup.ts',
@@ -36,6 +37,9 @@ export default defineConfig<ConfigOptions>({
 		reuseExistingServer: !isCI,
 		timeout: 300_000,
 		env: {
+			// Own database (nuxt.config.ts `hub.dir`), product types only: e2e data stays out of `.data`.
+			NUXT_HUB_DIR: '.data-test',
+			SEED_DEMO_CATALOG: 'false',
 			PORT: String(port),
 			NUXT_STRICT_ENV: 'false',
 			NUXT_PUBLIC_SITE_URL: baseURL,

@@ -3,20 +3,7 @@ const { loggedIn, user, logout } = useAuth()
 const { count: cartCount, refresh: refreshCart } = useCart()
 // Not awaited: Nuxt still resolves it during SSR, so the badge ships in the first paint.
 useAsyncData('header-cart', () => refreshCart().then(() => true), { watch: [loggedIn] })
-const route = useRoute()
 const router = useRouter()
-
-const q = ref(typeof route.query.q === 'string' ? route.query.q : '')
-watch(
-	() => route.query.q,
-	(value) => {
-		q.value = typeof value === 'string' ? value : ''
-	},
-)
-
-async function search() {
-	await router.push({ path: '/marketplace', query: q.value.trim() ? { q: q.value.trim() } : {} })
-}
 
 const navLinks = [
 	{ label: 'physical', to: { path: '/marketplace', query: { kind: 'physical' } } },
@@ -58,32 +45,11 @@ const userMenuItems = computed(() => [
 					<AppLogo />
 				</NuxtLink>
 
-				<search class="hidden max-w-md flex-1 md:block">
-					<form class="relative" @submit.prevent="search">
-						<label for="site-search" class="sr-only">search products</label>
-						<span
-							class="pointer-events-none absolute inset-y-0 start-5 flex items-center font-mono font-bold text-primary"
-							aria-hidden="true"
-							>$</span
-						>
-						<input
-							id="site-search"
-							v-model="q"
-							type="search"
-							name="q"
-							autocomplete="off"
-							placeholder="search “vintage tee”…"
-							class="h-12 w-full rounded-2xl bg-muted ps-10 pe-12 text-base font-medium text-highlighted placeholder:text-dimmed focus:outline-2 focus:outline-primary"
-						>
-						<button
-							type="submit"
-							class="absolute inset-y-0 end-2 my-auto flex size-9 items-center justify-center rounded-full text-highlighted hover:bg-accented"
-							aria-label="search"
-						>
-							<UIcon name="i-lucide-search" class="size-5" />
-						</button>
-					</form>
-				</search>
+				<AppSearch
+					id="site-search"
+					placeholder="search “vintage tee”…"
+					class="hidden max-w-md flex-1 md:block"
+				/>
 
 				<nav aria-label="shop by kind" class="ms-auto hidden items-center gap-5 lg:flex">
 					<NuxtLink
@@ -150,20 +116,12 @@ const userMenuItems = computed(() => [
 				</div>
 			</div>
 
-			<search class="rs-container pb-3 md:hidden">
-				<form @submit.prevent="search">
-					<label for="site-search-mobile" class="sr-only">search products</label>
-					<input
-						id="site-search-mobile"
-						v-model="q"
-						type="search"
-						name="q"
-						autocomplete="off"
-						placeholder="$ search “vintage tee”…"
-						class="h-11 w-full rounded-2xl bg-muted px-4 text-base font-medium text-highlighted placeholder:text-dimmed focus:outline-2 focus:outline-primary"
-					>
-				</form>
-			</search>
+			<AppSearch
+				id="site-search-mobile"
+				placeholder="$ search “vintage tee”…"
+				compact
+				class="rs-container pb-3 md:hidden"
+			/>
 		</header>
 	</div>
 </template>

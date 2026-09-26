@@ -12,6 +12,10 @@ test('user can sign up, log out, log back in, and reset their password', async (
 	await goto('/signup', { waitUntil: 'hydration' })
 	await page.getByLabel('Name').fill('E2E User')
 	await page.getByLabel('Email').fill(email)
+	// The password checklist sits under the field and only shows up once typing starts.
+	await expect(page.getByText('One special character')).toBeHidden()
+	await page.getByLabel('Password', { exact: true }).fill('ab')
+	await expect(page.getByText('One special character')).toBeVisible()
 	await page.getByLabel('Password', { exact: true }).fill(password)
 	await page.getByRole('button', { name: /create account/i }).click()
 

@@ -1,29 +1,14 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 
-const route = useRoute()
-const isAdmin = computed(() => route.path.startsWith('/admin'))
-
-const shopItems: NavigationMenuItem[] = [
-	{ label: 'Overview', icon: 'i-lucide-layout-dashboard', to: '/my-shop' },
-	{ label: 'Products', icon: 'i-lucide-package', to: '/my-shop/products' },
-	{ label: 'Orders', icon: 'i-lucide-receipt', to: '/my-shop/orders' },
-	{ label: 'Payouts', icon: 'i-lucide-banknote', to: '/my-shop/payouts' },
-	{ label: 'API tokens', icon: 'i-lucide-key', to: '/my-shop/api-tokens' },
-	{ label: 'API docs', icon: 'i-lucide-book-open', to: '/my-shop/api-docs' },
-	{ label: 'Settings', icon: 'i-lucide-settings', to: '/my-shop/settings' },
-]
-
-const adminItems: NavigationMenuItem[] = [
+// Admin area only; the seller area uses the site layout (layouts/my-shop.vue).
+const items: NavigationMenuItem[] = [
 	{ label: 'Dashboard', icon: 'i-lucide-layout-dashboard', to: '/admin' },
 	{ label: 'Shops', icon: 'i-lucide-store', to: '/admin/shops' },
 	{ label: 'Products', icon: 'i-lucide-package', to: '/admin/products' },
 	{ label: 'Users', icon: 'i-lucide-users', to: '/admin/users' },
 	{ label: 'Transaction logs', icon: 'i-lucide-scroll-text', to: '/admin/transaction-logs' },
 ]
-
-const items = computed(() => (isAdmin.value ? adminItems : shopItems))
-const panelTitle = computed(() => (isAdmin.value ? 'Admin' : 'My shop'))
 </script>
 
 <template>
@@ -75,7 +60,7 @@ const panelTitle = computed(() => (isAdmin.value ? 'Admin' : 'My shop'))
 				<UDashboardNavbar>
 					<template #leading>
 						<UDashboardSidebarCollapse />
-						<span class="font-semibold text-highlighted">{{ panelTitle }}</span>
+						<span class="font-semibold text-highlighted">Admin</span>
 					</template>
 					<template #right>
 						<UColorModeButton />

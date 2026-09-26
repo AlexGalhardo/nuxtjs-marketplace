@@ -40,10 +40,20 @@ test('buyer can search, filter and open a product and its shop', async ({ page, 
 	}
 
 	await goto('/', { waitUntil: 'hydration' })
-	await page.getByRole('searchbox', { name: 'search products' }).fill(token)
-	await page.getByRole('searchbox', { name: 'search products' }).press('Enter')
+	const search = page.getByRole('combobox', { name: 'search products' })
+	// Two characters: no suggestions yet.
+	await search.fill(token.slice(0, 2))
+	await expect(search).toHaveAttribute('aria-expanded', 'false')
+	// From three: the top matches, plus "see all".
+	await search.fill(token)
+	const suggestions = page.getByRole('listbox', { name: 'suggested products' })
+	await expect(suggestions.getByRole('option', { name: /denim jacket/ })).toBeVisible()
+	await expect(suggestions.getByRole('option', { name: /lightroom presets/ })).toBeVisible()
+	await expect(suggestions.getByRole('option', { name: /see all 2 finds/ })).toBeVisible()
+	// Enter with nothing highlighted searches everything.
+	await search.press('Enter')
 	await expect(page).toHaveURL(new RegExp(`/marketplace\\?q=${token}`))
-	await expect(page.getByText('2 finds')).toBeVisible()
+	await expect(page.getByText('2 finds', { exact: true })).toBeVisible()
 
 	await page.getByRole('button', { name: 'digital', exact: true }).click()
 	await expect(page).toHaveURL(/kind=digital/)

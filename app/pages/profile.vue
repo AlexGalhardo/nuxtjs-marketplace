@@ -72,7 +72,7 @@ const emptyAddress: AddressInput = {
 	city: '',
 	state: '',
 	postalCode: '',
-	country: '',
+	country: 'BR',
 	phone: '',
 	isDefault: false,
 }
@@ -104,6 +104,23 @@ function openEditAddress(address: Address) {
 	showAddressModal.value = true
 }
 
+// Filling the CEP completes street, neighborhood, city and state (ViaCEP); every field stays editable.
+const cepStatus = ref<'idle' | 'loading' | 'found' | 'not-found'>('idle')
+watch(
+	() => addressState.postalCode,
+	async (cep) => {
+		if (cep.replace(/\D/g, '').length !== 8) {
+			cepStatus.value = 'idle'
+			return
+		}
+		cepStatus.value = 'loading'
+		const found = await lookupCep(cep)
+		if (cep !== addressState.postalCode) return
+		cepStatus.value = found ? 'found' : 'not-found'
+		if (found) Object.assign(addressState, found, { country: 'BR' })
+	},
+)
+
 async function onAddressSubmit(event: FormSubmitEvent<AddressInput>) {
 	addressPending.value = true
 	try {
@@ -117,6 +134,13 @@ async function onAddressSubmit(event: FormSubmitEvent<AddressInput>) {
 		}
 		showAddressModal.value = false
 		await refreshAddresses()
+		toast.add({ title: 'Address saved', color: 'success' })
+	} catch (error) {
+		toast.add({
+			title: 'Could not save the address',
+			description: apiErrorMessage(error),
+			color: 'error',
+		})
 	} finally {
 		addressPending.value = false
 	}
@@ -146,7 +170,11 @@ async function deleteAddress() {
 	<UContainer class="max-w-2xl py-10 space-y-8">
 		<h1 class="text-2xl font-semibold">Your profile</h1>
 
-		<UPageCard title="Personal information" description="Update your name and phone number.">
+		<UPageCard
+			class="rounded-none"
+			title="Personal information"
+			description="Update your name and phone number."
+		>
 			<UForm
 				:schema="updateProfileSchema"
 				:state="profileState"
@@ -159,11 +187,14 @@ async function deleteAddress() {
 				<UFormField label="Phone" name="phone">
 					<UInput v-model="profileState.phone" class="w-full" />
 				</UFormField>
-				<UButton type="submit" :loading="profilePending">Save changes</UButton>
+				<UButton type="submit" class="rounded-none" :loading="profilePending"
+					>Save changes</UButton
+				>
 			</UForm>
 		</UPageCard>
 
 		<UPageCard
+			class="rounded-none"
 			title="Change password"
 			description="You’ll be logged out on every device after this."
 		>
@@ -189,25 +220,23 @@ async function deleteAddress() {
 						class="w-full"
 					/>
 				</UFormField>
-				<UButton type="submit" color="error" :loading="passwordPending"
+				<UButton type="submit" class="rounded-none" color="error" :loading="passwordPending"
 					>Change password</UButton
 				>
 			</UForm>
 		</UPageCard>
 
-		<UPageCard title="Addresses" description="Used at checkout for physical products.">
-			<template #trailing>
-				<UButton icon="i-lucide-plus" variant="subtle" @click="openNewAddress"
-					>Add address</UButton
-				>
-			</template>
-
+		<UPageCard
+			class="rounded-none"
+			title="Addresses"
+			description="Used at checkout for physical products."
+		>
 			<p v-if="!addresses?.length" class="text-sm text-muted">No addresses saved yet.</p>
 			<ul v-else class="space-y-3">
 				<li
 					v-for="address in addresses"
 					:key="address.id"
-					class="flex items-start justify-between gap-4 rounded-lg border border-default p-3"
+					class="flex items-start justify-between gap-4 border border-default p-3"
 				>
 					<div class="text-sm">
 						<p class="font-medium">
@@ -242,10 +271,19 @@ async function deleteAddress() {
 					</div>
 				</li>
 			</ul>
+			<UButton
+				icon="i-lucide-plus"
+				variant="subtle"
+				class="self-start"
+				@click="openNewAddress"
+			>
+				Add address
+			</UButton>
 		</UPageCard>
 
 		<UModal
 			v-model:open="showAddressModal"
+			:ui="{ content: 'rounded-none' }"
 			:title="editingAddressId ? 'Edit address' : 'Add address'"
 		>
 			<template #body>
@@ -256,13 +294,47 @@ async function deleteAddress() {
 					@submit="onAddressSubmit"
 				>
 					<UFormField label="Full name" name="fullName" required>
-						<UInput v-model="addressState.fullName" class="w-full" />
+						<UInput
+							v-model="addressState.fullName"
+							autocomplete="name"
+							class="w-full"
+						/>
 					</UFormField>
-					<UFormField label="Address line 1" name="line1" required>
-						<UInput v-model="addressState.line1" class="w-full" />
+					<UFormField
+						label="Postal code (CEP)"
+						name="postalCode"
+						required
+						:help="
+							cepStatus === 'loading'
+								? 'Looking up your address…'
+								: cepStatus === 'not-found'
+									? 'CEP not found. Fill in the address below.'
+									: 'Type your CEP and we fill in the rest.'
+						"
+					>
+						<UInput
+							v-model="addressState.postalCode"
+							inputmode="numeric"
+							autocomplete="postal-code"
+							placeholder="01001-000"
+							maxlength="9"
+							:loading="cepStatus === 'loading'"
+							class="w-full"
+						/>
 					</UFormField>
-					<UFormField label="Address line 2" name="line2">
-						<UInput v-model="addressState.line2" class="w-full" />
+					<UFormField label="Street and number" name="line1" required>
+						<UInput
+							v-model="addressState.line1"
+							autocomplete="address-line1"
+							class="w-full"
+						/>
+					</UFormField>
+					<UFormField label="Neighborhood and complement" name="line2">
+						<UInput
+							v-model="addressState.line2"
+							autocomplete="address-line2"
+							class="w-full"
+						/>
 					</UFormField>
 					<div class="grid grid-cols-2 gap-4">
 						<UFormField label="City" name="city" required>
@@ -272,19 +344,21 @@ async function deleteAddress() {
 							<UInput v-model="addressState.state" class="w-full" />
 						</UFormField>
 					</div>
-					<div class="grid grid-cols-2 gap-4">
-						<UFormField label="Postal code" name="postalCode" required>
-							<UInput v-model="addressState.postalCode" class="w-full" />
-						</UFormField>
-						<UFormField label="Country (2-letter code)" name="country" required>
-							<UInput v-model="addressState.country" class="w-full" maxlength="2" />
-						</UFormField>
-					</div>
+					<UFormField label="Country (2-letter code)" name="country" required>
+						<UInput
+							v-model="addressState.country"
+							autocomplete="country"
+							maxlength="2"
+							class="w-full"
+						/>
+					</UFormField>
 					<UFormField label="Phone" name="phone" required>
 						<UInput v-model="addressState.phone" class="w-full" />
 					</UFormField>
 					<UCheckbox v-model="addressState.isDefault" label="Set as default address" />
-					<UButton type="submit" :loading="addressPending">Save address</UButton>
+					<UButton type="submit" class="rounded-none" :loading="addressPending"
+						>Save address</UButton
+					>
 				</UForm>
 			</template>
 		</UModal>

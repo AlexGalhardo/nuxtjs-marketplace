@@ -30,7 +30,9 @@
 - Seed: `bun run db:seed` runs `server/db/seed.ts` (a plain Bun script, not a Nitro task — Nitro's
   `task run` requires an already-running dev server, which doesn't fit idempotent one-shot setup
   scripts). It always seeds the fixed `product_types` list (D13) using `onConflictDoNothing()`
-  for idempotency; outside production it also seeds the fake catalog.
+  for idempotency; outside production it also seeds the fake catalog (skip it with `SEED_DEMO_CATALOG=false`),
+  whose photos are bundled CC0 images in `public/seed/products/<type>/1..5.webp` (sources in `public/seed/CREDITS.json`).
+  Reruns on an existing database move any old picsum.photos URLs of demo rows to those photos.
 - Production/Docker: Postgres builds skip NuxtHub's build-time migrations (`applyMigrationsDuringBuild: false`,
   explicit `postgres-js` driver so `DATABASE_URL` is read at run time). Migrations run through
   `bun run db:migrate` — in Docker, the `migrate` target of `infra/docker/Dockerfile` (compose runs it before `app`).

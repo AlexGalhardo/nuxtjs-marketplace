@@ -2,7 +2,7 @@
 import type { AuthFormField, FormSubmitEvent } from '@nuxt/ui'
 import { type SignupInput, signupSchema } from '#shared/schemas/auth'
 
-definePageMeta({ layout: 'auth', middleware: 'guest' })
+definePageMeta({ middleware: 'guest' })
 
 const { signup } = useAuth()
 const toast = useToast()
@@ -64,42 +64,49 @@ async function onSubmit(event: FormSubmitEvent<SignupInput>) {
 </script>
 
 <template>
-	<UPageCard class="w-full max-w-md">
-		<h1 class="sr-only">Create an account</h1>
-		<UAuthForm
-			ref="authForm"
-			:schema="signupSchema"
-			title="Create an account"
-			icon="i-lucide-user-plus"
-			:fields="fields"
-			:loading="pending"
-			:submit="{ label: 'Create account' }"
-			@submit="onSubmit"
-		>
-			<template #description>
-				<p class="text-sm text-muted">Start buying and selling in minutes.</p>
-				<ul class="mt-3 space-y-1" aria-live="polite">
-					<li
-						v-for="rule in passwordRules"
-						:key="rule.label"
-						class="flex items-center gap-1.5 text-xs"
-						:class="rule.test(password) ? 'text-success' : 'text-muted'"
-					>
-						<UIcon
-							:name="rule.test(password) ? 'i-lucide-check-circle-2' : 'i-lucide-circle'"
-							class="size-3.5 shrink-0"
-						/>
-						{{ rule.label }}
-					</li>
-				</ul>
-			</template>
+	<div class="rs-container flex justify-center py-12 sm:py-16">
+		<UPageCard class="w-full max-w-md rounded-none">
+			<h1 class="sr-only">Create an account</h1>
+			<UAuthForm
+				ref="authForm"
+				:schema="signupSchema"
+				title="Create an account"
+				icon="i-lucide-user-plus"
+				:fields="fields"
+				:loading="pending"
+				:submit="{ label: 'Create account', class: 'rounded-none' }"
+				@submit="onSubmit"
+			>
+				<template #description>
+					<p class="text-sm text-muted">Start buying and selling in minutes.</p>
+				</template>
 
-			<template #footer>
-				<p class="text-sm text-muted text-center">
-					Already have an account?
-					<ULink to="/login" class="font-medium text-primary">Log in</ULink>
-				</p>
-			</template>
-		</UAuthForm>
-	</UPageCard>
+				<!-- Under the password field, only once typing starts: an empty checklist is noise. -->
+				<template #password-help>
+					<ul v-if="password" class="mt-1 space-y-1" aria-live="polite">
+						<li
+							v-for="rule in passwordRules"
+							:key="rule.label"
+							class="flex items-center gap-1.5 text-xs"
+							:class="rule.test(password) ? 'text-success' : 'text-muted'"
+						>
+							<UIcon
+								:name="rule.test(password) ? 'i-lucide-check-circle-2' : 'i-lucide-circle'"
+								class="size-3.5 shrink-0"
+								aria-hidden="true"
+							/>
+							{{ rule.label }}
+						</li>
+					</ul>
+				</template>
+
+				<template #footer>
+					<p class="text-sm text-muted text-center">
+						Already have an account?
+						<ULink to="/login" class="font-medium text-primary">Log in</ULink>
+					</p>
+				</template>
+			</UAuthForm>
+		</UPageCard>
+	</div>
 </template>

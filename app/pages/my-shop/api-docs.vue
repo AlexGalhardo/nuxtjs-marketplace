@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import '@scalar/api-reference/style.css'
 
-definePageMeta({ layout: 'dashboard', middleware: 'auth' })
+definePageMeta({ layout: 'my-shop', middleware: 'auth' })
 useSeoMeta({ title: 'api docs — my shop' })
 
 // Client-only and lazy: Scalar is a large bundle only this page needs.

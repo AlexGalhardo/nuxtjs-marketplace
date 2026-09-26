@@ -26,6 +26,8 @@ const ENTRY = '.output/server/index.mjs'
 // production 30/5min auth rate limit — raise it for this build. It is read at build time (routeRules
 // are baked into the Nitro build), so it must be set on the build step too, not just the server.
 const TEST_ENV = {
+	// Own database and blob dir (nuxt.config.ts `hub.dir`): test data never touches `.data`.
+	NUXT_HUB_DIR: '.data-test',
 	NUXT_STRICT_ENV: 'false',
 	NUXT_SESSION_PASSWORD: 'x'.repeat(32),
 	NUXT_AUTH_RATE_LIMIT_TOKENS: '1000',
@@ -126,9 +128,24 @@ async function warmUpRoutes(): Promise<void> {
 	])
 }
 
+// The build applied the migrations to `.data-test`; tests also need the product types.
+async function seedProductTypes(): Promise<void> {
+	await new Promise<void>((resolve, reject) => {
+		const seed = spawn('bun', ['run', 'db:seed'], {
+			stdio: 'inherit',
+			env: { ...process.env, ...TEST_ENV, SEED_DEMO_CATALOG: 'false' },
+		})
+		seed.on('error', reject)
+		seed.on('exit', (code) =>
+			code === 0 ? resolve() : reject(new Error(`bun run db:seed exited with code ${code}`)),
+		)
+	})
+}
+
 export async function setup() {
 	fakeStripe = startFakeStripe()
 	await runBuild()
+	await seedProductTypes()
 	server = startServer()
 	await waitForHealth(server, Date.now() + 60_000)
 	await warmUpRoutes()

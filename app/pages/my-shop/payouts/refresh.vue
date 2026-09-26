@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Stripe redirects here when an Account Link expired before onboarding finished. Bounce back to
 // the payouts page, which lets the seller request a fresh link.
-definePageMeta({ layout: 'dashboard', middleware: 'auth' })
+definePageMeta({ layout: 'my-shop', middleware: 'auth' })
 useSeoMeta({ title: 'Reconnecting — Marketplace' })
 
 const toast = useToast()

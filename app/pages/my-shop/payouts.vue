@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Shop } from '#shared/types/db'
 
-definePageMeta({ layout: 'dashboard', middleware: 'auth' })
+definePageMeta({ layout: 'my-shop', middleware: 'auth' })
 useSeoMeta({ title: 'Payouts — Marketplace' })
 
 const toast = useToast()

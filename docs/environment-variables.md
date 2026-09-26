@@ -11,6 +11,8 @@ Variables marked *(Phase N)* are not wired yet; add them to `runtimeConfig`, the
 | `NUXT_SESSION_PASSWORD` | yes | ≥ 32 chars, seals the session cookie (nuxt-auth-utils). Auto-generated in `nuxt dev` if left empty |
 | `NUXT_HUB_DB_DIALECT` | build | `sqlite` (default) or `postgresql`. Read directly in `nuxt.config.ts` (`hub.db`), not part of `runtimeConfig` |
 | `NUXT_RATE_LIMIT_TOKENS` | build | Global per-IP rate limit, tokens per 5 min (default `1000`, D20). Read directly in `nuxt.config.ts`; raised by `tests/integration/global-setup.ts` for the shared test server |
+| `NUXT_HUB_DIR` | build | NuxtHub data dir (SQLite file, local blobs), default `.data`. The test suites use `.data-test` so test data never reaches the dev database |
+| `SEED_DEMO_CATALOG` | seed | `false` skips the 100-shop demo catalog in `bun run db:seed` (test databases only need the product types) |
 | `NUXT_AUTH_RATE_LIMIT_TOKENS` | build | `/api/auth/**` rate limit, tokens per 5 min (default `30`). Read directly in `nuxt.config.ts` (`routeRules`), not part of `runtimeConfig`. `tests/integration/global-setup.ts` raises it for the shared test server (docs/testing.md) |
 | `DATABASE_URL` | postgres | PostgreSQL connection string, read by `@nuxthub/core`'s postgres-js driver |
 | `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT` | prod/docker | Blob storage (SeaweedFS S3 in docker-compose); leave empty to use the local `fs` driver (`.data/blob`) |

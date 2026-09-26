@@ -126,18 +126,3 @@
 	margin-inline: auto;
 	padding-inline: 1.5rem;
 }
-
-/* The wordmark cursor: the one authored motion that runs without user input. */
-@keyframes rs-blink {
-	50% {
-		opacity: 0;
-	}
-}
-
-@utility rs-cursor {
-	animation: rs-blink 1.1s steps(1) infinite;
-
-	@media (prefers-reduced-motion: reduce) {
-		animation: none;
-	}
-}

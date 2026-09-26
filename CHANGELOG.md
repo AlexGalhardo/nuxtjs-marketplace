@@ -7,7 +7,17 @@ Entries are generated with `bun run release` (changelogen).
 
 ## Unreleased
 
+### Fixes
+- **profile:** the "add address" button never rendered (it sat in a `UPageCard` slot that doesn't exist), so no address could be added and physical checkouts were blocked; saving an address now also reports errors.
+- **test:** integration and e2e runs wrote thousands of throwaway users and photo-less products into the dev database; they now use `.data-test`.
+- **ui:** the logo's blinking terminal cursor is gone.
+
 ### Features
+- **search:** the header search suggests the top 5 products from 3 characters on (accessible combobox: arrows, Enter, Esc), plus "see all N finds".
+- **profile:** typing a Brazilian CEP fills street, neighborhood, city, state and country (ViaCEP).
+- **ui:** `/login`, `/signup`, password reset and `/my-shop/**` now use the site layout (header + footer); the seller area gets a section nav.
+- **ui:** square form fields everywhere, square cards and buttons on the form pages; the signup password checklist appears under the field once you start typing.
+- **seed:** every demo product and shop uses real CC0 photos of its category (`public/seed`), so `picsum.photos` left the CSP.
 - **setup:** every `setups/*.sh` script now starts the app at the end with its logs on screen, saves the whole session to `logs/<script>-<timestamp>.log`, and keeps the Git Bash window open (press Enter to close) on success, error or Ctrl+C.
 
 ## v1.0.0 (2026-09-26)

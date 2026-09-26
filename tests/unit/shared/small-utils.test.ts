@@ -40,7 +40,7 @@ describe('blobFileName', () => {
 describe('mediaUrl', () => {
 	it('prefixes blob keys and leaves absolute URLs alone', () => {
 		expect(mediaUrl('images/a.webp')).toBe('/images/a.webp')
-		expect(mediaUrl('https://picsum.photos/1')).toBe('https://picsum.photos/1')
+		expect(mediaUrl('https://cdn.example.com/1.webp')).toBe('https://cdn.example.com/1.webp')
 	})
 })
 

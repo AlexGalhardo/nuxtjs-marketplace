@@ -2,7 +2,7 @@
 import { type ProductInput, productSchema } from '#shared/schemas/product'
 import type { Product, ProductFile, ProductImage, ProductType } from '#shared/types/db'
 
-definePageMeta({ layout: 'dashboard', middleware: 'auth' })
+definePageMeta({ layout: 'my-shop', middleware: 'auth' })
 useSeoMeta({ title: 'Edit product — Marketplace' })
 
 const route = useRoute()

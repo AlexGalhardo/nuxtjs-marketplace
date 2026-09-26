@@ -1,7 +1,7 @@
 import { slugify } from './slug'
 
-// Stored image paths are blob keys ("images/..." served by server/routes/images) — or, for the fake
-// seed catalog only, absolute placeholder URLs (picsum.photos, allowed in the CSP img-src).
+// Stored image paths are blob keys ("images/..." served by server/routes/images) or bundled demo
+// photos ("seed/...", public/seed). Absolute URLs pass through untouched.
 export function mediaUrl(path: string): string {
 	return /^https?:\/\//.test(path) ? path : `/${path}`
 }

@@ -1,0 +1,509 @@
+{
+	"about": "Demo catalog photos (server/db/seed.ts). All CC0 1.0 (public domain) via Openverse, square-cropped to 640px WebP. Attribution is not required; sources kept for provenance.",
+	"photos": {
+		"books": [
+			{
+				"file": "1.webp",
+				"query": "stack of books",
+				"title": "Woman holding stack old books",
+				"creator": null,
+				"license": "cc0 1.0",
+				"source": "https://www.rawpixel.com/image/6113312/photo-image-public-domain-vintage-person"
+			},
+			{
+				"file": "2.webp",
+				"query": "vintage books",
+				"title": "Desk with Lamp, Pitcher, and Vintage Books",
+				"creator": "Image Catalog",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/132795455@N08/22834299902"
+			},
+			{
+				"file": "3.webp",
+				"query": "bookshelf",
+				"title": "Library Bookshelf",
+				"creator": "Open Grid Scheduler / Grid Engine",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/29155878@N03/23156651289"
+			},
+			{
+				"file": "4.webp",
+				"query": "paperback novel",
+				"title": "Books Market",
+				"creator": "Suzy Hazelwood",
+				"license": "cc0 1.0",
+				"source": "https://stocksnap.io/photo/books-market-UVRPTGPNJ2"
+			},
+			{
+				"file": "5.webp",
+				"query": "hardcover book",
+				"title": "The back cover of a red hardcover book held by a hand.",
+				"creator": "Eduardo Salinas",
+				"license": "cc0 1.0",
+				"source": "https://wordpress.org/photos/photo/50668ab32f/"
+			}
+		],
+		"clothing-apparel": [
+			{
+				"file": "1.webp",
+				"query": "jacket on hanger",
+				"title": "Blouses, jackets sweater hangers store",
+				"creator": null,
+				"license": "cc0 1.0",
+				"source": "https://www.rawpixel.com/image/3284712/free-photo-image-mannequin-shop-fashion"
+			},
+			{
+				"file": "2.webp",
+				"query": "white sneakers",
+				"title": "White Sneakers",
+				"creator": "Ylanite Koppens",
+				"license": "cc0 1.0",
+				"source": "https://stocksnap.io/photo/white-sneakers-EA7TDORJBT"
+			},
+			{
+				"file": "3.webp",
+				"query": "clothes rack",
+				"title": "Shirts Hanging on Clothes Rack",
+				"creator": "Image Catalog",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/132795455@N08/22062843021"
+			},
+			{
+				"file": "4.webp",
+				"query": "dress clothing",
+				"title": "Dress Clothes, Located",
+				"creator": "cogdogblog",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/37996646802@N01/42315541201"
+			},
+			{
+				"file": "5.webp",
+				"query": "hoodie",
+				"title": "Hoodie",
+				"creator": "SissyTvinhose",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/166654743@N04/51657272972"
+			}
+		],
+		"digital-art-design": [
+			{
+				"file": "1.webp",
+				"query": "abstract painting",
+				"title": "Found abstract painting with wire, broom, rag, arch, bricks, tile, metal grate, and mango, Belmar Hotel floor, South Mazatlan, Sinaloa, Mexico - Encontrado pintura abstracta con alambre e escoba",
+				"creator": "Wonderlane",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/71401718@N00/3926971334"
+			},
+			{
+				"file": "2.webp",
+				"query": "illustration drawing",
+				"title": "Illustration 'Drawings some Ruins Colossal",
+				"creator": null,
+				"license": "cc0 1.0",
+				"source": "https://www.rawpixel.com/image/8757499/image-person-art-public-domain"
+			},
+			{
+				"file": "3.webp",
+				"query": "colorful art",
+				"title": "Colorful Art",
+				"creator": "Steve Johnson",
+				"license": "cc0 1.0",
+				"source": "https://stocksnap.io/photo/colorful-art-HAGFBT3KXX"
+			},
+			{
+				"file": "4.webp",
+				"query": "watercolor painting",
+				"title": "2007 / 2014 - 'Beauty & Truth 3', a later digital re-painting of my visual response in watercolor painting for making a free art-print - a visual eaction on Schillers 'Letters Upon The Aesthetic Education of Man' 1. Fons Heijnsbroek",
+				"creator": "Free Abstract painting art",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/97030532@N06/10090395715"
+			},
+			{
+				"file": "5.webp",
+				"query": "paint palette",
+				"title": "Aesthetic easel color paint palette",
+				"creator": null,
+				"license": "cc0 1.0",
+				"source": "https://www.rawpixel.com/image/5926434/photo-image-aesthetic-background-texture"
+			}
+		],
+		"ebooks": [
+			{
+				"file": "1.webp",
+				"query": "e-reader",
+				"title": "Kindle E-Reader",
+				"creator": "Aliis Sinisalu",
+				"license": "cc0 1.0",
+				"source": "https://stocksnap.io/photo/kindle-e-reader-YE3BR41KSE"
+			},
+			{
+				"file": "2.webp",
+				"query": "ipad reading",
+				"title": "Learn Unlearn Relearn",
+				"creator": "giulia.forsythe",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/59217476@N00/7211160284"
+			},
+			{
+				"file": "3.webp",
+				"query": "reading book",
+				"title": "Girl reading book",
+				"creator": "Worlds Direction",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/144661696@N05/34172449641"
+			},
+			{
+				"file": "4.webp",
+				"query": "library books",
+				"title": "seattle library books",
+				"creator": "JessOpals",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/40950210@N08/43491704674"
+			},
+			{
+				"file": "5.webp",
+				"query": "person reading",
+				"title": "Free person reading book closeup",
+				"creator": null,
+				"license": "cc0 1.0",
+				"source": "https://www.rawpixel.com/image/5912134/image-book-public-domain-hands"
+			}
+		],
+		"electronics": [
+			{
+				"file": "1.webp",
+				"query": "headphones",
+				"title": "Koss headphones",
+				"creator": "Abdulla Al Muhairi",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/57866029@N00/52459692877"
+			},
+			{
+				"file": "2.webp",
+				"query": "vintage camera",
+				"title": "Vintage cameras",
+				"creator": "StockyPics",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/135371437@N04/21698523515"
+			},
+			{
+				"file": "3.webp",
+				"query": "laptop computer",
+				"title": "Apple Laptop Computer with Headphones, Camera, and Open Notebook",
+				"creator": "Image Catalog",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/132795455@N08/17652700524"
+			},
+			{
+				"file": "4.webp",
+				"query": "smartphone on table",
+				"title": "Woman taking photo of bread and wine on her smartphone in restaurant.",
+				"creator": "Artem Beliaikin",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/157635012@N07/31299887987"
+			},
+			{
+				"file": "5.webp",
+				"query": "computer keyboard",
+				"title": "Backlit computer keyboard",
+				"creator": "freestocks.org",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/135396164@N05/40623300100"
+			}
+		],
+		"home-kitchen": [
+			{
+				"file": "1.webp",
+				"query": "coffee mug",
+				"title": "Coffee Mug",
+				"creator": "Alex Holt",
+				"license": "cc0 1.0",
+				"source": "https://stocksnap.io/photo/coffee-mug-M4PI6CXDDP"
+			},
+			{
+				"file": "2.webp",
+				"query": "ceramic bowl",
+				"title": "Zapotec Ceramic Bowls, Monte Alban II",
+				"creator": "Gary Lee Todd, Ph.D.",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/101561334@N08/9768588205"
+			},
+			{
+				"file": "3.webp",
+				"query": "teapot",
+				"title": "Black Ceramic Teapot",
+				"creator": "Image Catalog",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/132795455@N08/17106495329"
+			},
+			{
+				"file": "4.webp",
+				"query": "desk lamp",
+				"title": "Metal desk lamp and books pile",
+				"creator": "freestocks.org",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/135396164@N05/42381074432"
+			},
+			{
+				"file": "5.webp",
+				"query": "kitchen utensils",
+				"title": "Still Life of Kitchen Utensils, Herbs, and Spices",
+				"creator": "Image Catalog",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/132795455@N08/18392177145"
+			}
+		],
+		"music-audio": [
+			{
+				"file": "1.webp",
+				"query": "synthesizer",
+				"title": "Synthesizer Keyboard",
+				"creator": "Skitter Photo",
+				"license": "cc0 1.0",
+				"source": "https://stocksnap.io/photo/synthesizer-keyboard-QVZN44GAXB"
+			},
+			{
+				"file": "2.webp",
+				"query": "vinyl record",
+				"title": "Vinyl Record",
+				"creator": "Skitter Photo",
+				"license": "cc0 1.0",
+				"source": "https://stocksnap.io/photo/vinyl-record-0NOS06CDVI"
+			},
+			{
+				"file": "3.webp",
+				"query": "electric guitar",
+				"title": "Electric Guitar with Cord",
+				"creator": "Image Catalog",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/132795455@N08/16714011173"
+			},
+			{
+				"file": "4.webp",
+				"query": "studio microphone",
+				"title": "Is This Thing On?",
+				"creator": "cogdogblog",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/37996646802@N01/31417963024"
+			},
+			{
+				"file": "5.webp",
+				"query": "music mixer",
+				"title": "close-up white dials music mixer",
+				"creator": null,
+				"license": "cc0 1.0",
+				"source": "https://www.rawpixel.com/image/3283107/free-photo-image-music-studio-cc0"
+			}
+		],
+		"online-courses": [
+			{
+				"file": "1.webp",
+				"query": "studying laptop",
+				"title": "Joel at the iSchool Study group, University Inn, Seattle, Washington, USA",
+				"creator": "Wonderlane",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/71401718@N00/3043177743"
+			},
+			{
+				"file": "2.webp",
+				"query": "student notes",
+				"title": "#etmooc @audreywatters asks 'Who Owns Your Education Data (and Why Does It Matter?)'",
+				"creator": "giulia.forsythe",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/59217476@N00/8508041553"
+			},
+			{
+				"file": "3.webp",
+				"query": "classroom",
+				"title": "Classroom",
+				"creator": "westernhunan",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/99865395@N05/9493920086"
+			},
+			{
+				"file": "4.webp",
+				"query": "notebook pen",
+				"title": "Notebook Pen",
+				"creator": "Negative Space",
+				"license": "cc0 1.0",
+				"source": "https://stocksnap.io/photo/notebook-pen-2H0QPGDVGZ"
+			},
+			{
+				"file": "5.webp",
+				"query": "online learning",
+				"title": "7 Measures of Quality in Online Learning",
+				"creator": "giulia.forsythe",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/59217476@N00/10164585803"
+			}
+		],
+		"software-apps": [
+			{
+				"file": "1.webp",
+				"query": "programming code screen",
+				"title": "HTML PHP Javascript Source Code",
+				"creator": "markus spiske",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/125167502@N02/31906693748"
+			},
+			{
+				"file": "2.webp",
+				"query": "laptop code",
+				"title": "Laptop Code",
+				"creator": "Matthew Henry",
+				"license": "cc0 1.0",
+				"source": "https://stocksnap.io/photo/laptop-code-0KAT80KW5F"
+			},
+			{
+				"file": "3.webp",
+				"query": "computer monitor",
+				"title": "Computer Monitors",
+				"creator": "Tran Mau Tri Tam",
+				"license": "cc0 1.0",
+				"source": "https://stocksnap.io/photo/computer-monitors-SLZRDLFT96"
+			},
+			{
+				"file": "4.webp",
+				"query": "source code",
+				"title": "When You Say Culture, I Reach For My Source Code, @daviddarts #umwfa12",
+				"creator": "giulia.forsythe",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/59217476@N00/7217027190"
+			},
+			{
+				"file": "5.webp",
+				"query": "software developer",
+				"title": "Software developer programming code black",
+				"creator": "Markus Spiske",
+				"license": "cc0 1.0",
+				"source": "https://www.rawpixel.com/image/593170/programmer-code-screen"
+			}
+		],
+		"sports-outdoors": [
+			{
+				"file": "1.webp",
+				"query": "bicycle",
+				"title": "The Red Bicycle.",
+				"creator": "Bernard Spragg",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/88123769@N02/15655615295"
+			},
+			{
+				"file": "2.webp",
+				"query": "skateboard",
+				"title": "Skateboard Skate Skating Skater Urban Energy Concept",
+				"creator": "Rawpixel Ltd",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/147875007@N03/32191466483"
+			},
+			{
+				"file": "3.webp",
+				"query": "camping tent",
+				"title": "Camping Tent",
+				"creator": "Julian Bialowas",
+				"license": "cc0 1.0",
+				"source": "https://stocksnap.io/photo/camping-tent-177F2EBDDC"
+			},
+			{
+				"file": "4.webp",
+				"query": "soccer ball",
+				"title": "Soccer Ball",
+				"creator": "Michal Jarmoluk",
+				"license": "cc0 1.0",
+				"source": "https://stocksnap.io/photo/soccer-ball-LHHL7FKKVD"
+			},
+			{
+				"file": "5.webp",
+				"query": "hiking",
+				"title": "Sun hiking in Garraf",
+				"creator": "Lottie's pets & stuff",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/36943025@N07/21378403148"
+			}
+		],
+		"templates-themes": [
+			{
+				"file": "1.webp",
+				"query": "workspace desk",
+				"title": "Work space, Microsoft Custom Development Solutions Technical Innovation Partner of the Year 2006, Tiger mousepad, San Francisco, California, 20 floors up, USA",
+				"creator": "Wonderlane",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/71401718@N00/3006233559"
+			},
+			{
+				"file": "2.webp",
+				"query": "laptop desk",
+				"title": "Laptop Desk",
+				"creator": "Lisa Fotios",
+				"license": "cc0 1.0",
+				"source": "https://stocksnap.io/photo/laptop-desk-JCXQS3IVWD"
+			},
+			{
+				"file": "3.webp",
+				"query": "sketchbook",
+				"title": "Sketchbook and Cellphone on Desktop",
+				"creator": "Image Catalog",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/132795455@N08/21796327464"
+			},
+			{
+				"file": "4.webp",
+				"query": "minimal desk",
+				"title": "Minimal Desk",
+				"creator": "Ylanite Koppens",
+				"license": "cc0 1.0",
+				"source": "https://stocksnap.io/photo/minimal-desk-4LRLO5RYTY"
+			},
+			{
+				"file": "5.webp",
+				"query": "notebook planner",
+				"title": "iPhone and iWatch",
+				"creator": "freestocks.org",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/135396164@N05/30302883830"
+			}
+		],
+		"toys-games": [
+			{
+				"file": "1.webp",
+				"query": "wooden toys",
+				"title": "Wooden toy lion, with moving jaw, rock crystal eyes and bronze teeth. Thebes New Kingdom (?) Purchased from Rev Greville John Chester, 1885 EA15671 @britishmuseum #Animals",
+				"creator": "akhenatenator",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/86012097@N08/28256291752"
+			},
+			{
+				"file": "2.webp",
+				"query": "lego bricks",
+				"title": "LEGO brick wall",
+				"creator": "Alex does LEGO",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/163799831@N07/46983288504"
+			},
+			{
+				"file": "3.webp",
+				"query": "toy car",
+				"title": "ds649 Toy Car on a Makeshift Pedestal",
+				"creator": "mnsc",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/49976053@N00/6083405104"
+			},
+			{
+				"file": "4.webp",
+				"query": "teddy bear toy",
+				"title": "Cute teddy bear toy background",
+				"creator": null,
+				"license": "cc0 1.0",
+				"source": "https://www.rawpixel.com/image/6017419/photo-image-background-cute-public-domain"
+			},
+			{
+				"file": "5.webp",
+				"query": "chess pieces",
+				"title": "Chess Pieces on Wood Board",
+				"creator": "Image Catalog",
+				"license": "cc0 1.0",
+				"source": "https://www.flickr.com/photos/132795455@N08/19232856770"
+			}
+		]
+	}
+}

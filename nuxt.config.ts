@@ -34,6 +34,9 @@ export default defineNuxtConfig({
 	// sqlite defaults to a local file at .data/db/sqlite.db. Blob: fs locally, S3 when
 	// S3_ACCESS_KEY_ID/S3_SECRET_ACCESS_KEY/S3_BUCKET are set (docker-compose/prod).
 	hub: {
+		// NUXT_HUB_DIR (build time): the test suites use `.data-test`, so their thousands of throwaway
+		// users and photo-less products never land in the dev database (`.data`).
+		dir: process.env.NUXT_HUB_DIR || '.data',
 		// libsql pools several connections per process with a 0 ms busy timeout by default, so two
 		// concurrent writes (e.g. a checkout transaction + any other write) failed instantly with
 		// SQLITE_BUSY. Wait up to 5 s for the lock instead.
@@ -182,13 +185,8 @@ export default defineNuxtConfig({
 		},
 		headers: {
 			contentSecurityPolicy: {
-				// picsum.photos: placeholder photos of the fake seed catalog (server/db/seed.ts, dev only).
-				'img-src': [
-					"'self'",
-					'data:',
-					'https://picsum.photos',
-					'https://fastly.picsum.photos',
-				],
+				// Images are same-origin only: uploads (/images) and the bundled demo photos (/seed).
+				'img-src': ["'self'", 'data:'],
 			},
 		},
 	},
