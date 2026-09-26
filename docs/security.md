@@ -20,6 +20,11 @@ PLAN.md §5.1. Every phase ends with a review of the categories it touches, reco
   `/api/**` request whose `Origin` (or `Referer`) is another host gets 403. Skipped for `Authorization: Bearer`
   calls and the signed Stripe webhook; requests with neither header (non-browser clients) pass, since they can't
   carry a victim's cookies. Keep GET handlers free of side effects so Lax top-level navigations stay harmless.
+- **Security logs (A09)**: `logSecurityEvent()` (`server/utils/security-log.ts`) writes one JSON line per
+  `login.succeeded|failed`, `password_reset.requested|completed`, `password.changed`, `csrf.refused` to stdout
+  (ids, reason, client IP; never emails, passwords, tokens). Admin actions stay in `audit_logs`.
+- **Client IP**: taken from `X-Real-IP`, set by the production reverse proxy (docs/infra-and-setup.md). Per-route
+  rate limits: auth 30/5min, password change 10/15min, contact 5/15min, checkout 20/15min, global 1000/5min.
 
 ## Rules for every change
 

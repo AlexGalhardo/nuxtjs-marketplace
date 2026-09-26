@@ -7,6 +7,7 @@ export default defineEventHandler(async (event) => {
 	const body = await readValidatedBody(event, forgotPasswordSchema.parse)
 
 	const [user] = await db.select().from(schema.users).where(eq(schema.users.email, body.email))
+	logSecurityEvent(event, 'password_reset.requested', { userId: user?.id ?? null })
 	if (user) {
 		const token = generateToken()
 		await db.insert(schema.passwordResetTokens).values({

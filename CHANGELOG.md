@@ -23,8 +23,10 @@ Entries are generated with `bun run release` (changelogen).
 - **admin:** `/admin` dashboard (marketplace stats, audit log), users, shops and products with suspend/reinstate (reason required), transaction logs with filters and CSV export; every admin action written to `audit_logs`; `bun run db:make-admin <email>`.
 - **ci:** GitHub Actions: `ci` (checks, SQLite + PostgreSQL integration matrix, build + smoke + e2e), `commitlint` on PRs, `release` (GitHub Release + GHCR images on `v*` tags), manual `deploy`; Dependabot for Bun, Actions and Docker.
 - **security:** cookie-authenticated API mutations from another origin are refused with 403 (Origin/Referer check on top of `SameSite=Lax`).
+- **security:** security events (`login.failed`/`succeeded`, password reset requested/completed, password changed, CSRF refused) are logged as JSON lines without PII; password change is rate-limited (10/15min).
 
 ### Fixes
+- **security:** rate limits shared one bucket for every visitor (Nitro's Bun server hides the socket address) and trusted spoofable `X-Forwarded-For`; they now key on `X-Real-IP` from the reverse proxy.
 - **security:** paid digital files could be downloaded without buying them through the public image route with an encoded `../` (`/images/..%2Ffiles/…`, also double-encoded); the route now refuses any path with `.`/`..` segments, backslashes or leftover `%`.
 - **security:** upload filenames went into storage keys verbatim, so `../` could place objects outside their prefix and a `%` in the name crashed the upload; keys are now sanitized (`blobFileName`), the original name is kept for display.
 - **infra:** the Docker image didn't build (`addgroup` missing in `oven/bun`) and never migrated its database; it now builds for PostgreSQL (`DATABASE_URL` read at run time), runs as the image's `bun` user, stores uploads under a writable `/app/.data` volume, and ships a `migrate` target that compose runs before the app.

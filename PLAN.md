@@ -388,6 +388,7 @@ Things only the owner can do (accounts, keys, external services). Everything els
 
 - [ ] GitHub: create a `production` environment with secrets `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_PATH`; on the server, clone the repo there and put the production `.env` in `infra/`. After the first release, make the GHCR package public (or `docker login ghcr.io` on the server).
 - [ ] Watch the first `ci` run on GitHub after this push and report anything environment-specific that fails.
+- [ ] Put a TLS reverse proxy (Caddy/nginx/Traefik) in front of the app that overwrites `X-Real-IP` with the client address, and keep port 3000 private (docs/infra-and-setup.md "Production requirement"). Rate limits are per client only with it.
 - [ ] Decide how production stores uploads (§7 "Docker image stores uploads"): keep the `fs` volume, build per environment with S3 build args, or approve the NuxtHub blob-module rewrite.
 
 - [ ] Promote your own account to admin after deploying: sign up, then run `bun run db:make-admin <your-email>` on the server (or inside the container) and log in again.

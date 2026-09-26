@@ -27,5 +27,6 @@ export default defineEventHandler(async (event) => {
 	// also clear this request's own cookie so the user explicitly logs back in with the new password.
 	await clearUserSession(event)
 
+	logSecurityEvent(event, 'password_reset.completed', { userId: record.userId })
 	return { success: true }
 })

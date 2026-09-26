@@ -16,6 +16,7 @@ export default defineEventHandler((event) => {
 		sourceHost = new URL(source).host
 	} catch {}
 	if (sourceHost !== getRequestHost(event, { xForwardedHost: true })) {
+		logSecurityEvent(event, 'csrf.refused', { path: event.path, origin: source })
 		throw createError({ statusCode: 403, statusMessage: 'Cross-site request refused' })
 	}
 })

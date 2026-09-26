@@ -46,6 +46,15 @@ Stripe/Resend keys, `bun run dev`).
 - `setups/*.sh`: idempotent Bash scripts, one per environment. Windows versions target **Git
   Bash** (winget-installed Bun, Docker Desktop with WSL2 integration, `psql.exe` on `PATH`).
 
+## Production requirement: TLS reverse proxy
+
+The app speaks plain HTTP on port 3000 and sends HSTS, so production runs behind a reverse proxy that
+terminates TLS **and overwrites `X-Real-IP` with the peer address**. Rate limits and security logs key on
+that header (`nuxt.config.ts` → `security.rateLimiter.ipHeader`), because Nitro's Bun server doesn't expose
+the socket address and `X-Forwarded-For` is client-spoofable. Without the proxy, every client shares one
+rate-limit bucket per route. Examples: Caddy `reverse_proxy app:3000 { header_up X-Real-IP {remote_host} }`;
+nginx `proxy_set_header X-Real-IP $remote_addr;`. Keep port 3000 unreachable from the internet.
+
 ## CI/CD (GitHub Actions)
 
 - `ci.yml` (push to `main`, every PR), three parallel jobs on Bun 1.4.2 with the Bun cache:

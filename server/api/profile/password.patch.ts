@@ -12,6 +12,7 @@ export default defineEventHandler(async (event) => {
 
 	const valid = await verifyPassword(user.passwordHash, body.currentPassword)
 	if (!valid) {
+		logSecurityEvent(event, 'login.failed', { userId: user.id, reason: 'bad_current_password' })
 		throw createError({ statusCode: 401, statusMessage: 'Current password is incorrect' })
 	}
 
@@ -21,5 +22,6 @@ export default defineEventHandler(async (event) => {
 	// Every other session (including this one's cookie) is now stale (server/plugins/auth-session.ts).
 	await clearUserSession(event)
 
+	logSecurityEvent(event, 'password.changed', { userId: user.id })
 	return { success: true }
 })

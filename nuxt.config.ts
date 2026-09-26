@@ -118,6 +118,15 @@ export default defineNuxtConfig({
 				},
 			},
 		},
+		// Checks the current password, so it's a brute-force target for a stolen session (A07).
+		'/api/profile/password': {
+			security: {
+				rateLimiter: {
+					tokensPerInterval: Number(process.env.NUXT_AUTH_RATE_LIMIT_TOKENS) || 10,
+					interval: 900_000,
+				},
+			},
+		},
 		// Tighter than auth: the contact form has no account behind it to slow down repeat abuse.
 		'/api/contact': { security: { rateLimiter: { tokensPerInterval: 5, interval: 900_000 } } },
 		// A06: each call creates an order and a Stripe session; 20/15min covers real retries.
@@ -163,6 +172,11 @@ export default defineNuxtConfig({
 			// every file, so it raises this like NUXT_AUTH_RATE_LIMIT_TOKENS.
 			tokensPerInterval: Number(process.env.NUXT_RATE_LIMIT_TOKENS) || 1000,
 			interval: 300_000,
+			// Nitro's Bun server never hands the socket address to h3, and X-Forwarded-For is
+			// client-spoofable, so limits key on X-Real-IP, which the production reverse proxy must
+			// overwrite with the peer address (docs/infra-and-setup.md). Without it, all clients share
+			// one bucket per route.
+			ipHeader: 'x-real-ip',
 		},
 		headers: {
 			contentSecurityPolicy: {

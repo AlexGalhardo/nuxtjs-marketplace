@@ -6,6 +6,7 @@ import { logAudit } from '../../../server/utils/audit'
 import { apiTokenScopeFor } from '../../../server/utils/auth'
 import { isValidDownloadSignature, signedDownloadUrl } from '../../../server/utils/downloads'
 import { sendMail } from '../../../server/utils/mail'
+import { logSecurityEvent } from '../../../server/utils/security-log'
 import { toSafeUser } from '../../../server/utils/session'
 import { getStripeClient } from '../../../server/utils/stripe'
 import { generateToken, hashToken } from '../../../server/utils/token'
@@ -186,5 +187,29 @@ describe('mail', () => {
 		await expect(sendMail({ to: 'a@x.dev', subject: 'hi', text: 'b' })).rejects.toMatchObject({
 			statusCode: 502,
 		})
+	})
+})
+
+describe('logSecurityEvent', () => {
+	it('writes one JSON line with the event, client IP and ids only', () => {
+		const info = vi.spyOn(console, 'info').mockImplementation(() => {})
+		// X-Real-IP is set (overwritten) by the reverse proxy; x-forwarded-for is client-spoofable.
+		const event = {
+			context: {},
+			node: {
+				req: { headers: { 'x-real-ip': '203.0.113.9', 'x-forwarded-for': '6.6.6.6' } },
+			},
+		} as never
+		logSecurityEvent(event, 'login.failed', { userId: null, reason: 'unknown_email' })
+		expect(info).toHaveBeenCalledOnce()
+		const line = JSON.parse(String(info.mock.calls[0]?.[0]))
+		expect(line).toMatchObject({
+			security: 'login.failed',
+			ip: '203.0.113.9',
+			userId: null,
+			reason: 'unknown_email',
+		})
+		expect(Number.isNaN(Date.parse(line.at))).toBe(false)
+		info.mockRestore()
 	})
 })
