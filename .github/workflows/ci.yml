@@ -1,0 +1,110 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  BUN_VERSION: 1.4.2
+  HUSKY: '0'
+
+jobs:
+  checks:
+    name: lint, typecheck, unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - uses: actions/cache@v6
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile
+      - run: shellcheck -x setups/*.sh
+      - run: bunx biome ci .
+      - run: bun run typecheck
+      # Unit tests with the 80% coverage gate on shared/ + server/utils/, then the Nuxt component tests.
+      - run: bun run test:coverage
+      - run: bunx vitest run --project nuxt
+
+  integration:
+    name: integration (${{ matrix.dialect }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dialect: sqlite
+            database_url: ''
+          - dialect: postgresql
+            database_url: postgres://postgres:postgres@localhost:5432/marketplace
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: marketplace
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NUXT_HUB_DB_DIALECT: ${{ matrix.dialect }}
+      DATABASE_URL: ${{ matrix.database_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - uses: actions/cache@v6
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile
+      - run: bun run db:migrate
+      - run: bun run db:seed
+      - run: bun run test:integration
+
+  e2e:
+    name: build, smoke, e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - uses: actions/cache@v6
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright install --with-deps chromium
+      - run: bun run db:migrate
+      - run: bun run db:seed
+      - run: bun run build
+      # One build serves both suites (playwright.config.ts).
+      - run: bun run test:smoke
+        env:
+          PLAYWRIGHT_SKIP_BUILD: '1'
+      - run: bun run test:e2e
+        env:
+          PLAYWRIGHT_SKIP_BUILD: '1'
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7

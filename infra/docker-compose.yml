@@ -1,5 +1,6 @@
 # Full stack: app + migrate + postgres + stripe-cli. Run from the repo root:
 #   docker compose -f infra/docker-compose.yml up -d --build
+# On a server, pull a release instead: APP_VERSION=1.2.3 docker compose ... pull && ... up -d
 name: nuxtjs-marketplace
 
 x-database-url: &database-url postgres://${POSTGRES_USER:-marketplace}:${POSTGRES_PASSWORD:-marketplace}@postgres:5432/${POSTGRES_DB:-marketplace}
@@ -7,6 +8,7 @@ x-database-url: &database-url postgres://${POSTGRES_USER:-marketplace}:${POSTGRE
 services:
   # One-shot: applies migrations and seeds product types, then exits; `app` waits for it.
   migrate:
+    image: ghcr.io/alexgalhardo/nuxtjs-marketplace:${APP_VERSION:-latest}-migrate
     build:
       context: ..
       dockerfile: infra/docker/Dockerfile
@@ -19,6 +21,8 @@ services:
         condition: service_healthy
 
   app:
+    # Release images (.github/workflows/release.yml); `up --build` builds them locally instead.
+    image: ghcr.io/alexgalhardo/nuxtjs-marketplace:${APP_VERSION:-latest}
     build:
       context: ..
       dockerfile: infra/docker/Dockerfile

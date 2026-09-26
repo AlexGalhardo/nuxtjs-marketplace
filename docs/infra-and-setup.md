@@ -46,10 +46,19 @@ Stripe/Resend keys, `bun run dev`).
 - `setups/*.sh`: idempotent Bash scripts, one per environment. Windows versions target **Git
   Bash** (winget-installed Bun, Docker Desktop with WSL2 integration, `psql.exe` on `PATH`).
 
-## CI/CD (GitHub Actions) — planned, Phase 13
+## CI/CD (GitHub Actions)
 
-- `ci.yml` on PR/push: ShellCheck (`setups/*.sh`, `setups/lib.sh`) → Biome → typecheck → unit →
-  integration (sqlite + postgres matrix) → build → smoke → e2e.
-- `release.yml` on `v*.*.*` tags: GitHub Release + Docker image pushed to
-  `ghcr.io/alexgalhardo/nuxtjs-marketplace`.
-- `deploy.yml` (manual): SSH into the host and `docker compose pull && docker compose up -d`.
+- `ci.yml` (push to `main`, every PR), three parallel jobs on Bun 1.4.2 with the Bun cache:
+  - `checks`: ShellCheck (`setups/*.sh`) → `biome ci` → typecheck → unit tests with the 80% coverage gate → Nuxt component tests.
+  - `integration`: `db:migrate` → `db:seed` → `test:integration`, matrix `sqlite` / `postgresql` (Postgres 18 service).
+  - `e2e`: Playwright Chromium → migrate/seed → one `build` → smoke → e2e (`PLAYWRIGHT_SKIP_BUILD=1`); the HTML report is uploaded when it fails.
+- `commitlint.yml` (PRs): every commit in the PR and the PR title (squash-merge message) against `commitlint.config.js`.
+- `release.yml` (`v*.*.*` tags pushed by `bun run release`): GitHub Release from the tag's `CHANGELOG.md`
+  section (`changelogen gh release`), then `ghcr.io/alexgalhardo/nuxtjs-marketplace:<version>`/`latest` and
+  `:<version>-migrate`/`latest-migrate` (the Dockerfile's `migrate` target).
+- `deploy.yml` (manual, `version` input): SSH to the server, `git pull`, then
+  `APP_VERSION=<version> docker compose -f infra/docker-compose.yml pull migrate app && … up -d app`
+  (migrations run before the app starts). Needs the `production` environment secrets `DEPLOY_HOST`,
+  `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_PATH` (a checkout with the production `.env` in `infra/`).
+- `.github/dependabot.yml`: weekly Bun (minor/patch grouped), GitHub Actions and Docker base image updates.
+- Workflows are linted with `actionlint` (`docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:latest`).

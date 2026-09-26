@@ -327,12 +327,12 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (explain 
 - [x] Accessibility & UX audit (web-design-guidelines skill) on all pages; fix findings
 - [x] Exploratory QA with `agent-browser`
 
-### Phase 13 — CI/CD
-- [ ] `ci.yml`: install (Bun cache) → Biome CI → typecheck → unit → integration (matrix sqlite/postgres service) → build → smoke → e2e (Playwright report artifact)
-- [ ] `commitlint.yml` on PR titles/commits
-- [ ] `release.yml`: on `v*.*.*` tag → changelog → GitHub Release → Docker build & push to GHCR
-- [ ] `deploy.yml` (manual/dispatch): SSH + `docker compose pull && up -d` (secrets documented)
-- [ ] Renovate/Dependabot for Bun deps
+### Phase 13 — CI/CD ✅ (workflows written and linted; first real run happens on the next push — see Developer actions)
+- [x] `ci.yml`: install (Bun cache) → Biome CI → typecheck → unit → integration (matrix sqlite/postgres service) → build → smoke → e2e (Playwright report artifact)
+- [x] `commitlint.yml` on PR titles/commits
+- [x] `release.yml`: on `v*.*.*` tag → changelog → GitHub Release → Docker build & push to GHCR
+- [x] `deploy.yml` (manual/dispatch): SSH + `docker compose pull && up -d` (secrets documented)
+- [x] Renovate/Dependabot for Bun deps
 
 ### Phase 14 — Hardening & launch readiness
 - [ ] Full OWASP Top 10:2025 audit (§5.1), fix findings, document residual risks
@@ -379,11 +379,14 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (explain 
 | 2026-09-25 | Phase 11 OWASP Top 10:2025 review. A01: every `/api/admin/**` route calls `requireAdmin` (deny by default; 401/403 matrix integration-tested for all 7 list routes and a PATCH); the admin role is only granted from the server CLI (`db:make-admin`), never through the API; the client `admin` route middleware is UX only. A05: every query/body validated with Zod (enums, bounded `perPage` ≤ 100, `YYYY-MM-DD` dates, reason 3–500 chars); search is a parameterized `lower() like`; CSV cells starting with `= + - @ 	 ` are prefixed with `'` (CSV injection). A08/A09: suspensions, reinstatements and exports each write an append-only `audit_logs` row with actor, target, reason and previous status, committed in the same transaction as the change. A04: exports are `cache-control: no-store`; transaction payloads carry ids/amounts only. A06: the export is capped at 50,000 rows. Residual: no per-admin rate limit beyond the global one; admin sessions aren't step-up authenticated (Phase 14 CSRF/session review). |
 
 | 2026-09-25 | Phase 12 (quality pass): unit coverage 98% on `shared/` + `server/utils/` with 80% thresholds enforced by `bun run test:coverage` (new `tests/unit/server/utils.test.ts` with Nitro-global stubs in `nitro-globals.ts`; DB/Stripe orchestration modules excluded and left to integration). **Fixed a production bug found while chasing an e2e flake:** under concurrent writes the SQLite server returned 500 `SQLITE_BUSY`, because libsql pools up to 20 connections per process with a 0 ms busy timeout — `hub.db.connection.timeout: 5000` (also reaches the seed/test clients via `.nuxt/hub/db/config.json`); the `markShopChargesEnabled`/`issueResetToken` test helpers now go through `dbQuery`'s busy retry. E2e went from ~1 failure in 5 parallel runs to 0 in 12. Audit (web-design-guidelines, grep across `app/` + agent-browser at 390px on every public, buyer and seller page): admin filters synced to the URL (`useUrlFilters`), dashboard skip link + `<main>` + single `h1`, placeholders end with `…`, buttons now inherit the lowercase transform (UA stylesheet reset it), footer category list spans the full width on phones, product cards mark their photo decorative so links aren't named twice. Verified: no horizontal overflow and exactly one `h1` on every page, all images sized. |
+| 2026-09-25 | Phase 13 (CI/CD): `.github/workflows/{ci,commitlint,release,deploy}.yml` and `.github/dependabot.yml` (see docs/infra-and-setup.md), actions pinned to their latest stable majors (checkout v7, setup-bun v2, cache v6, upload-artifact v7, docker setup-buildx/login v4, build-push v7, appleboy/ssh-action v1); commitlint and GitHub releases use the repo's own `commitlint`/`changelogen` instead of third-party actions. Every step was run locally first: ShellCheck and actionlint clean; the integration suite passes on **PostgreSQL 18 from a fresh database** (90/90) as well as SQLite. Doing that exposed that the Docker image had never worked, fixed in the same phase: it failed to build (`addgroup` doesn't exist in `oven/bun`; now runs as the image's `bun` user), was built for SQLite while compose configured Postgres (dialect is build-time; now `ARG NUXT_HUB_DB_DIALECT=postgresql`), fell back to PGlite with no `DATABASE_URL` at build time (explicit `postgres-js` driver, URL read at run time), never applied migrations (new `migrate` target, compose runs it before `app`), and couldn't write uploads (writable `/app/.data` volume). Also: `minio/minio` images no longer exist (dev stack now uses SeaweedFS 4.47, verified signed S3 put/get), and Postgres 18 refused the old `/var/lib/postgresql/data` volume path. Verified the full compose stack end to end (migrate → health → signup → shop → logo upload → public image read). Open: S3 for the image (§7). |
 
 ## Developer actions (owner to-do)
 
 Things only the owner can do (accounts, keys, external services). Everything else is automated.
 
+- [ ] GitHub: create a `production` environment with secrets `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_PATH`; on the server, clone the repo there and put the production `.env` in `infra/`. After the first release, make the GHCR package public (or `docker login ghcr.io` on the server).
+- [ ] Watch the first `ci` run on GitHub after this push and report anything environment-specific that fails.
 - [ ] Decide how production stores uploads (§7 "Docker image stores uploads"): keep the `fs` volume, build per environment with S3 build args, or approve the NuxtHub blob-module rewrite.
 
 - [ ] Promote your own account to admin after deploying: sign up, then run `bun run db:make-admin <your-email>` on the server (or inside the container) and log in again.
