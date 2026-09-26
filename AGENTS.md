@@ -36,7 +36,7 @@ resell.sh — a lowercase, terminal-green marketplace (Enjoei-like) to buy/sell 
 
 ## Commands
 - `bun install` · `bun run dev` · `bun run build` · `bun run typecheck` · `bun run db:make-admin <email>`
-- `bun run check` / `check:fix` (Biome) · `bun run test:unit` · `test:integration` · `test:smoke` · `test:e2e`
+- `bun run check` / `check:fix` (Biome) · `bun run test:unit` · `test:coverage` (80% gate) · `test:integration` · `test:smoke` · `test:e2e`
 - Before finishing a task: `bun run check && bun run typecheck && bun run test:unit`.
 
 ## AI tooling

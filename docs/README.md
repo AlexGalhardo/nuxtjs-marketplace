@@ -1,7 +1,6 @@
 # Documentation index (for AI agents and humans)
 
 Read [`../PLAN.md`](../PLAN.md) first: it holds scope, decisions and the task checklist.
-Files marked **(planned)** describe the target design; update them when the implementation lands.
 
 | File | What it covers |
 |------|----------------|

@@ -9,7 +9,7 @@ Check with `npm view <pkg> version` before adding a dependency.
 | Framework | Nuxt 4.5.x | yes |
 | UI | Nuxt UI 4.x + Tailwind CSS 4.x | yes |
 | Database | NuxtHub DB (`@nuxthub/core`) + Drizzle ORM, SQLite / PostgreSQL | yes |
-| File storage | NuxtHub Blob (fs / S3 / MinIO) | yes |
+| File storage | NuxtHub Blob (fs / S3 / SeaweedFS in dev) | yes |
 | Images | `@nuxt/image` | yes |
 | Auth | `nuxt-auth-utils` | yes |
 | Security | `nuxt-security` (headers, CSP, rate limit) | community module (approved) |

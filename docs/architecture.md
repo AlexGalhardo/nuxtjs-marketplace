@@ -8,7 +8,7 @@ There is no separate backend service.
 Browser ──useFetch/$fetch──▶ Nitro (server/api/**)
                               ├─ auth: nuxt-auth-utils session cookie | Bearer API token
                               ├─ data: Drizzle via NuxtHub DB (SQLite | PostgreSQL)
-                              ├─ files: NuxtHub Blob (fs | S3/MinIO)
+                              ├─ files: NuxtHub Blob (fs | S3/SeaweedFS)
                               ├─ payments: Stripe (Checkout + Connect Express)
                               └─ email: Resend
 Stripe ──webhook──▶ /api/stripe/webhook

@@ -5,7 +5,7 @@ The format follows [Conventional Commits](https://www.conventionalcommits.org/en
 
 Entries are generated with `bun run release` (changelogen).
 
-## Unreleased
+## v1.0.0 (2026-09-26)
 
 ### Features
 - **catalog:** public `GET /api/products` (search, kind/type/shop/price filters, sort, pagination), `GET /api/products/:slug`, `GET /api/shops/:slug`.
@@ -24,7 +24,7 @@ Entries are generated with `bun run release` (changelogen).
 - **ci:** GitHub Actions: `ci` (checks, SQLite + PostgreSQL integration matrix, build + smoke + e2e), `commitlint` on PRs, `release` (GitHub Release + GHCR images on `v*` tags), manual `deploy`; Dependabot for Bun, Actions and Docker.
 - **security:** cookie-authenticated API mutations from another origin are refused with 403 (Origin/Referer check on top of `SameSite=Lax`).
 - **security:** security events (`login.failed`/`succeeded`, password reset requested/completed, password changed, CSRF refused) are logged as JSON lines without PII; password change is rate-limited (10/15min).
-- **perf:** 17 indexes on foreign keys and the hot list/sort/lookup columns (both dialects, migrations `0001`/`0002`); every seller/buyer list, the catalog and the webhook's checkout-session lookup now use an index.
+- **perf:** 16 indexes on foreign keys and the hot list/sort/lookup columns (both dialects, migrations `0001`/`0002`); every seller/buyer list, the catalog and the webhook's checkout-session lookup now use an index.
 - **perf:** photos are downscaled in the browser to WebP (≤1600px; logos 512px, banners 2400px) before upload; uploaded images are served `immutable` for a year; `/api/product-types` is browser-cached for an hour.
 
 ### Fixes
