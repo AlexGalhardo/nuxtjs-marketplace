@@ -23,11 +23,15 @@ const items: NavigationMenuItem[] = [
 				>
 					my shop
 				</p>
-				<UNavigationMenu
-					:items="items"
-					orientation="horizontal"
-					class="-mx-2 overflow-x-auto lg:hidden"
-				/>
+				<!-- Phones: one scrollable row; items keep their width instead of truncating to a letter. -->
+				<div class="-mx-2 overflow-x-auto lg:hidden">
+					<UNavigationMenu
+						:items="items"
+						orientation="horizontal"
+						class="w-max"
+						:ui="{ item: 'shrink-0', linkLabel: 'overflow-visible' }"
+					/>
+				</div>
 				<UNavigationMenu
 					:items="items"
 					orientation="vertical"

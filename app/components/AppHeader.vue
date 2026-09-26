@@ -35,7 +35,7 @@ const userMenuItems = computed(() => [
 
 <template>
 	<div class="sticky top-0 z-40 bg-default">
-		<p class="bg-(--rs-signal) py-1.5 text-center text-sm font-semibold text-(--rs-signal-ink)">
+		<p class="bg-(--rs-banner) py-1.5 text-center text-sm font-semibold text-(--rs-banner-ink)">
 			list for free. we only take 10% when it sells.
 		</p>
 

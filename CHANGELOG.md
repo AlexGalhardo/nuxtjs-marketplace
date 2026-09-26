@@ -11,6 +11,8 @@ Entries are generated with `bun run release` (changelogen).
 - **profile:** the "add address" button never rendered (it sat in a `UPageCard` slot that doesn't exist), so no address could be added and physical checkouts were blocked; saving an address now also reports errors.
 - **test:** integration and e2e runs wrote thousands of throwaway users and photo-less products into the dev database; they now use `.data-test`.
 - **ui:** the logo's blinking terminal cursor is gone.
+- **ui:** dark theme: form fields were nearly invisible (1.7:1 outlines, now 3.6:1), the promo bar and home hero stayed full neon blocks (now a phosphor "terminal screen"), native controls stayed light (`color-scheme` now follows the theme), and empty states were solid brand blocks (alerts now default to `subtle`). Light theme: field outlines 1.6:1 → 3.4:1 and success text 2.3:1 → 5:1.
+- **ui:** on phones, the `/my-shop` section nav truncated every label to one letter; it now scrolls horizontally.
 
 ### Features
 - **search:** the header search suggests the top 5 products from 3 characters on (accessible combobox: arrows, Enter, Esc), plus "see all N finds".

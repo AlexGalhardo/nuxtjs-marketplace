@@ -7,6 +7,17 @@ useHead({
 	},
 })
 
+// Browser chrome (mobile address bar) matches the promo bar at the top of every page.
+const colorMode = useColorMode()
+useHead({
+	meta: [
+		{
+			name: 'theme-color',
+			content: computed(() => (colorMode.value === 'dark' ? '#022e14' : '#3dff7a')),
+		},
+	],
+})
+
 const title = 'Marketplace'
 const description = 'Buy and sell physical and digital products.'
 

@@ -67,7 +67,7 @@ const steps = [
 	<div class="rs-container space-y-16 py-8 sm:space-y-20">
 		<section class="grid gap-6 md:grid-cols-[2fr_1fr] md:items-center">
 			<div
-				class="relative overflow-hidden rounded-xl bg-(--rs-signal) px-6 py-10 text-(--rs-signal-ink) sm:px-10 sm:py-14"
+				class="relative overflow-hidden rounded-xl bg-(--rs-banner) px-6 py-10 text-(--rs-banner-ink) ring-1 ring-(--rs-banner-edge) ring-inset sm:px-10 sm:py-14"
 			>
 				<h1 class="font-display text-[clamp(3rem,9vw,6rem)] leading-[0.85] font-black">
 					list it free.<br>pay 10% when it sells.

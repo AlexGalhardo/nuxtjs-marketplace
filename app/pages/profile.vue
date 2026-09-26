@@ -271,14 +271,16 @@ async function deleteAddress() {
 					</div>
 				</li>
 			</ul>
-			<UButton
-				icon="i-lucide-plus"
-				variant="subtle"
-				class="self-start"
-				@click="openNewAddress"
-			>
-				Add address
-			</UButton>
+			<div>
+				<UButton
+					icon="i-lucide-plus"
+					variant="subtle"
+					class="rounded-none"
+					@click="openNewAddress"
+				>
+					Add address
+				</UButton>
+			</div>
 		</UPageCard>
 
 		<UModal

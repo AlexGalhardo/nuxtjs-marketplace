@@ -35,6 +35,8 @@
 }
 
 :root {
+	/* Native controls (scrollbars, autofill, the search "×") follow the theme. */
+	color-scheme: light;
 	--ui-radius: 0.5rem;
 	--ui-container: 75rem;
 	--ui-header-height: 4.5rem;
@@ -46,15 +48,24 @@
 	--ui-text-dimmed: var(--ui-color-neutral-500);
 	--ui-bg-muted: var(--ui-color-neutral-100);
 	--ui-border: var(--ui-color-neutral-200);
+	/* Field outlines (ring-accented): ≥ 3:1 against the page (WCAG 1.4.11); neutral-300 was 1.6:1. */
+	--ui-border-accented: #838e87;
+	/* Nuxt UI's success-500 was 2.3:1 as text on white (signup checklist); 700 is 5:1. */
+	--ui-success: var(--ui-color-success-700);
 
 	/* Enjoei's lime/lavender roles, re-cast in green. */
 	--rs-signal: var(--color-matrix-400);
 	--rs-signal-ink: var(--color-ink-950);
 	--rs-selected: var(--color-matrix-200);
 	--rs-selected-ink: var(--color-matrix-900);
+	/* Large brand surfaces (promo bar, hero): neon in light, a phosphor terminal screen in dark. */
+	--rs-banner: var(--rs-signal);
+	--rs-banner-ink: var(--rs-signal-ink);
+	--rs-banner-edge: transparent;
 }
 
 .dark {
+	color-scheme: dark;
 	--ui-primary: var(--ui-color-primary-400);
 	--ui-text: var(--color-matrix-100);
 	--ui-text-highlighted: var(--color-matrix-50);
@@ -68,10 +79,15 @@
 	--ui-bg-accented: #13261a;
 	--ui-border: #173020;
 	--ui-border-muted: #11241a;
-	--ui-border-accented: #1f4029;
+	/* Field outlines: 3.6:1 on the page (was 1.7:1, fields vanished). */
+	--ui-border-accented: #467353;
 
 	--rs-selected: #0f2e1a;
 	--rs-selected-ink: var(--color-matrix-300);
+	/* A full-width neon block was the brightest thing on a dark screen; 11:1 text contrast kept. */
+	--rs-banner: var(--color-matrix-950);
+	--rs-banner-ink: var(--color-matrix-400);
+	--rs-banner-edge: var(--color-matrix-900);
 }
 
 @layer base {

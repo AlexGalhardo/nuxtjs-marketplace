@@ -32,6 +32,12 @@ export default defineAppConfig({
 				base: 'rounded-none',
 			},
 		},
+		// Alerts and empty states are quiet: a solid brand block was loud in light and glaring in dark.
+		alert: {
+			defaultVariants: {
+				variant: 'subtle',
+			},
+		},
 		badge: {
 			slots: {
 				base: 'rounded-md font-semibold',
