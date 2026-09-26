@@ -37,9 +37,17 @@ export default defineNuxtConfig({
 		// libsql pools several connections per process with a 0 ms busy timeout by default, so two
 		// concurrent writes (e.g. a checkout transaction + any other write) failed instantly with
 		// SQLITE_BUSY. Wait up to 5 s for the lock instead.
+		// Postgres: no build-time migrations (a `docker build` has no database to reach); they run
+		// through `bun run db:migrate` (setups, CI, the image's `migrate` target). The explicit driver
+		// stops NuxtHub from falling back to PGlite when DATABASE_URL is unset at build time; the
+		// production server then reads DATABASE_URL at run time.
 		db:
 			process.env.NUXT_HUB_DB_DIALECT === 'postgresql'
-				? 'postgresql'
+				? {
+						dialect: 'postgresql',
+						driver: 'postgres-js',
+						applyMigrationsDuringBuild: false,
+					}
 				: { dialect: 'sqlite', connection: { timeout: 5000 } },
 		blob: true,
 	},

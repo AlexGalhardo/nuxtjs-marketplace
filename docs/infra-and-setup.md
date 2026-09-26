@@ -6,7 +6,7 @@
 |------|----|------|-----|
 | Local SQLite | SQLite file `.data/db/sqlite.db` | fs `.data/blob` | `setups/setup-*-using-sqlite.sh` |
 | Local Postgres | PostgreSQL installed on the host | fs | `setups/setup-*-using-postgres-local.sh` |
-| Docker Postgres | PostgreSQL + MinIO containers | S3 (MinIO) | `setups/setup-*-using-postgres-with-docker.sh` |
+| Docker Postgres | PostgreSQL + SeaweedFS containers | S3 (SeaweedFS) | `setups/setup-*-using-postgres-with-docker.sh` |
 | Production | Managed or containerized PostgreSQL | S3-compatible | Docker image from GHCR |
 
 ## Quick start
@@ -18,7 +18,7 @@
 # macOS/Linux, PostgreSQL already installed on the host
 ./setups/setup-unix-using-postgres-local.sh
 
-# macOS/Linux, PostgreSQL + MinIO in Docker (app still runs on the host)
+# macOS/Linux, PostgreSQL + SeaweedFS S3 in Docker (app still runs on the host)
 ./setups/setup-unix-using-postgres-with-docker.sh
 
 # Windows (Git Bash), same three flavors
@@ -37,9 +37,9 @@ Stripe/Resend keys, `bun run dev`).
 - `infra/docker/Dockerfile`: multi-stage build on `oven/bun:1.4.2` — installs deps, runs
   `bun run build`, then copies only `.output/` into a non-root (`nuxt:1001`) runtime layer.
   Includes a `HEALTHCHECK` against `GET /api/health`.
-- `infra/docker-compose.yml`: full stack (`app`, `postgres`, `minio`, `stripe-cli`) for a
+- `infra/docker-compose.yml`: full stack (`migrate` one-shot, `app` with uploads on the `app-data` volume, `postgres`, `stripe-cli`) for a
   containerized run: `docker compose -f infra/docker-compose.yml up -d --build`.
-- `infra/docker-compose.dev.yml`: services only (`postgres`, `minio`, `stripe-cli`); the app runs
+- `infra/docker-compose.dev.yml`: services only (`postgres`, `s3`, `stripe-cli`); the app runs
   on the host with `bun run dev`. `stripe-cli` forwards to `host.docker.internal:3000`.
 - `setups/lib.sh`: shared helpers (`log`, `require_command`, `ensure_env_file`, `set_env_var`,
   `install_deps`, `prepare_db`, `print_next_steps`) sourced by every `setups/*.sh` script.

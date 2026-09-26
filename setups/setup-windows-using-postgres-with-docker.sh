@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Idempotent setup for local development using PostgreSQL + MinIO in Docker Desktop.
+# Idempotent setup for local development using PostgreSQL + SeaweedFS S3 in Docker Desktop.
 # Run from Git Bash on Windows; the app itself runs on the host with `bun run dev`.
 set -euo pipefail
 
@@ -8,7 +8,7 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 # shellcheck source=setups/lib.sh
 source "$SCRIPT_DIR/lib.sh"
 
-log "Nuxt Marketplace — Windows setup (PostgreSQL + MinIO via Docker Desktop)"
+log "Nuxt Marketplace — Windows setup (PostgreSQL + SeaweedFS S3 via Docker Desktop)"
 
 require_command bun "Install it from https://bun.sh (winget install Oven-sh.Bun), then restart Git Bash"
 require_command docker "Install Docker Desktop: https://www.docker.com/products/docker-desktop and enable WSL2 integration"
@@ -18,13 +18,13 @@ docker compose version >/dev/null 2>&1 || die "Docker Compose v2 is required (bu
 ensure_env_file "$ROOT_DIR"
 set_env_var "$ROOT_DIR/.env" NUXT_HUB_DB_DIALECT postgresql
 set_env_var "$ROOT_DIR/.env" DATABASE_URL "postgres://marketplace:marketplace@localhost:5432/marketplace"
-set_env_var "$ROOT_DIR/.env" S3_ACCESS_KEY_ID minioadmin
-set_env_var "$ROOT_DIR/.env" S3_SECRET_ACCESS_KEY minioadmin
+set_env_var "$ROOT_DIR/.env" S3_ACCESS_KEY_ID resell
+set_env_var "$ROOT_DIR/.env" S3_SECRET_ACCESS_KEY resell-secret
 set_env_var "$ROOT_DIR/.env" S3_BUCKET marketplace
 set_env_var "$ROOT_DIR/.env" S3_REGION us-east-1
 set_env_var "$ROOT_DIR/.env" S3_ENDPOINT http://localhost:9000
 
-log "Starting postgres + minio + stripe-cli containers"
+log "Starting postgres + s3 + stripe-cli containers"
 docker compose -f "$ROOT_DIR/infra/docker-compose.dev.yml" up -d
 
 log "Waiting for PostgreSQL to be healthy"
@@ -35,4 +35,3 @@ done
 install_deps
 prepare_db postgresql
 print_next_steps
-echo "  4. MinIO console: http://localhost:9001 (minioadmin/minioadmin)"

@@ -13,7 +13,7 @@ Variables marked *(Phase N)* are not wired yet; add them to `runtimeConfig`, the
 | `NUXT_RATE_LIMIT_TOKENS` | build | Global per-IP rate limit, tokens per 5 min (default `1000`, D20). Read directly in `nuxt.config.ts`; raised by `tests/integration/global-setup.ts` for the shared test server |
 | `NUXT_AUTH_RATE_LIMIT_TOKENS` | build | `/api/auth/**` rate limit, tokens per 5 min (default `30`). Read directly in `nuxt.config.ts` (`routeRules`), not part of `runtimeConfig`. `tests/integration/global-setup.ts` raises it for the shared test server (docs/testing.md) |
 | `DATABASE_URL` | postgres | PostgreSQL connection string, read by `@nuxthub/core`'s postgres-js driver |
-| `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT` | prod/docker | Blob storage (MinIO locally); leave empty to use the local `fs` driver (`.data/blob`) |
+| `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT` | prod/docker | Blob storage (SeaweedFS S3 in docker-compose); leave empty to use the local `fs` driver (`.data/blob`) |
 | `E2E_PORT` | no | Port for the Playwright test server (default `3100`) |
 | `PLAYWRIGHT_SKIP_BUILD` | no | `1` = Playwright reuses the existing `.output` build |
 | `NUXT_STRIPE_SECRET_KEY` | yes | Stripe secret key (test mode in dev) |

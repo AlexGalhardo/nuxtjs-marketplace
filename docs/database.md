@@ -31,6 +31,9 @@
   `task run` requires an already-running dev server, which doesn't fit idempotent one-shot setup
   scripts). It always seeds the fixed `product_types` list (D13) using `onConflictDoNothing()`
   for idempotency; outside production it also seeds the fake catalog.
+- Production/Docker: Postgres builds skip NuxtHub's build-time migrations (`applyMigrationsDuringBuild: false`,
+  explicit `postgres-js` driver so `DATABASE_URL` is read at run time). Migrations run through
+  `bun run db:migrate` — in Docker, the `migrate` target of `infra/docker/Dockerfile` (compose runs it before `app`).
 - `bun run db:make-admin <email>` (`server/db/make-admin.ts`) promotes an existing account to `admin`
   (Phase 11). The role is read into the session at login, so the user logs in again afterwards.
 - `bun run db:reset` drops every table (`nuxt db drop-all --force`), re-migrates, then re-seeds.

@@ -23,6 +23,8 @@ Entries are generated with `bun run release` (changelogen).
 - **admin:** `/admin` dashboard (marketplace stats, audit log), users, shops and products with suspend/reinstate (reason required), transaction logs with filters and CSV export; every admin action written to `audit_logs`; `bun run db:make-admin <email>`.
 
 ### Fixes
+- **infra:** the Docker image didn't build (`addgroup` missing in `oven/bun`) and never migrated its database; it now builds for PostgreSQL (`DATABASE_URL` read at run time), runs as the image's `bun` user, stores uploads under a writable `/app/.data` volume, and ships a `migrate` target that compose runs before the app.
+- **infra:** `minio/minio` images no longer exist; the dev stack uses SeaweedFS (`chrislusf/seaweedfs:4.47`) for S3. Postgres 18 volumes mount at `/var/lib/postgresql` (the old `/data` path refused to start).
 - **db:** concurrent writes on SQLite failed instantly with `SQLITE_BUSY` (500s): libsql pools several connections with a 0 ms busy timeout; now waits up to 5 s.
 - **ui:** buttons kept their capitals despite the lowercase design system (UA stylesheet resets `text-transform`); the footer category list no longer wraps every label on phones.
 - **a11y:** dashboard pages get a skip link, a `<main>` landmark and a single `h1`; product cards no longer announce their title twice.
