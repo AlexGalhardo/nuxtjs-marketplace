@@ -16,6 +16,10 @@ PLAN.md §5.1. Every phase ends with a review of the categories it touches, reco
   forgot-password (no user enumeration); a password change invalidates every other session
   (`server/plugins/auth-session.ts`); stricter rate limit on `/api/auth/**` (`routeRules`); ownership
   checks via `requireShopOwner`/`requireApiToken` (`server/utils/auth.ts`).
+- **CSRF (Phase 14)**: `SameSite=Lax` session cookie plus `server/middleware/csrf.ts`: any non-GET/HEAD/OPTIONS
+  `/api/**` request whose `Origin` (or `Referer`) is another host gets 403. Skipped for `Authorization: Bearer`
+  calls and the signed Stripe webhook; requests with neither header (non-browser clients) pass, since they can't
+  carry a victim's cookies. Keep GET handlers free of side effects so Lax top-level navigations stay harmless.
 
 ## Rules for every change
 

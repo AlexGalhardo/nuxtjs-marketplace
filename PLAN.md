@@ -336,7 +336,7 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (explain 
 
 ### Phase 14 — Hardening & launch readiness
 - [ ] Full OWASP Top 10:2025 audit (§5.1), fix findings, document residual risks
-- [ ] Tighten nuxt-security (CSP review, per-route rate limits, CSRF for cookie-authenticated mutations)
+- [~] Tighten nuxt-security (CSP review, per-route rate limits, CSRF for cookie-authenticated mutations) — CSRF done (`server/middleware/csrf.ts`, `tests/integration/csrf.test.ts`)
 - [ ] Performance (image sizes, caching `routeRules`, DB indexes)
 - [ ] Final docs pass; `v1.0.0` release
 

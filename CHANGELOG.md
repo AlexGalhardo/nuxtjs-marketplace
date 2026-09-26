@@ -22,6 +22,7 @@ Entries are generated with `bun run release` (changelogen).
 - **admin:** list filters (search, role/status, pagination) live in the URL, so admin views are shareable and survive reloads.
 - **admin:** `/admin` dashboard (marketplace stats, audit log), users, shops and products with suspend/reinstate (reason required), transaction logs with filters and CSV export; every admin action written to `audit_logs`; `bun run db:make-admin <email>`.
 - **ci:** GitHub Actions: `ci` (checks, SQLite + PostgreSQL integration matrix, build + smoke + e2e), `commitlint` on PRs, `release` (GitHub Release + GHCR images on `v*` tags), manual `deploy`; Dependabot for Bun, Actions and Docker.
+- **security:** cookie-authenticated API mutations from another origin are refused with 403 (Origin/Referer check on top of `SameSite=Lax`).
 
 ### Fixes
 - **infra:** the Docker image didn't build (`addgroup` missing in `oven/bun`) and never migrated its database; it now builds for PostgreSQL (`DATABASE_URL` read at run time), runs as the image's `bun` user, stores uploads under a writable `/app/.data` volume, and ships a `migrate` target that compose runs before the app.
