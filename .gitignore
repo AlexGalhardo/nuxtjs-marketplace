@@ -35,3 +35,6 @@ blob-report
 
 # graphify skill output
 graphify-out/
+
+# git worktrees created by agents
+.claude/worktrees/

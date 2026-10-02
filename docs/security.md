@@ -1,7 +1,8 @@
 # Security
 
 Baseline: [OWASP Top 10:2025](https://top10.owasp.org/2025/). The control matrix per category lives in
-PLAN.md §5.1. Every phase ends with a review of the categories it touches, recorded in PLAN.md Change History.
+PLAN.md §5.1. Every phase ends with a review of the categories it touches, recorded under `### Security` in
+CHANGELOG.md.
 
 ## What is in place
 
@@ -38,3 +39,14 @@ PLAN.md §5.1. Every phase ends with a review of the categories it touches, reco
 - **Dependencies (A03)**: add only approved libraries (PLAN.md §2), pin versions, commit `bun.lock`.
 - **Per-route rate limits** for auth, checkout and contact via `routeRules` → `security.rateLimiter`.
 - A CSP violation shows up as a console error; the smoke suite fails on console errors, so keep it green.
+
+## Residual risks (accepted for v1)
+
+- No MFA or admin step-up authentication.
+- Deploys pull a version tag, not an image digest (tags are mutable; only the release workflow can write the registry).
+- Stock isn't reserved between checkout and payment; the last unit can oversell (stock is clamped at 0).
+- The CSP allows `style-src 'unsafe-inline'` for Nuxt UI.
+- The per-token API rate limit is per process (move to shared storage if the app scales out).
+- `bun audit`: dev-only/unreachable advisories (esbuild dev server; an AI-SDK transitive never called).
+- Without the reverse proxy setting `X-Real-IP`, rate limits collapse to one bucket per route.
+- Separate charges and transfers: the platform balance must cover refunds before reversals settle.

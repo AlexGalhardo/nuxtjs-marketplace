@@ -31,7 +31,7 @@ bun run db:migrate && bun run db:seed   # SQLite by default, plus a labeled demo
 bun run build && bun run start          # http://localhost:3000
 ```
 
-For development, `bun run dev`; PLAN.md §7 tracks an open dev-server issue under Bun (production builds are unaffected).
+For development, `bun run dev` (plain `nuxt dev`; `bun --bun nuxt dev` fails SSR resolving `zod` under vite-node, production builds are unaffected).
 
 | Command | What it does |
 |---|---|
@@ -41,7 +41,8 @@ For development, `bun run dev`; PLAN.md §7 tracks an open dev-server issue unde
 | `bun run test:integration` | API tests against a built server |
 | `bun run test:smoke` / `test:e2e` | Playwright |
 | `bun run db:make-admin <email>` | Promote an account to admin |
-| `bun run release` | Bump the version, update CHANGELOG.md, tag (pushing the tag publishes the release) |
+| `bun run release <patch\|minor\|major>` | Turn CHANGELOG `[Unreleased]` into a version, bump, tag (pushing the tag publishes the release) |
+| `bun run setup:sqlite` / `setup:postgres-local` / `setup:postgres-docker` | Run the matching `setups/*.sh` for your OS (Git Bash on Windows) |
 
 ## Deploying
 
