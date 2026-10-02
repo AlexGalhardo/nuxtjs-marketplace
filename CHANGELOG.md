@@ -17,6 +17,7 @@ version (see [docs/git-workflow.md](docs/git-workflow.md)).
 - Typing a Brazilian CEP on `/profile` fills street, neighborhood, city, state and country (ViaCEP).
 - `/login`, `/signup`, password reset and `/my-shop/**` use the site layout (header + footer); the seller area gets a section nav.
 - Every demo product and shop uses real CC0 photos of its category (`public/seed`), so `picsum.photos` left the CSP.
+- Open source release files: `docs/system-design/` (a system design guide for learners: requirements, capacity estimates, architecture, ERD, money flow, security, caching, queues, scaling, observability, failure modes, trade-offs, exercises; Mermaid diagrams), README rewritten for open source, MIT `LICENSE` (`"license": "MIT"` in package.json), `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), `SECURITY.md`, GitHub issue and pull request templates.
 - Every `setups/*.sh` script starts the app at the end with its logs on screen, saves the session to `logs/<script>-<timestamp>.log`, and keeps the Git Bash window open on success, error or Ctrl+C.
 
 ### Changed

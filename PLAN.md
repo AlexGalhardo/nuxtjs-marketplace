@@ -411,9 +411,9 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (say why 
 - **Assert:** `docker compose --profile observability up` shows a checkout trace in Grafana and the dashboard has live metrics
 
 ### Phase 23 — Open source & system design docs (owner request 2026-10-02)
-- [ ] `docs/system-design/`: requirements, capacity estimates (1k sellers / 10k buyers / black friday), high-level architecture, data model ERD, money flow sequence, caching, queues, LB, observability, failure modes, trade-offs — Mermaid diagrams (render on GitHub)
-- [ ] README.md rewritten for open source (learning project statement, features, screenshots, quick start, architecture link)
-- [ ] `LICENSE` (MIT), `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, issue/PR templates
+- [x] `docs/system-design/`: requirements, capacity estimates (1k sellers / 10k buyers / black friday), high-level architecture, data model ERD, money flow sequence, caching, queues, LB, observability, failure modes, trade-offs — Mermaid diagrams (render on GitHub)
+- [~] README.md rewritten for open source (learning project statement, features, quick start, architecture link); screenshots still to add
+- [x] `LICENSE` (MIT), `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, issue/PR templates
 - **Assert:** every doc link resolves; Mermaid renders on GitHub
 
 ### Phase 24 — Release v1.1.0
