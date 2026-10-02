@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: resell-sh
+    folder: resell.sh
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards

@@ -1,0 +1,174 @@
+{
+	"uid": "resell-sh",
+	"title": "resell.sh \u2014 app",
+	"schemaVersion": 41,
+	"time": {
+		"from": "now-1h",
+		"to": "now"
+	},
+	"refresh": "10s",
+	"panels": [
+		{
+			"id": 1,
+			"type": "timeseries",
+			"title": "requests per second by route",
+			"gridPos": {
+				"x": 0,
+				"y": 0,
+				"w": 12,
+				"h": 8
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prometheus"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "reqps"
+				},
+				"overrides": []
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "sum by (http_route) (rate(http_server_request_duration_seconds_count[1m]))",
+					"legendFormat": "{{http_route}}"
+				}
+			]
+		},
+		{
+			"id": 2,
+			"type": "timeseries",
+			"title": "p95 latency by route",
+			"gridPos": {
+				"x": 12,
+				"y": 0,
+				"w": 12,
+				"h": 8
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prometheus"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "s"
+				},
+				"overrides": []
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "histogram_quantile(0.95, sum by (le, http_route) (rate(http_server_request_duration_seconds_bucket[5m])))",
+					"legendFormat": "{{http_route}}"
+				}
+			]
+		},
+		{
+			"id": 3,
+			"type": "timeseries",
+			"title": "5xx responses per second",
+			"gridPos": {
+				"x": 0,
+				"y": 8,
+				"w": 12,
+				"h": 8
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prometheus"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "reqps"
+				},
+				"overrides": []
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "sum by (http_route) (rate(http_server_request_duration_seconds_count{http_response_status_code=~\"5..\"}[1m]))",
+					"legendFormat": "{{http_route}}"
+				}
+			]
+		},
+		{
+			"id": 4,
+			"type": "timeseries",
+			"title": "money events per minute",
+			"gridPos": {
+				"x": 12,
+				"y": 8,
+				"w": 12,
+				"h": 8
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prometheus"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short"
+				},
+				"overrides": []
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "sum by (type, status) (rate({__name__=~\"resell_money_events.*\"}[5m])) * 60",
+					"legendFormat": "{{type}} {{status}}"
+				}
+			]
+		},
+		{
+			"id": 5,
+			"type": "timeseries",
+			"title": "money moved per minute (usd)",
+			"gridPos": {
+				"x": 0,
+				"y": 16,
+				"w": 12,
+				"h": 8
+			},
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prometheus"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "currencyUSD"
+				},
+				"overrides": []
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "sum by (type) (rate({__name__=~\"resell_money_cents.*\"}[5m])) * 60 / 100",
+					"legendFormat": "{{type}}"
+				}
+			]
+		},
+		{
+			"id": 6,
+			"type": "logs",
+			"title": "app logs",
+			"gridPos": {
+				"x": 12,
+				"y": 16,
+				"w": 12,
+				"h": 8
+			},
+			"datasource": {
+				"type": "loki",
+				"uid": "loki"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "{service=\"app\"}"
+				}
+			]
+		}
+	],
+	"tags": ["resell.sh"]
+}

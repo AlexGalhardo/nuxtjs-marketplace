@@ -1,0 +1,9 @@
+global:
+  scrape_interval: 15s
+scrape_configs:
+  # Every `app` replica: Docker's DNS returns one A record per container, so scaled replicas are found.
+  - job_name: resell-sh
+    dns_sd_configs:
+      - names: [app]
+        type: A
+        port: 9464

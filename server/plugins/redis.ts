@@ -16,7 +16,11 @@ export default defineNitroPlugin(async () => {
 		await storage.unmount(mount, false)
 		storage.mount(
 			mount,
-			failOpen(redisDriver({ url, base: `resell:${base}`, ...redisOptions }), memoryDriver()),
+			// preConnect: connect now, not on the first request (which would fail while still connecting).
+			failOpen(
+				redisDriver({ url, base: `resell:${base}`, preConnect: true, ...redisOptions }),
+				memoryDriver(),
+			),
 		)
 	}
 	console.info('[redis] cache and rate limits use Redis')
