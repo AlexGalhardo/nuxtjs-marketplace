@@ -7,6 +7,7 @@ const publicPages = [
 	{ path: '/terms', heading: /./ },
 	{ path: '/privacy', heading: /./ },
 	{ path: '/marketplace', heading: /everything/ },
+	{ path: '/system-design', heading: /how resell\.sh is built/ },
 ]
 
 for (const { path, heading } of publicPages) {

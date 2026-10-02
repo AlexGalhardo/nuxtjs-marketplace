@@ -1,6 +1,15 @@
 import { and, eq } from 'drizzle-orm'
 
-const staticPaths = ['/', '/marketplace', '/contact', '/terms', '/privacy', '/login', '/signup']
+const staticPaths = [
+	'/',
+	'/marketplace',
+	'/contact',
+	'/terms',
+	'/privacy',
+	'/system-design',
+	'/login',
+	'/signup',
+]
 // ponytail: single sitemap capped at the protocol's 50k URLs; split into a sitemap index if the catalog grows past it.
 const maxEntries = 45_000
 
