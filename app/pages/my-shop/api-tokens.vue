@@ -200,7 +200,9 @@ async function revoke() {
 					</p>
 					<p class="mt-1 text-xs text-muted">
 						{{
-							token.lastUsedAt ? `last used ${formatDate(token.lastUsedAt)}` : 'never used'
+							token.lastUsedAt
+								? `last used ${formatDate(token.lastUsedAt)}`
+								: 'never used'
 						}}
 						·
 						{{

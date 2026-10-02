@@ -4,8 +4,9 @@
   Nuxt UI only for accessible primitives (re-themed). Use the `nuxt-ui` skill or MCP to pick primitives.
 - **Styling**: Tailwind CSS v4 utilities for fine-tuning. Theme colors in `app/app.config.ts`
   (`ui.colors`), design tokens in `app/assets/css/main.css` (`@theme`). No inline styles, no extra CSS frameworks.
-- **Layouts**: `default` (header + footer), `auth` (centered card for login/signup/reset),
-  `dashboard` (`UDashboardGroup` + sidebar for `/my-shop` and `/admin`).
+- **Layouts** (`app/layouts/`): `default` (header + footer; public pages, auth pages, `/profile`), `my-shop`
+  (`default` + the seller section nav, every `/my-shop/**` page), `dashboard` (`UDashboardGroup` + sidebar,
+  `/admin/**` only).
 - **Forms**: `UForm` + shared Zod schema + `UFormField`; show server errors with `UAlert`/toast.
   Password inputs: `UInput` with a trailing eye button toggling `type` (`aria-label` "Show password"/"Hide password").
 - **Data states**: every list has loading (`USkeleton`), empty (`UEmpty` or equivalent) and error states.

@@ -245,7 +245,9 @@ async function refund() {
 					<strong class="text-highlighted">{{ refunding?.buyerName }}</strong>
 					gets back
 					<strong class="text-highlighted tabular-nums">{{
-						formatMoney((refunding?.subtotalCents ?? 0) + (refunding?.shippingCents ?? 0))
+						formatMoney(
+							(refunding?.subtotalCents ?? 0) + (refunding?.shippingCents ?? 0),
+						)
 					}}</strong>
 					and your
 					<strong class="text-highlighted tabular-nums">{{

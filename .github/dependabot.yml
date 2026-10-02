@@ -1,18 +1,11 @@
 version: 2
+# Bun deps are not here: Dependabot's bun support only parses lockfileVersion 1 and this repo's
+# bun.lock is v2 (every run failed). .github/workflows/deps.yml reports outdated/vulnerable packages.
+# PRs target `dev` (sandbox), so updates go through the same dev -> main gate as any change.
 updates:
-  - package-ecosystem: bun
-    directory: /
-    schedule:
-      interval: weekly
-    commit-message:
-      prefix: build
-      include: scope
-    groups:
-      minor-and-patch:
-        update-types: [minor, patch]
-
   - package-ecosystem: github-actions
     directory: /
+    target-branch: dev
     schedule:
       interval: weekly
     commit-message:
@@ -20,6 +13,7 @@ updates:
 
   - package-ecosystem: docker
     directory: /infra/docker
+    target-branch: dev
     schedule:
       interval: weekly
     commit-message:

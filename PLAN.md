@@ -354,7 +354,7 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (say why 
 - [x] CLAUDE.md/AGENTS.md: karpathy-guidelines, ponytail and graphify mandatory
 - [x] `bun run setup:{sqlite,postgres-local,postgres-docker}` → `scripts/setup.ts` picks `setups/*-{windows,unix}-*.sh` (Git Bash on Windows)
 - [x] graphify graph built (`graphify-out/`, gitignored): 1280 nodes, 115 communities
-- [ ] Rewrite GitHub Release v1.0.0 notes from the new CHANGELOG section (`gh release edit`)
+- [x] Rewrite GitHub Release v1.0.0 notes from the new CHANGELOG section (`gh release edit`)
 - **Assert:** `bun run check && bun run typecheck && bun run test:unit` green; `bun run setup:sqlite` reaches "app started"
 
 ### Phase 16 — Branch flow dev → main (item 9) — D23
@@ -364,10 +364,10 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (say why 
 - **Assert:** a push to `dev` triggers `ci`; nothing deploys from `dev`
 
 ### Phase 17 — Stabilization: deploy, tests, CI (item 8)
-- [ ] Fix doc contradictions found by graphify: `/my-shop` layout (ui-ux-frontend vs design-system); `server/tasks/` vs seed script (folder-structure vs database)
-- [ ] Fix Dependabot `bun` update job failure (2026-09-26 run)
-- [ ] Review `ci.yml` (timeouts, concurrency cancel, caching, Playwright browsers cache, artifact on failure)
-- [ ] Review `deploy.yml` (health check after `up -d`, rollback to previous tag on failure, migrate before app)
+- [x] Fix doc contradictions found by graphify: `/my-shop` layout (ui-ux-frontend vs design-system); `server/tasks/` vs seed script (folder-structure vs database)
+- [x] Dependabot `bun` job failed (bun.lock v2 unsupported): removed; weekly `deps.yml` reports `bun outdated` + `bun audit`; Actions/Docker PRs target `dev`
+- [x] `ci.yml`: job timeouts, new `docker` job builds the image on every push (concurrency cancel, Bun cache, report artifact already there)
+- [x] `deploy.yml`: `up --wait` on the healthcheck, automatic rollback to the last good version (`.deployed-version`); `stripe/stripe-cli` pinned to v1.53.0
 - [ ] Docker: build image locally, run compose stack, smoke `/api/health`
 - [ ] Run the whole suite locally (unit, coverage, integration sqlite+postgres, smoke, e2e); fix flakes/bugs found
 - **Assert:** `bun run test` green locally; `ci` green on `dev`; image builds

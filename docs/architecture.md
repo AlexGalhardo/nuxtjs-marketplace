@@ -24,7 +24,8 @@ Stripe ──webhook──▶ /api/stripe/webhook
 - **Dialect chosen at build time** (`NUXT_HUB_DB_DIALECT`): SQLite for zero-setup dev, PostgreSQL for docker/prod.
 
 ## Request lifecycle (server)
-1. `server/middleware/` resolves the auth context (session or API token) — no redirects here.
+1. nuxt-security (headers, rate limits, size limits) and `server/middleware/csrf.ts` (cross-origin cookie
+   mutations → 403). There is no auth middleware: each handler authenticates itself (step 3).
 2. Route handler (`defineEventHandler`) validates input with Zod schemas from `shared/schemas`
    via `readValidatedBody` / `getValidatedQuery`.
 3. Authorization with `server/utils/auth.ts` helpers (`requireUser`, `requireShopOwner`, `requireAdmin`).

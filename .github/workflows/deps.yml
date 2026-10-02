@@ -1,0 +1,34 @@
+name: deps
+
+# Weekly report of vulnerable and outdated Bun packages (Dependabot can't parse bun.lock v2).
+# Upgrades are done by hand on `dev`, so they pass the same ci gate as any change.
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      HUSKY: '0'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - name: outdated
+        run: |
+          { echo '## bun outdated'; echo '```'; bun outdated || true; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      # Fails the run on advisories, so they show up red in the Actions tab.
+      - name: audit
+        run: |
+          { echo '## bun audit'; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          status=0; bun audit >> "$GITHUB_STEP_SUMMARY" 2>&1 || status=$?
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"

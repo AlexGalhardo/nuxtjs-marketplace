@@ -65,7 +65,7 @@ services:
     restart: unless-stopped
 
   stripe-cli:
-    image: stripe/stripe-cli:latest
+    image: stripe/stripe-cli:v1.53.0
     command: listen --api-key ${NUXT_STRIPE_SECRET_KEY:-} --forward-to app:3000/api/stripe/webhook --skip-verify
     depends_on:
       - app

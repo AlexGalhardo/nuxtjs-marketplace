@@ -20,6 +20,8 @@ version (see [docs/git-workflow.md](docs/git-workflow.md)).
 - Every `setups/*.sh` script starts the app at the end with its logs on screen, saves the session to `logs/<script>-<timestamp>.log`, and keeps the Git Bash window open on success, error or Ctrl+C.
 
 ### Changed
+- `ci` builds the Docker image on every push and every job has a timeout; `deploy` waits for the app's healthcheck and rolls back to the last good version when a release never gets healthy.
+- In-range dependency updates (Nuxt UI 4.11.3, Scalar 1.72.4, Resend 6.32.0, Vitest 5.0.3, Biome 2.5.15, ...); `stripe/stripe-cli` image pinned to v1.53.0 instead of `latest`.
 - Branch flow: `dev` is the sandbox and runs the full `ci`; `main` (production) only receives commits whose `dev` run passed; `deploy` refuses any ref but `main`.
 - Releases: `bun run release <patch|minor|major>` (`scripts/release.ts`) replaces changelogen; GitHub Release notes come from the version's CHANGELOG section.
 - Square form fields everywhere, square cards and buttons on the form pages; the signup password checklist appears under the field once you start typing.
@@ -30,6 +32,8 @@ version (see [docs/git-workflow.md](docs/git-workflow.md)).
 - The blinking terminal cursor in the logo.
 
 ### Fixed
+- Dependabot's Bun job failed on every run (it can't parse `bun.lock` v2); a weekly `deps` workflow now reports outdated and vulnerable packages, and Actions/Docker update PRs target `dev`.
+- Docs disagreed with the code on layouts (`/my-shop` uses its own layout), on a `server/tasks/` folder that doesn't exist and on an auth middleware that doesn't exist.
 - The "add address" button on `/profile` never rendered, so no address could be added and physical checkouts were blocked; saving an address now also reports errors.
 - Integration and e2e runs wrote thousands of throwaway users and products into the dev database; they now use `.data-test`.
 - Dark theme: near-invisible form fields (1.7:1 outlines, now 3.6:1), full neon promo bar and hero, light native controls (`color-scheme` follows the theme), solid brand empty states. Light theme: field outlines 1.6:1 → 3.4:1, success text 2.3:1 → 5:1.

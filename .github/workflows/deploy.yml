@@ -37,6 +37,16 @@ jobs:
             set -e
             cd "${{ secrets.DEPLOY_PATH }}"
             git pull --ff-only
+            compose="docker compose -f infra/docker-compose.yml"
+            previous="$(cat .deployed-version 2>/dev/null || echo latest)"
             export APP_VERSION
-            docker compose -f infra/docker-compose.yml pull migrate app
-            docker compose -f infra/docker-compose.yml up -d app
+            $compose pull migrate app
+            # --wait blocks until the app's healthcheck passes; a release that never gets healthy is rolled
+            # back to the last good image. Migrations are forward-only, so they are not undone.
+            if $compose up -d --wait --wait-timeout 180 app; then
+              echo "$APP_VERSION" > .deployed-version
+            else
+              echo "::error::$APP_VERSION did not become healthy, rolling back to $previous"
+              APP_VERSION="$previous" $compose up -d --wait --wait-timeout 180 app
+              exit 1
+            fi

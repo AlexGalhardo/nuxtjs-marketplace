@@ -15,11 +15,10 @@ Follows Nuxt 4 defaults. Do not invent new top-level patterns (no `services/`, `
 ├─ server/
 │  ├─ api/                    # /api/** handlers. REST API for shops under api/v1/
 │  ├─ routes/                 # Non-/api routes (e.g. images/[...pathname].get.ts)
-│  ├─ middleware/             # Auth context resolution
+│  ├─ middleware/             # CSRF guard (auth is per handler: requireUser/requireAdmin)
 │  ├─ plugins/                # Nitro plugins (env validation)
-│  ├─ tasks/                  # Nitro tasks (db:seed)
 │  ├─ utils/                  # Auto-imported server helpers (auth, stripe, email, logTransaction)
-│  └─ db/                     # schema.sqlite.ts, schema.postgresql.ts, migrations/{dialect}/
+│  └─ db/                     # schema.{sqlite,postgresql}.ts, migrations/{dialect}/, seed.ts + make-admin.ts (Bun scripts)
 ├─ shared/
 │  ├─ schemas/                # Zod schemas (forms + API validation) — explicit imports only;
 │  │                          # Nuxt does not auto-import this subfolder (only utils/ and types/)
