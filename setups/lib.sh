@@ -36,7 +36,8 @@ end_session() {
   else
     printf '\033[1;31mSetup failed (exit code %s).\033[0m Full log: %s\n' "$status" "$SESSION_LOG"
   fi
-  if [ -t 0 ]; then
+  # `bun run setup:*` sets SETUP_NO_PAUSE: the terminal stays open there anyway.
+  if [ -t 0 ] && [ -z "${SETUP_NO_PAUSE:-}" ]; then
     read -r -p "Press Enter to close this window..." _ || true
   fi
 }
