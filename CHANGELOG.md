@@ -10,6 +10,9 @@ version (see [docs/git-workflow.md](docs/git-workflow.md)).
 ## [Unreleased]
 
 ### Added
+- `/system-design`: interactive Vue Flow diagrams of the architecture, request lifecycle, money flow, data model, scaling and observability, linked from the footer.
+- `bun run stripe:bootstrap <site-url>` creates the platform and Connect webhook endpoints; `charge.refunded` (Dashboard refunds) and `charge.dispute.closed` are logged.
+- `docs/system-design/` (didactic system design guide), MIT `LICENSE`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, issue and PR templates.
 - Redis (optional, `REDIS_URL`): public catalog reads cached 30 s with stale-while-revalidate, nuxt-security rate limits and the per-token API limit shared by every replica, and a BullMQ mail queue (5 attempts, exponential backoff) with a worker in each replica. A Redis outage degrades to in-process behavior instead of failing requests.
 - Self-hosted stack: Caddy load balancer in front of 2 app replicas (`--scale app=N` joins automatically), Redis with AOF.
 - OpenTelemetry: request spans (continuing upstream `traceparent`) exported over OTLP, request-duration histogram and money-event counters for Prometheus; off unless `OTEL_*` is set.

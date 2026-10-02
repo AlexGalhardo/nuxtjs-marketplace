@@ -414,7 +414,7 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (say why 
 
 ### Phase 23 — Open source & system design docs (owner request 2026-10-02)
 - [x] `docs/system-design/`: requirements, capacity estimates (1k sellers / 10k buyers / black friday), high-level architecture, data model ERD, money flow sequence, caching, queues, LB, observability, failure modes, trade-offs — Mermaid diagrams (render on GitHub)
-- [ ] `/system-design` page: interactive Vue Flow diagrams (architecture, request lifecycle, money flow, data model, scaling, observability), linked from the footer (owner request 2026-10-02; `@vue-flow/*` approved)
+- [x] `/system-design` page: interactive Vue Flow diagrams (architecture, request lifecycle, money flow, data model, scaling, observability), linked from the footer (owner request 2026-10-02; `@vue-flow/*` approved)
 - [~] README.md rewritten for open source (learning project statement, features, quick start, architecture link); screenshots still to add
 - [x] `LICENSE` (MIT), `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, issue/PR templates
 - **Assert:** every doc link resolves; Mermaid renders on GitHub
