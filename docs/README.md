@@ -4,6 +4,7 @@ Read [`../PLAN.md`](../PLAN.md) first: it holds scope, decisions and the task ch
 
 | File | What it covers |
 |------|----------------|
+| [system-design/](system-design/README.md) | System design guide for learners: requirements, capacity math, ERD, money flow, scaling, failure modes, trade-offs, exercises |
 | [architecture.md](architecture.md) | System overview, request flow, key design decisions |
 | [folder-structure.md](folder-structure.md) | Where every kind of file lives (Nuxt 4 conventions) |
 | [tech-stack.md](tech-stack.md) | Libraries, versions, non-official exceptions, AI tooling |
