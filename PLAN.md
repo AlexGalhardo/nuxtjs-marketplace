@@ -42,7 +42,7 @@ Multi-currency, carrier rate calculation, subscriptions, chat between buyer/sell
 | D13 | Product types | **Seeded fixed list** (`product_types`), each tagged `physical`\|`digital` | Filters stay clean. |
 | D14 | REST API auth | **Personal API tokens** (hashed, scoped, revocable) + session cookie | `/my-shop` UI consumes the same `/api/v1/shop/**` endpoints (dogfooding). |
 | D15 | Extra v1 scope | **Stock, reviews/ratings, seller refunds, admin role & moderation** | |
-| D16 | Git hooks | pre-commit `biome check --staged`; commit-msg `commitlint`; pre-push typecheck + unit + integration tests | |
+| D16 | Git hooks | pre-commit `biome check --staged`; commit-msg `commitlint`; no pre-push hook since 2026-10-02 (CI is the gate) | Owner: faster pushes; failures are caught and fixed from the GitHub Actions run. |
 | D17 | TypeScript | **TS 6.0.x**, not 7.x | `vue-tsc@3.3` crashes with TS 7 (`ERR_PACKAGE_PATH_NOT_EXPORTED`). Revisit when vue-tsc supports TS 7. |
 | D18 | Validation | **Zod v4** (Standard Schema) shared in `shared/schemas` | Not a Nuxt lib → exception. Works with `UForm` and `readValidatedBody`. |
 | D19 | Remote | `origin` = `https://github.com/AlexGalhardo/nuxtjs-marketplace.git` | Agents commit and push themselves (owner, 2026-09-25), following D23. |
@@ -208,7 +208,7 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (say why 
   - [x] Husky 9 `prepare` script
   - [x] `pre-commit`: `bunx biome check --staged --no-errors-on-unmatched --files-ignore-unknown=true`
   - [x] `commit-msg`: commitlint (`@commitlint/config-conventional`, header ≤ 72, scope-enum as warning)
-  - [x] `pre-push`: `typecheck` + `test:unit` + `test:integration`
+  - [-] `pre-push`: `typecheck` + `test:unit` + `test:integration` (removed 2026-10-02: CI is the gate)
 - **1.3 Runtime config, env & security baseline**
   - [x] `.env.example` with every current variable (documented in `docs/environment-variables.md`)
   - [x] Typed `runtimeConfig`; Zod validation at startup (`server/utils/env.ts` + `server/plugins/env.ts`, D21)

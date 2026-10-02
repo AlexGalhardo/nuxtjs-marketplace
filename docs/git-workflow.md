@@ -13,7 +13,8 @@
 - **Hooks (Husky, `.husky/`)**, installed by `bun install` (`prepare` script):
   - `pre-commit`: `biome check --staged` (fix with `bun run check:fix`)
   - `commit-msg`: `commitlint` (`commitlint.config.js`; unknown scopes only warn)
-  - `pre-push`: `typecheck` + `test:unit` + `test:integration` (takes a few minutes)
+  - no `pre-push` hook (owner, 2026-10-02): pushes stay fast; GitHub Actions `ci` is the gate. After pushing,
+    check the run (`gh run watch` / `gh run view --log-failed`) and fix failures.
   Never bypass hooks with `--no-verify`.
 - **Changelog**: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Every user-visible change adds a line
   under `## [Unreleased]` (`Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`) in the same commit.

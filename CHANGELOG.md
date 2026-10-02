@@ -26,6 +26,7 @@ version (see [docs/git-workflow.md](docs/git-workflow.md)).
 - `CHANGELOG.md` follows Keep a Changelog; PLAN.md no longer keeps its own change history or risks section (residual risks moved to `docs/security.md`).
 
 ### Removed
+- The `pre-push` hook (typecheck + unit + integration); the GitHub Actions `ci` run is the gate.
 - The blinking terminal cursor in the logo.
 
 ### Fixed
