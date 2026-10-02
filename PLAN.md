@@ -387,11 +387,11 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (say why 
 - **Assert:** `bun run test:qa` and `bun run test:load` green locally and in CI
 
 ### Phase 19 — Stripe automation (item 1; needs owner login)
-- [ ] Owner: `stripe login` (CLI) + Stripe MCP auth
+- [x] Stripe CLI logged in (sandbox `acct_1UA62y…`); live mode and Stripe MCP need the owner
 - [ ] Inventory account (test + live): connected accounts, customers, products/prices, webhooks, coupons → show list, owner OKs deletion
 - [ ] Delete via API everything deletable; archive the rest; owner clicks "Delete all test data" and removes old sandboxes
-- [ ] `scripts/stripe-bootstrap.ts`: idempotent creation of webhook endpoint(s) with the exact event list, Connect settings check, writes keys/secret to `.env`
-- [ ] Cover every Stripe case: onboarding incomplete/restricted, `account.updated` deauth, async payments, expired sessions, transfer failure + retry, refund failure, disputes (created/closed), `charge.refunded` from Dashboard, payout failures, idempotent retries
+- [x] `scripts/stripe-bootstrap.ts` (`bun run stripe:bootstrap`): idempotent platform + Connect webhook endpoints (matched by metadata), secrets to Railway with `--railway`; webhook accepts comma-separated secrets
+- [~] Stripe cases: async payments, expired sessions, transfer failure, crash-safe transfers, refund failure, disputes created+closed, Dashboard refunds (`charge.refunded`), idempotent retries — done and integration-tested. Open: Stripe SDK 23 / API 2026-08-26 upgrade, payouts are Stripe's to notify (no handler)
 - [ ] Real test-mode run with test cards (success, 3DS, decline, insufficient funds, dispute) via `stripe trigger`/test clocks
 - **Assert:** e2e checkout passes against real Stripe test mode locally; fake-Stripe suite green in CI
 

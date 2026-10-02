@@ -30,6 +30,7 @@
 		"db:seed": "bun run server/db/seed.ts",
 		"db:deploy": "bun run db:migrate && bun run db:seed",
 		"db:make-admin": "bun run server/db/make-admin.ts",
+		"stripe:bootstrap": "bun run scripts/stripe-bootstrap.ts",
 		"setup:sqlite": "bun run scripts/setup.ts sqlite",
 		"setup:postgres-local": "bun run scripts/setup.ts postgres-local",
 		"setup:postgres-docker": "bun run scripts/setup.ts postgres-with-docker",

@@ -31,6 +31,13 @@ Model: **Stripe Connect Express** + **separate charges and transfers**, USD, int
      never fails the webhook.
    - `checkout.session.expired` / `async_payment_failed` → order `expired`, seller orders `canceled`, logged.
    - `charge.dispute.created` → `dispute.created` logged against the order.
+   - `charge.dispute.closed` → `dispute.closed` (status `won`/`lost`) logged against the order.
+   - `charge.refunded` → refunds made outside the app (Stripe Dashboard) logged as `refund.created`
+     (`payload.source = stripe_dashboard`); only the amount the ledger doesn't already know, so the app's own
+     refunds and re-deliveries add nothing. The order status is left for an admin to reconcile.
+   - `account.updated` arrives on a separate **Connect** endpoint (connected accounts' events); the webhook
+     accepts both signing secrets, comma-separated in `NUXT_STRIPE_WEBHOOK_SECRET`.
+   - Endpoints are created by `bun run stripe:bootstrap <site-url> [--railway]` (`scripts/stripe-bootstrap.ts`).
 5. Refund by seller (Phase 9, done): `POST /api/v1/shop/orders/:id/refund` → `refundSellerOrder()`
    (`server/utils/orders.ts`). Full refunds only (D15), per seller order:
    - `refunds.create` on the payment intent for `subtotal + shipping` of that seller order (what the buyer paid
