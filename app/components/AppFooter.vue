@@ -33,6 +33,7 @@ const columns = computed(() => [
 			{ label: 'talk to us', to: '/contact' },
 			{ label: 'terms', to: '/terms' },
 			{ label: 'privacy', to: '/privacy' },
+			{ label: 'system design', to: '/system-design' },
 		],
 	},
 	{
