@@ -406,10 +406,10 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (say why 
 - **Assert:** compose stack with 2 replicas behind Caddy passes smoke + QA suite; cache hit ratio visible in metrics; app works with Redis down (degrades to no cache / inline jobs)
 
 ### Phase 22 — Telemetry & observability (owner request 2026-10-02)
-- [ ] OpenTelemetry SDK in a Nitro plugin: HTTP + DB + Stripe spans, trace id in logs, OTLP exporter (off when `OTEL_EXPORTER_OTLP_ENDPOINT` unset)
-- [ ] Prometheus metrics (`/api/metrics`, private): request rate/latency histogram, errors, checkout/payments counters, queue depth, cache hits
-- [ ] Compose profile `observability`: OpenTelemetry Collector, Prometheus, Grafana (provisioned dashboards), Tempo (traces), Loki + Promtail (logs)
-- [ ] docs/observability.md (how to read a trace from click to Stripe webhook)
+- [x] OpenTelemetry SDK in a Nitro plugin (`server/plugins/telemetry.ts`): request spans from Nitro hooks continuing `traceparent`, OTLP exporter, off unless `OTEL_*` set. DB/Stripe child spans left as an exercise (docs/observability.md)
+- [x] Prometheus metrics on a private `:9464`: request duration histogram (route pattern labels) + money-event counters from `logTransaction()`; queue depth gauge left as an exercise
+- [x] `infra/docker-compose.observability.yml`: Tempo, Prometheus (DNS discovery of replicas), Loki + Grafana Alloy (Promtail is deprecated), Grafana with provisioned datasources and dashboard; app exports straight to Tempo (no collector needed)
+- [x] docs/observability.md; Railway tracing enabled on `app` in production
 - **Assert:** `docker compose --profile observability up` shows a checkout trace in Grafana and the dashboard has live metrics
 
 ### Phase 23 — Open source & system design docs (owner request 2026-10-02)

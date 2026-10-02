@@ -16,6 +16,11 @@ Variables marked *(Phase N)* are not wired yet; add them to `runtimeConfig`, the
 | `NUXT_AUTH_RATE_LIMIT_TOKENS` | build | `/api/auth/**` rate limit, tokens per 5 min (default `30`). Read directly in `nuxt.config.ts` (`routeRules`), not part of `runtimeConfig`. `tests/integration/global-setup.ts` raises it for the shared test server (docs/testing.md) |
 | `DATABASE_URL` | postgres | PostgreSQL connection string, read by `@nuxthub/core`'s postgres-js driver |
 | `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT` | prod/docker | Blob storage (SeaweedFS S3 in docker-compose); leave empty to use the local `fs` driver (`.data/blob`) |
+| `REDIS_URL` | no | Redis for the shared response cache, rate limits and the BullMQ mail queue (`server/utils/redis.ts`). Empty = in-process memory and inline emails. Read at run time |
+| `QUEUE_WORKER` | no | `false` = this replica doesn't run the mail worker (`server/plugins/queue-worker.ts`) |
+| `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_METRICS_EXPORTER`, `OTEL_EXPORTER_PROMETHEUS_HOST`, `OTEL_SERVICE_NAME` | no | Standard OpenTelemetry variables; telemetry stays off unless the endpoint or the metrics exporter is set (docs/observability.md). Railway tracing injects them |
+| `APP_TARGET` | build | Dockerfile final stage (`runtime` default, `migrate` on Railway so the pre-deploy migrations can run in the image) |
+| `PORT` | no | HTTP port (default `3000`); Railway sets it |
 | `E2E_PORT` | no | Port for the Playwright test server (default `3100`) |
 | `PLAYWRIGHT_SKIP_BUILD` | no | `1` = Playwright reuses the existing `.output` build |
 | `NUXT_STRIPE_SECRET_KEY` | yes | Stripe secret key (test mode in dev) |

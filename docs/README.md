@@ -18,4 +18,5 @@ Read [`../PLAN.md`](../PLAN.md) first: it holds scope, decisions and the task ch
 | [testing.md](testing.md) | Unit, integration, smoke, e2e strategy and commands |
 | [git-workflow.md](git-workflow.md) | Conventional Commits, SemVer, hooks, releases |
 | [infra-and-setup.md](infra-and-setup.md) | Docker, setup scripts, environments, CI/CD |
+| [observability.md](observability.md) | OpenTelemetry traces, Prometheus metrics, Loki logs, Grafana; Railway tracing |
 | [environment-variables.md](environment-variables.md) | Every env var and its purpose |

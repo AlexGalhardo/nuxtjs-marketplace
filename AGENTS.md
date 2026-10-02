@@ -35,7 +35,7 @@ resell.sh — a lowercase, terminal-green marketplace (Enjoei-like) to buy/sell 
 - Architecture: [docs/architecture.md](docs/architecture.md) · Conventions: [docs/coding-conventions.md](docs/coding-conventions.md)
 - Database (SQLite + Postgres dual schema): [docs/database.md](docs/database.md)
 - Auth & API tokens: [docs/authentication.md](docs/authentication.md) · REST API: [docs/rest-api.md](docs/rest-api.md)
-- Infra, setup scripts, CI/CD: [docs/infra-and-setup.md](docs/infra-and-setup.md) · Env vars: [docs/environment-variables.md](docs/environment-variables.md)
+- Infra, CI/CD, Railway: [docs/infra-and-setup.md](docs/infra-and-setup.md) · Env: [docs/environment-variables.md](docs/environment-variables.md) · [docs/observability.md](docs/observability.md)
 
 ## Commands
 - `bun install` · `bun run setup:sqlite|setup:postgres-local|setup:postgres-docker` · `bun run dev` · `bun run build`
