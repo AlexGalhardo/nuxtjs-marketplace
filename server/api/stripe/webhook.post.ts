@@ -17,16 +17,18 @@ export default defineEventHandler(async (event) => {
 	}
 
 	const stripe = getStripeClient()
-	let stripeEvent: Stripe.Event
-	try {
-		// Async on purpose: under Bun, stripe loads its worker build (SubtleCrypto), whose sync
-		// constructEvent always throws, so every event would be rejected as a bad signature.
-		stripeEvent = await stripe.webhooks.constructEventAsync(
-			rawBody,
-			signature,
-			config.stripe.webhookSecret,
-		)
-	} catch {
+	// Comma-separated: the platform endpoint and the Connect endpoint (connected accounts' events, e.g.
+	// account.updated) each have their own signing secret (scripts/stripe-bootstrap.ts).
+	let stripeEvent: Stripe.Event | undefined
+	for (const secret of config.stripe.webhookSecret.split(',').map((s) => s.trim())) {
+		try {
+			// Async on purpose: under Bun, stripe loads its worker build (SubtleCrypto), whose sync
+			// constructEvent always throws, so every event would be rejected as a bad signature.
+			stripeEvent = await stripe.webhooks.constructEventAsync(rawBody, signature, secret)
+			break
+		} catch {}
+	}
+	if (!stripeEvent) {
 		throw createError({ statusCode: 400, statusMessage: 'Invalid webhook signature' })
 	}
 
@@ -59,6 +61,12 @@ export default defineEventHandler(async (event) => {
 			break
 		case 'charge.dispute.created':
 			await recordDispute(stripeEvent.data.object)
+			break
+		case 'charge.dispute.closed':
+			await recordDispute(stripeEvent.data.object, 'dispute.closed')
+			break
+		case 'charge.refunded':
+			await recordExternalRefund(stripeEvent.data.object)
 			break
 		case 'account.updated': {
 			const account = stripeEvent.data.object

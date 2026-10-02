@@ -7,6 +7,7 @@ export type TransactionType =
 	| 'transfer.created'
 	| 'transfer.failed'
 	| 'dispute.created'
+	| 'dispute.closed'
 	| 'refund.created'
 	| 'refund.failed'
 	| 'transfer.reversed'

@@ -379,4 +379,47 @@ describe('checkout and webhook', () => {
 		`)
 		expect(logs.filter((log) => log.type === 'transfer.created')).toHaveLength(1)
 	})
+
+	it('logs refunds made in the Stripe Dashboard once, and closed disputes', async () => {
+		const refunded = {
+			id: `evt_refunded_${run}`,
+			type: 'charge.refunded',
+			data: {
+				object: {
+					id: `ch_dash_${run}`,
+					object: 'charge',
+					payment_intent: `pi_${run}`,
+					amount_refunded: 500,
+				},
+			},
+		}
+		expect((await postWebhook(refunded)).status).toBe(200)
+		expect((await postWebhook({ ...refunded, id: `evt_refunded_again_${run}` })).status).toBe(
+			200,
+		)
+		const closed = {
+			id: `evt_dispute_closed_${run}`,
+			type: 'charge.dispute.closed',
+			data: {
+				object: {
+					id: `dp_${run}`,
+					object: 'dispute',
+					payment_intent: `pi_${run}`,
+					amount: 6500,
+					status: 'won',
+					reason: 'fraudulent',
+					charge: `ch_for_pi_${run}`,
+				},
+			},
+		}
+		expect((await postWebhook(closed)).status).toBe(200)
+
+		const logs = dbQuery<{ type: string; amountCents: number; status: string }[]>(`
+			return db.select().from(schema.transactionLogs).where(eq(schema.transactionLogs.orderId, '${ids.order}'))
+		`)
+		expect(logs.filter((log) => log.type === 'refund.created')).toEqual([
+			expect.objectContaining({ amountCents: 500, status: 'succeeded' }),
+		])
+		expect(logs.find((log) => log.type === 'dispute.closed')).toMatchObject({ status: 'won' })
+	})
 })

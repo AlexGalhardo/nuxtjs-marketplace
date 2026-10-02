@@ -270,7 +270,11 @@ export async function expireCheckout(session: Stripe.Checkout.Session): Promise<
 	})
 }
 
-export async function recordDispute(dispute: Stripe.Dispute): Promise<void> {
+// `charge.dispute.created` and `charge.dispute.closed` (status won/lost) both land in the ledger.
+export async function recordDispute(
+	dispute: Stripe.Dispute,
+	type: 'dispute.created' | 'dispute.closed' = 'dispute.created',
+): Promise<void> {
 	const paymentIntentId =
 		typeof dispute.payment_intent === 'string'
 			? dispute.payment_intent
@@ -282,7 +286,7 @@ export async function recordDispute(dispute: Stripe.Dispute): Promise<void> {
 				.where(eq(schema.orders.stripePaymentIntentId, paymentIntentId))
 		: []
 	await logTransaction({
-		type: 'dispute.created',
+		type,
 		orderId: order?.id,
 		userId: order?.buyerId,
 		stripeObjectId: dispute.id,
@@ -464,4 +468,41 @@ export async function refundSellerOrder(sellerOrder: SellerOrder): Promise<void>
 		'you got a refund on resell.sh',
 		`a seller refunded ${formatMoney(amountCents)} of your order. it goes back to your original payment method, usually within 5–10 business days.`,
 	)
+}
+
+// `charge.refunded` fires for our own refunds (already logged by refundSellerOrder) and for refunds made in
+// the Stripe Dashboard. Only the part of `amount_refunded` the ledger doesn't know yet is logged, so our
+// refunds and re-deliveries add nothing. ponytail: logs only, the order status isn't changed; an admin
+// reconciles from /admin/transaction-logs.
+export async function recordExternalRefund(charge: Stripe.Charge): Promise<void> {
+	const paymentIntentId =
+		typeof charge.payment_intent === 'string'
+			? charge.payment_intent
+			: charge.payment_intent?.id
+	if (!paymentIntentId) return
+	const [order] = await db
+		.select({ id: schema.orders.id, buyerId: schema.orders.buyerId })
+		.from(schema.orders)
+		.where(eq(schema.orders.stripePaymentIntentId, paymentIntentId))
+	if (!order) return
+	const [logged] = await db
+		.select({ cents: sql<number>`coalesce(sum(${schema.transactionLogs.amountCents}), 0)` })
+		.from(schema.transactionLogs)
+		.where(
+			and(
+				eq(schema.transactionLogs.orderId, order.id),
+				eq(schema.transactionLogs.type, 'refund.created'),
+			),
+		)
+	const unknownCents = charge.amount_refunded - Number(logged?.cents ?? 0)
+	if (unknownCents <= 0) return
+	await logTransaction({
+		type: 'refund.created',
+		orderId: order.id,
+		userId: order.buyerId,
+		stripeObjectId: charge.id,
+		amountCents: unknownCents,
+		status: 'succeeded',
+		payload: { source: 'stripe_dashboard', amountRefunded: charge.amount_refunded },
+	})
 }
