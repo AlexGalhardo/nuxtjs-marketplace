@@ -1,6 +1,10 @@
 // Nuxt UI re-themed to the resell.sh system (docs/design-system.md). Nuxt UI is kept only for
 // accessible primitives; layout and marketing pieces are own Tailwind components in app/components.
+import { version } from '../package.json'
+
 export default defineAppConfig({
+	// Shown in the footer, linked to its GitHub release (bumped by `bun run release`).
+	version,
 	ui: {
 		colors: {
 			primary: 'matrix',

@@ -2,6 +2,7 @@
 import type { ProductType } from '#shared/types/db'
 
 const { loggedIn } = useAuth()
+const { version } = useAppConfig()
 const { data: productTypes } = await useFetch<ProductType[]>('/api/product-types', {
 	key: 'product-types',
 	default: () => [],
@@ -84,7 +85,12 @@ const columns = computed(() => [
 			>
 				<AppLogo />
 				<p class="text-xs text-muted">
-					resell.sh © {{ new Date().getFullYear() }} · an open-source learning project
+					resell.sh © {{ new Date().getFullYear() }} · an open-source learning project ·
+					<a
+						:href="`https://github.com/AlexGalhardo/nuxtjs-marketplace/releases/tag/v${version}`"
+						class="font-mono hover:text-primary"
+						>v{{ version }}</a
+					>
 				</p>
 			</div>
 		</div>
