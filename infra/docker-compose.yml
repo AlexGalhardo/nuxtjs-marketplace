@@ -1,5 +1,7 @@
-# Full stack: app + migrate + postgres + stripe-cli. Run from the repo root:
+# Full stack: Caddy load balancer -> 2 app replicas, migrate, postgres, redis (cache, rate limits, mail
+# queue), stripe-cli. Run from the repo root:
 #   docker compose -f infra/docker-compose.yml up -d --build
+#   docker compose -f infra/docker-compose.yml up -d --scale app=4   # more replicas, Caddy picks them up
 # On a server, pull a release instead: APP_VERSION=1.2.3 docker compose ... pull && ... up -d
 name: nuxtjs-marketplace
 
@@ -26,9 +28,11 @@ services:
     build:
       context: ..
       dockerfile: infra/docker/Dockerfile
-    ports:
-      - '3000:3000'
+    # No published port: traffic enters through `lb`.
+    deploy:
+      replicas: 2
     environment:
+      REDIS_URL: redis://redis:6379
       NUXT_STRICT_ENV: ${NUXT_STRICT_ENV:-true}
       NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-http://localhost:3000}
       NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD:-}
@@ -46,6 +50,32 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  lb:
+    image: caddy:2.11.6-alpine
+    ports:
+      - '3000:80'
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  redis:
+    image: redis:8.8.3-alpine
+    # AOF so queued mail jobs survive a restart.
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
     restart: unless-stopped
 
   postgres:
@@ -66,11 +96,13 @@ services:
 
   stripe-cli:
     image: stripe/stripe-cli:v1.53.0
-    command: listen --api-key ${NUXT_STRIPE_SECRET_KEY:-} --forward-to app:3000/api/stripe/webhook --skip-verify
+    command: listen --api-key ${NUXT_STRIPE_SECRET_KEY:-} --forward-to lb:80/api/stripe/webhook --skip-verify
     depends_on:
-      - app
+      - lb
     restart: unless-stopped
 
 volumes:
   postgres-data:
   app-data:
+  redis-data:
+  caddy-data:

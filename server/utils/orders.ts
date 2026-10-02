@@ -8,7 +8,9 @@ import type { SellerOrderStatus } from '#shared/types/enums'
 export const downloadLimits = { maxDownloads: 5, ttlDays: 30 }
 
 // PLAN.md §3.5 step 2. Safe to call more than once for the same session: the pending → paid update
-// is conditional, so only the first call fulfils; transfers also carry Stripe idempotency keys.
+// is conditional, so only the first call fulfils and emails. Transfers run on every call for seller
+// orders that never got one attempted (a crash after the commit leaves them pending; Stripe's retry of
+// the unprocessed event then pays the seller), and carry Stripe idempotency keys.
 export async function fulfillCheckout(session: Stripe.Checkout.Session): Promise<void> {
 	const orderId = session.metadata?.orderId
 	// Async payment methods complete unpaid first; `checkout.session.async_payment_succeeded` follows.
@@ -117,12 +119,12 @@ export async function fulfillCheckout(session: Stripe.Checkout.Session): Promise
 		)
 		return paid
 	})
-	if (!order) return
 
 	const sellers = await db
 		.select({
 			id: schema.sellerOrders.id,
 			shopId: schema.sellerOrders.shopId,
+			status: schema.sellerOrders.status,
 			payoutCents: schema.sellerOrders.payoutCents,
 			subtotalCents: schema.sellerOrders.subtotalCents,
 			stripeAccountId: schema.shops.stripeAccountId,
@@ -134,10 +136,28 @@ export async function fulfillCheckout(session: Stripe.Checkout.Session): Promise
 		.innerJoin(schema.users, eq(schema.shops.ownerId, schema.users.id))
 		.where(eq(schema.sellerOrders.orderId, orderId))
 
+	// Every attempt (created or failed) is logged, so "no transfer log" means it never ran.
+	const attempted = new Set(
+		(
+			await db
+				.select({ sellerOrderId: schema.transactionLogs.sellerOrderId })
+				.from(schema.transactionLogs)
+				.where(
+					and(
+						eq(schema.transactionLogs.orderId, orderId),
+						inArray(schema.transactionLogs.type, [
+							'transfer.created',
+							'transfer.failed',
+						]),
+					),
+				)
+		).map((row) => row.sellerOrderId),
+	)
 	for (const seller of sellers) {
+		if (seller.status !== 'paid' || attempted.has(seller.id)) continue
 		await transferToSeller(stripe, orderId, chargeId, seller)
 	}
-	await sendOrderEmails(order, items, sellers)
+	if (order) await sendOrderEmails(order, items, sellers)
 }
 
 // ponytail: a failed transfer is logged (`transfer.failed`) and not retried automatically; admin
@@ -220,7 +240,7 @@ async function sendOrderEmails(
 	for (const mail of mails) {
 		if (!mail) continue
 		// A10: a mail outage must not fail the webhook after money already moved.
-		await sendMail(mail).catch((error: unknown) =>
+		await queueMail(mail).catch((error: unknown) =>
 			console.error('[orders] email failed', error),
 		)
 	}
@@ -301,7 +321,7 @@ export async function notifyBuyer(orderId: string, subject: string, text: string
 		.where(eq(schema.orders.id, orderId))
 	if (!buyer) return
 	const siteUrl = useRuntimeConfig().public.siteUrl.replace(/\/$/, '')
-	await sendMail({
+	await queueMail({
 		to: buyer.email,
 		subject,
 		text: `hi ${buyer.name},\n\n${text}\n\nyour order: ${siteUrl}/orders/${orderId}\n`,

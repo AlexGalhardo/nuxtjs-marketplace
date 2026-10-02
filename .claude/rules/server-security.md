@@ -7,7 +7,8 @@ paths:
 # Server security (docs/security.md, OWASP Top 10:2025)
 
 - Every protected handler starts with `requireUser`/`requireAdmin`/owner helpers; check ownership of every id it
-  receives and answer another user's resource with 404. Add the integration test that proves it.
+  receives. Another user's buyer data (orders, addresses, tokens) is a 404; another seller's shop/product is a
+  403 (`requireShopOwner`/`requireProductOwner`). Add the integration test that proves it.
 - Validate body, query and params with the shared Zod schemas (`readValidatedBody`, `getValidatedQuery`).
 - Drizzle query builder or bound `sql` templates only; never interpolate input into SQL.
 - Errors: `createError` with a safe `statusMessage`; no stack traces, SQL or Stripe messages in responses.

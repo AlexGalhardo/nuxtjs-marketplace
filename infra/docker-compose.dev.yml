@@ -1,4 +1,4 @@
-# Services only (postgres, s3, stripe-cli): the app runs on the host with `bun run dev`.
+# Services only (postgres, s3, redis, stripe-cli): the app runs on the host with `bun run dev`.
 # Run from the repo root: docker compose -f infra/docker-compose.dev.yml up -d
 name: nuxtjs-marketplace-dev
 
@@ -36,6 +36,12 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  # Optional: set REDIS_URL=redis://localhost:6379 in .env to try the shared cache and the mail queue.
+  redis:
+    image: redis:8.8.3-alpine
+    ports:
+      - '6379:6379'
 
   stripe-cli:
     image: stripe/stripe-cli:v1.53.0

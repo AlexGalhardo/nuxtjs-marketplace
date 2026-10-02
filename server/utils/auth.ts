@@ -108,12 +108,27 @@ export async function requireProductOwner(event: H3Event, productId: string) {
 	return { product, shop }
 }
 
-// ponytail: in-memory fixed window per token, per server process; move to shared storage
-// (NuxtHub KV/Redis) if the app ever runs more than one instance.
+// Fixed window per token. With Redis (server/utils/redis.ts) every replica shares the counter (atomic
+// INCR + PEXPIRE); without it the window lives in this process's memory (dev, tests, a single instance).
 export const apiTokenRateLimit = { requests: 120, windowMs: 60_000 }
 const tokenWindows = new Map<string, { start: number; count: number }>()
 
-function enforceTokenRateLimit(event: H3Event, tokenId: string): void {
+async function countTokenRequest(tokenId: string): Promise<{ count: number; resetMs: number }> {
+	const redis = useRedis()
+	if (redis) {
+		const key = `resell:token-rate:${tokenId}`
+		try {
+			const result = await redis
+				.multi()
+				.incr(key)
+				.pexpire(key, apiTokenRateLimit.windowMs, 'NX')
+				.pttl(key)
+				.exec()
+			return { count: Number(result?.[0]?.[1] ?? 0), resetMs: Number(result?.[2]?.[1] ?? 0) }
+		} catch (error) {
+			console.warn('[redis] token rate limit falls back to memory:', (error as Error).message)
+		}
+	}
 	const now = Date.now()
 	let window = tokenWindows.get(tokenId)
 	if (!window || now - window.start >= apiTokenRateLimit.windowMs) {
@@ -121,12 +136,15 @@ function enforceTokenRateLimit(event: H3Event, tokenId: string): void {
 		tokenWindows.set(tokenId, window)
 	}
 	window.count += 1
-	const remaining = Math.max(apiTokenRateLimit.requests - window.count, 0)
+	return { count: window.count, resetMs: window.start + apiTokenRateLimit.windowMs - now }
+}
+
+async function enforceTokenRateLimit(event: H3Event, tokenId: string): Promise<void> {
+	const { count, resetMs } = await countTokenRequest(tokenId)
 	setHeader(event, 'x-ratelimit-limit', apiTokenRateLimit.requests)
-	setHeader(event, 'x-ratelimit-remaining', remaining)
-	if (window.count > apiTokenRateLimit.requests) {
-		const retryAfter = Math.ceil((window.start + apiTokenRateLimit.windowMs - now) / 1000)
-		setHeader(event, 'retry-after', retryAfter)
+	setHeader(event, 'x-ratelimit-remaining', Math.max(apiTokenRateLimit.requests - count, 0))
+	if (count > apiTokenRateLimit.requests) {
+		setHeader(event, 'retry-after', Math.ceil(resetMs / 1000))
 		throw createError({ statusCode: 429, statusMessage: 'API token rate limit exceeded' })
 	}
 }
@@ -153,7 +171,7 @@ export async function requireApiToken(event: H3Event, requiredScopes: string[] =
 	if (record.expiresAt && record.expiresAt.getTime() < Date.now()) {
 		throw createError({ statusCode: 401, statusMessage: 'API token expired' })
 	}
-	enforceTokenRateLimit(event, record.id)
+	await enforceTokenRateLimit(event, record.id)
 	const missingScope = requiredScopes.find((scope) => !record.scopes.includes(scope))
 	if (missingScope) {
 		throw createError({

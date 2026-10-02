@@ -343,4 +343,40 @@ describe('checkout and webhook', () => {
 		`)
 		expect(order?.status).toBe('expired')
 	})
+
+	it('pays the seller when a crash left a paid order without transfers', async () => {
+		await cartApi('/api/cart/items', { method: 'POST', body: { productId: ids.preset } })
+		const { orderId } = (await (
+			await cartApi('/api/checkout', { method: 'POST', body: {} })
+		).json()) as { orderId: string }
+		// The fulfilment transaction committed, then the process died before any transfer ran.
+		dbQuery(`
+			await db.update(schema.orders).set({ status: 'paid' }).where(eq(schema.orders.id, '${orderId}'))
+			await db.update(schema.sellerOrders).set({ status: 'paid' }).where(eq(schema.sellerOrders.orderId, '${orderId}'))
+		`)
+		const session = {
+			id: `cs_crash_${run}`,
+			object: 'checkout.session',
+			payment_status: 'paid',
+			payment_intent: `pi_crash_${run}`,
+			amount_total: 1000,
+			metadata: { orderId },
+		}
+		const event = {
+			id: `evt_crash_${run}`,
+			type: 'checkout.session.completed',
+			data: { object: session },
+		}
+		expect((await postWebhook(event)).status).toBe(200)
+		expect((await postWebhook({ ...event, id: `evt_crash_again_${run}` })).status).toBe(200)
+
+		const transfers = (await stripeRequests('/v1/transfers')).filter(
+			(request) => request.body.transfer_group === orderId,
+		)
+		expect(transfers).toHaveLength(1)
+		const logs = dbQuery<{ type: string }[]>(`
+			return db.select({ type: schema.transactionLogs.type }).from(schema.transactionLogs).where(eq(schema.transactionLogs.orderId, '${orderId}'))
+		`)
+		expect(logs.filter((log) => log.type === 'transfer.created')).toHaveLength(1)
+	})
 })

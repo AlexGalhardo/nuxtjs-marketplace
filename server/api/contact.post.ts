@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
 
 	const config = useRuntimeConfig()
 	if (config.contactEmail) {
-		await sendMail({
+		await queueMail({
 			to: config.contactEmail,
 			subject: `[Contact] ${body.subject}`,
 			text: `From: ${body.name} <${body.email}>\n\n${body.message}`,

@@ -18,11 +18,13 @@ export default defineEventHandler(async (event) => {
 
 		const config = useRuntimeConfig()
 		const resetUrl = `${config.public.siteUrl}/reset-password?token=${token}`
-		await sendMail({
+		// Not awaited, and a mail outage never reaches the response: otherwise known emails would answer
+		// slower, or with an error, than unknown ones (user enumeration).
+		queueMail({
 			to: user.email,
 			subject: 'Reset your password',
 			text: `We received a request to reset your password.\n\nReset it here: ${resetUrl}\n\nThis link expires in 1 hour. If you didn't request this, you can ignore this email.`,
-		})
+		}).catch((error: unknown) => console.error('[auth] reset email failed', error))
 	}
 
 	// Always 200, whether or not the email exists: no user enumeration (docs/authentication.md).

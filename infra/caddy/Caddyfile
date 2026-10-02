@@ -1,0 +1,24 @@
+# Load balancer for the self-hosted stack (infra/docker-compose.yml). Round-robins across every `app`
+# replica, re-resolving Docker's DNS every 10 s so `--scale app=N` joins without a restart, and sets
+# X-Real-IP, which the app's rate limits and security logs key on (docs/infra-and-setup.md).
+# Production with a domain: replace `:80` with `example.com` and Caddy gets and renews the TLS
+# certificate by itself (then publish 443 in compose and drop auto_https off).
+{
+	admin off
+	auto_https off
+}
+
+:80 {
+	encode zstd gzip
+
+	reverse_proxy {
+		dynamic a app 3000 {
+			refresh 10s
+		}
+		lb_policy least_conn
+		# A replica that dies mid-request is retried on another one for up to 5 s.
+		lb_try_duration 5s
+		fail_duration 10s
+		header_up X-Real-IP {remote_host}
+	}
+}

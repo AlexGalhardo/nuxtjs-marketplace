@@ -2,7 +2,7 @@ import { and, asc, desc, eq } from 'drizzle-orm'
 
 // GET /api/products/:slug — public product page data. 404 for anything not publicly visible
 // (draft, archived, suspended, or its shop can't take payments) — never a 403 that leaks existence.
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
 	const slug = getRouterParam(event, 'slug')
 	if (!slug) {
 		throw createError({ statusCode: 400, statusMessage: 'Missing product slug' })
@@ -66,4 +66,4 @@ export default defineEventHandler(async (event) => {
 			buyerName: buyerName.split(' ')[0] ?? '',
 		})),
 	}
-})
+}, catalogCache)

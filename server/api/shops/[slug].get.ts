@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm'
 
 // GET /api/shops/:slug — public storefront header. Products come from GET /api/products?shop=:slug.
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
 	const slug = getRouterParam(event, 'slug')
 	if (!slug) {
 		throw createError({ statusCode: 400, statusMessage: 'Missing shop slug' })
@@ -15,4 +15,4 @@ export default defineEventHandler(async (event) => {
 		throw createError({ statusCode: 404, statusMessage: 'Shop not found' })
 	}
 	return shop
-})
+}, catalogCache)

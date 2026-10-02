@@ -10,6 +10,9 @@ version (see [docs/git-workflow.md](docs/git-workflow.md)).
 ## [Unreleased]
 
 ### Added
+- Redis (optional, `REDIS_URL`): public catalog reads cached 30 s with stale-while-revalidate, nuxt-security rate limits and the per-token API limit shared by every replica, and a BullMQ mail queue (5 attempts, exponential backoff) with a worker in each replica. A Redis outage degrades to in-process behavior instead of failing requests.
+- Self-hosted stack: Caddy load balancer in front of 2 app replicas (`--scale app=N` joins automatically), Redis with AOF.
+- OpenTelemetry: request spans (continuing upstream `traceparent`) exported over OTLP, request-duration histogram and money-event counters for Prometheus; off unless `OTEL_*` is set.
 - Production on Railway: Postgres, an S3 bucket for uploads, the app built from `main` with migrations as a pre-deploy step (`bun run db:deploy`) and `/api/health` as the healthcheck.
 - The footer shows the running version, linked to its GitHub release.
 - `bun run setup:sqlite`, `setup:postgres-local` and `setup:postgres-docker` run the matching `setups/*.sh` for the OS (Git Bash on Windows).
@@ -35,6 +38,9 @@ version (see [docs/git-workflow.md](docs/git-workflow.md)).
 - The blinking terminal cursor in the logo.
 
 ### Fixed
+- A crash between marking an order paid and paying its sellers lost the transfers for good (the retried webhook saw the order already paid); every webhook delivery now runs the transfers no attempt was logged for.
+- `/api/auth/forgot-password` answered differently for known emails when the mail provider failed (user enumeration); the reset email is now sent off the request path.
+- `/api/health` passed with the database unreachable; it now checks the database and answers 503.
 - `nuxt db migrate` (NuxtHub 0.10.8) applied migrations in directory-listing order, so a fresh PostgreSQL on Railway ran `0002` before `0001` and failed; `patches/` sorts them (Bun `patchedDependencies`).
 - Dependabot's Bun job failed on every run (it can't parse `bun.lock` v2); a weekly `deps` workflow now reports outdated and vulnerable packages, and Actions/Docker update PRs target `dev`.
 - Docs disagreed with the code on layouts (`/my-shop` uses its own layout), on a `server/tasks/` folder that doesn't exist and on an auth middleware that doesn't exist.

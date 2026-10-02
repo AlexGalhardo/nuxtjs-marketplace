@@ -51,6 +51,7 @@ Multi-currency, carrier rate calculation, subscriptions, chat between buyer/sell
 | D22 | Changelog & releases | **Keep a Changelog** in `CHANGELOG.md`; `bun run release <patch\|minor\|major>` (`scripts/release.ts`) cuts versions; GitHub Release notes = that version's section; app version shown in the footer | Replaced `changelogen` (its format isn't Keep a Changelog). PLAN.md no longer keeps a change history (owner, 2026-10-02). |
 | D23 | Branches | **`dev` = sandbox, `main` = production**. Push to `dev`; promote the same commits to `main` only after `dev`'s `ci` passes | `main` only ever receives commits CI already validated (owner, 2026-10-02). |
 | D24 | Hosting | **Railway** (owner, 2026-10-02): Postgres, S3 bucket, app built from `main` with Wait for CI; SSH `deploy.yml` removed | Managed TLS/edge (`X-Real-IP`), zero-downtime deploys, no server to maintain. GHCR images stay for self-hosters. |
+| D25 | Load balancer | **Caddy** (owner, 2026-10-02) instead of nginx for the self-hosted stack | Smaller config, automatic HTTPS when a domain is set, `dynamic a` re-resolves scaled replicas. Railway's own edge balances replicas in production. |
 
 ### Non-official libraries (Nuxt ecosystem has no equivalent)
 
@@ -395,14 +396,14 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (say why 
 - **Assert:** e2e checkout passes against real Stripe test mode locally; fake-Stripe suite green in CI
 
 ### Phase 21 — Scale-out: Redis, queues, load balancer (owner request 2026-10-02)
-- [ ] Redis 8 in compose; Nitro `storage.cache` + `useStorage('redis')` via unstorage's built-in redis driver (`ioredis`)
-- [ ] Cache hot reads (catalog, product page, shop page, product types) with `defineCachedEventHandler` + invalidation on write
-- [ ] Shared rate limits (nuxt-security limiter + per-token API limit) in Redis, so N app replicas share buckets
-- [ ] Queue (BullMQ on Redis) for side effects off the request path: emails, seller transfers retry, webhook follow-ups; worker process; dead-letter + retries with backoff; inline fallback when `REDIS_URL` is unset (dev/tests)
-- [ ] Load balancer: nginx in compose in front of 2+ app replicas (`/api/health` checks, sets `X-Real-IP`, gzip, static cache)
+- [x] Redis 8.8 in compose; `server/plugins/redis.ts` mounts `cache` + `#rate-limiter-storage` on unstorage's redis driver at run time, fail-open to memory
+- [x] Cache hot reads (catalog, product page, shop page, product types) with `defineCachedEventHandler`: 30 s TTL + SWR instead of invalidation (bounded staleness; checkout re-prices from the DB); bypassed without Redis
+- [x] Shared rate limits (nuxt-security limiter + per-token API limit via atomic INCR) in Redis
+- [x] BullMQ mail queue (`queueMail`): 5 attempts, exponential backoff, failed set kept; worker in each replica (`QUEUE_WORKER=false` opts out); inline fallback without Redis or when enqueueing fails. Transfer crash window fixed in `fulfillCheckout` instead (re-entrant transfers) — no queue needed
+- [x] Load balancer: Caddy (D25) in compose in front of 2+ app replicas (DNS-discovered replicas, passive health, sets `X-Real-IP`, zstd/gzip)
 - [-] MongoDB: not added. Every entity here is relational and money needs ACID transactions across tables (Postgres already gives JSONB for loose data). Documented in docs/system-design as a "why not" lesson.
 - [ ] Docs: docs/system-design (caching, queues, LB), env vars, infra
-- **Assert:** compose stack with 2 replicas behind nginx passes smoke + QA suite; cache hit ratio visible in metrics; app works with Redis down (degrades to no cache / inline jobs)
+- **Assert:** compose stack with 2 replicas behind Caddy passes smoke + QA suite; cache hit ratio visible in metrics; app works with Redis down (degrades to no cache / inline jobs)
 
 ### Phase 22 — Telemetry & observability (owner request 2026-10-02)
 - [ ] OpenTelemetry SDK in a Nitro plugin: HTTP + DB + Stripe spans, trace id in logs, OTLP exporter (off when `OTEL_EXPORTER_OTLP_ENDPOINT` unset)
@@ -413,6 +414,7 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (say why 
 
 ### Phase 23 — Open source & system design docs (owner request 2026-10-02)
 - [x] `docs/system-design/`: requirements, capacity estimates (1k sellers / 10k buyers / black friday), high-level architecture, data model ERD, money flow sequence, caching, queues, LB, observability, failure modes, trade-offs — Mermaid diagrams (render on GitHub)
+- [ ] `/system-design` page: interactive Vue Flow diagrams (architecture, request lifecycle, money flow, data model, scaling, observability), linked from the footer (owner request 2026-10-02; `@vue-flow/*` approved)
 - [~] README.md rewritten for open source (learning project statement, features, quick start, architecture link); screenshots still to add
 - [x] `LICENSE` (MIT), `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, issue/PR templates
 - **Assert:** every doc link resolves; Mermaid renders on GitHub
