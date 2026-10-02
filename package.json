@@ -23,11 +23,14 @@
 		"test:watch": "vitest --project unit --project nuxt",
 		"test:smoke": "playwright test --project smoke",
 		"test:e2e": "playwright test --project e2e",
-		"release": "changelogen --release",
+		"release": "bun run scripts/release.ts",
 		"db:generate": "nuxt db generate",
 		"db:migrate": "nuxt db migrate",
 		"db:seed": "bun run server/db/seed.ts",
 		"db:make-admin": "bun run server/db/make-admin.ts",
+		"setup:sqlite": "bun run scripts/setup.ts sqlite",
+		"setup:postgres-local": "bun run scripts/setup.ts postgres-local",
+		"setup:postgres-docker": "bun run scripts/setup.ts postgres-with-docker",
 		"db:reset": "nuxt db drop-all --force && bun run db:migrate && bun run db:seed"
 	},
 	"dependencies": {
@@ -57,7 +60,6 @@
 		"@playwright/test": "^1.63.0",
 		"@vitest/coverage-v8": "^5.0.1",
 		"@vue/test-utils": "^2.5.1",
-		"changelogen": "^0.6.2",
 		"drizzle-kit": "^0.31.11",
 		"happy-dom": "^20.14.5",
 		"husky": "^9.1.7",

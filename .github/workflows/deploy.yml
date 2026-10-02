@@ -20,6 +20,8 @@ concurrency:
 
 jobs:
   deploy:
+    # Production deploys only from main (D23): dev is the sandbox.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
     steps:

@@ -7,7 +7,7 @@
 | Local SQLite | SQLite file `.data/db/sqlite.db` | fs `.data/blob` | `setups/setup-*-using-sqlite.sh` |
 | Local Postgres | PostgreSQL installed on the host | fs | `setups/setup-*-using-postgres-local.sh` |
 | Docker Postgres | PostgreSQL + SeaweedFS containers | S3 (SeaweedFS) | `setups/setup-*-using-postgres-with-docker.sh` |
-| Production | Managed or containerized PostgreSQL | S3-compatible | Docker image from GHCR |
+| Production | Managed or containerized PostgreSQL | fs volume `/app/.data` (see below) | Docker image from GHCR |
 
 ## Quick start
 
@@ -50,6 +50,15 @@ Stripe/Resend keys, `bun run dev`).
   (gitignored), and the window waits for Enter before closing, on success, error or Ctrl+C, instead of
   vanishing as Git Bash does when a double-clicked script exits.
 
+## Uploads in the Docker image
+
+The published image stores uploads with NuxtHub's `fs` blob driver on the `/app/.data` volume, not S3.
+`@nuxthub/core@0.10.8` serializes the blob driver **and its S3 credentials** into the server bundle at build
+time, so a published image can't be pointed at S3 from run-time env. Options (owner decision, PLAN.md
+"Developer actions"): (a) build per environment with `S3_*` build args (credentials end up inside the image,
+never publish it); (b) a build hook that rewrites NuxtHub's generated `@nuxthub/blob` module to read
+`process.env`; (c) keep `fs` and back up the volume (current). Local `bun run dev` with `S3_*` is unaffected.
+
 ## Production requirement: TLS reverse proxy
 
 The app speaks plain HTTP on port 3000 and sends HSTS, so production runs behind a reverse proxy that
@@ -67,7 +76,7 @@ nginx `proxy_set_header X-Real-IP $remote_addr;`. Keep port 3000 unreachable fro
   - `e2e`: Playwright Chromium → migrate/seed → one `build` → smoke → e2e (`PLAYWRIGHT_SKIP_BUILD=1`); the HTML report is uploaded when it fails.
 - `commitlint.yml` (PRs): every commit in the PR and the PR title (squash-merge message) against `commitlint.config.js`.
 - `release.yml` (`v*.*.*` tags pushed by `bun run release`): GitHub Release from the tag's `CHANGELOG.md`
-  section (`changelogen gh release`), then `ghcr.io/alexgalhardo/nuxtjs-marketplace:<version>`/`latest` and
+  section (`gh release create`), then `ghcr.io/alexgalhardo/nuxtjs-marketplace:<version>`/`latest` and
   `:<version>-migrate`/`latest-migrate` (the Dockerfile's `migrate` target).
 - `deploy.yml` (manual, `version` input): SSH to the server, `git pull`, then
   `APP_VERSION=<version> docker compose -f infra/docker-compose.yml pull migrate app && … up -d app`
