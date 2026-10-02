@@ -10,6 +10,7 @@ version (see [docs/git-workflow.md](docs/git-workflow.md)).
 ## [Unreleased]
 
 ### Added
+- Production on Railway: Postgres, an S3 bucket for uploads, the app built from `main` with migrations as a pre-deploy step (`bun run db:deploy`) and `/api/health` as the healthcheck.
 - The footer shows the running version, linked to its GitHub release.
 - `bun run setup:sqlite`, `setup:postgres-local` and `setup:postgres-docker` run the matching `setups/*.sh` for the OS (Git Bash on Windows).
 - `.claude/rules/` with the rules agents follow in every session (workflow, money, server security, frontend, tests, worktrees).
@@ -32,6 +33,7 @@ version (see [docs/git-workflow.md](docs/git-workflow.md)).
 - The blinking terminal cursor in the logo.
 
 ### Fixed
+- `nuxt db migrate` (NuxtHub 0.10.8) applied migrations in directory-listing order, so a fresh PostgreSQL on Railway ran `0002` before `0001` and failed; `patches/` sorts them (Bun `patchedDependencies`).
 - Dependabot's Bun job failed on every run (it can't parse `bun.lock` v2); a weekly `deps` workflow now reports outdated and vulnerable packages, and Actions/Docker update PRs target `dev`.
 - Docs disagreed with the code on layouts (`/my-shop` uses its own layout), on a `server/tasks/` folder that doesn't exist and on an auth middleware that doesn't exist.
 - The "add address" button on `/profile` never rendered, so no address could be added and physical checkouts were blocked; saving an address now also reports errors.

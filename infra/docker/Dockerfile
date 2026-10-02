@@ -13,6 +13,8 @@ WORKDIR /app
 
 FROM base AS deps
 COPY package.json bun.lock ./
+# Bun applies patches/ (patchedDependencies) during install.
+COPY patches ./patches
 RUN bun install --frozen-lockfile
 
 FROM base AS build
