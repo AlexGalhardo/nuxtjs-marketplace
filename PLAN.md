@@ -50,6 +50,7 @@ Multi-currency, carrier rate calculation, subscriptions, chat between buyer/sell
 | D21 | Env validation | Zod-validated `runtimeConfig` at startup; `NUXT_STRICT_ENV` (default `true`) aborts on missing production secrets; skipped in `nuxt dev` and prerender | `NODE_ENV` is inlined at build time by Nitro, so strictness must be a runtime flag. Tests set `NUXT_STRICT_ENV=false`. |
 | D22 | Changelog & releases | **Keep a Changelog** in `CHANGELOG.md`; `bun run release <patch\|minor\|major>` (`scripts/release.ts`) cuts versions; GitHub Release notes = that version's section; app version shown in the footer | Replaced `changelogen` (its format isn't Keep a Changelog). PLAN.md no longer keeps a change history (owner, 2026-10-02). |
 | D23 | Branches | **`dev` = sandbox, `main` = production**. Push to `dev`; promote the same commits to `main` only after `dev`'s `ci` passes | `main` only ever receives commits CI already validated (owner, 2026-10-02). |
+| D24 | Hosting | **Railway** (owner, 2026-10-02): Postgres, S3 bucket, app built from `main` with Wait for CI; SSH `deploy.yml` removed | Managed TLS/edge (`X-Real-IP`), zero-downtime deploys, no server to maintain. GHCR images stay for self-hosters. |
 
 ### Non-official libraries (Nuxt ecosystem has no equivalent)
 
@@ -368,7 +369,7 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (say why 
 - [x] Dependabot `bun` job failed (bun.lock v2 unsupported): removed; weekly `deps.yml` reports `bun outdated` + `bun audit`; Actions/Docker PRs target `dev`
 - [x] `ci.yml`: job timeouts, new `docker` job builds the image on every push (concurrency cancel, Bun cache, report artifact already there)
 - [x] `deploy.yml`: `up --wait` on the healthcheck, automatic rollback to the last good version (`.deployed-version`); `stripe/stripe-cli` pinned to v1.53.0
-- [ ] Docker: build image locally, run compose stack, smoke `/api/health`
+- [x] Production on Railway (D24): Postgres + bucket + app from `main` with Wait for CI, pre-deploy migrations; smoke: pages 200, `/api/health`, HSTS/CSP. Found and fixed NuxtHub's unsorted migrations (Bun patch)
 - [ ] Run the whole suite locally (unit, coverage, integration sqlite+postgres, smoke, e2e); fix flakes/bugs found
 - **Assert:** `bun run test` green locally; `ci` green on `dev`; image builds
 
@@ -425,9 +426,6 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (say why 
 
 Things only the owner can do (accounts, keys, external services). Everything else is automated.
 
-- [ ] GitHub: create a `production` environment with secrets `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_PATH`; on the server, clone the repo there and put the production `.env` in `infra/`. After the first release, make the GHCR package public (or `docker login ghcr.io` on the server).
-- [ ] Watch the first `ci` run on GitHub after this push and report anything environment-specific that fails.
-- [ ] Put a TLS reverse proxy (Caddy/nginx/Traefik) in front of the app that overwrites `X-Real-IP` with the client address, and keep port 3000 private (docs/infra-and-setup.md "Production requirement"). Rate limits are per client only with it.
-- [ ] Decide how production stores uploads (docs/infra-and-setup.md "Uploads in the Docker image"): keep the `fs` volume, build per environment with S3 build args, or approve the NuxtHub blob-module rewrite.
-
-- [ ] Promote your own account to admin after deploying: sign up, then run `bun run db:make-admin <your-email>` on the server (or inside the container) and log in again.
+- [ ] Promote your own account to admin: sign up on https://app-production-8586.up.railway.app, then run
+  `railway ssh --service app -- bun run db:make-admin <your-email>` and log in again.
+- [ ] Stripe: `stripe login` + Stripe MCP auth (Phase 19).

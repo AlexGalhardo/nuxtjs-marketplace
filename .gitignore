@@ -38,4 +38,3 @@ graphify-out/
 
 # git worktrees created by agents
 .claude/worktrees/
-.deployed-version
