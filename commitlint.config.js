@@ -27,6 +27,8 @@ export default {
 				'deps',
 				'test',
 				'release',
+				'observability',
+				'qa',
 			],
 		],
 	},
