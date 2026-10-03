@@ -2,72 +2,81 @@
 
 A queue moves work that the user doesn't need to wait for out of the request, and gives that work retries.
 
-## What exists today: everything inline
+## The mail queue (BullMQ on Redis)
 
-There is no queue yet. Side effects run inside the request that triggers them:
+Every email goes through `queueMail()` (`server/utils/queue.ts`):
 
-| Side effect | Runs inside | If it fails today |
-|-------------|-------------|-------------------|
-| Seller transfers | The Stripe webhook request (`fulfillCheckout` → `transferToSeller`, `server/utils/orders.ts`) | Logged as `transfer.failed`, not retried |
-| Order emails (buyer + each seller) | The same webhook request (`sendOrderEmails`) | Logged to the console, never retried; the webhook still succeeds |
-| Refund email, shipped email | The seller's request (`notifyBuyer`) | Same |
-| Password reset email | `POST /api/auth/forgot-password` | Request fails |
-| Contact email | `POST /api/contact` (the message is stored first) | Request fails, row kept |
-
-This works at today's scale and keeps the code simple: one process, no worker, no broker. The costs:
-
-1. **Latency on the webhook.** Stripe waits while we make 1 + N transfer calls and send N + 1 emails sequentially.
-2. **No retries.** A failed transfer or email needs a human.
-3. **A crash window.** If the process dies after the fulfilment transaction commits but before the transfers run, the
-   retried webhook sees the order already `paid` and skips the transfers ([05-money-flow.md](05-money-flow.md#known-gaps-honest-list)).
-
-## Planned: BullMQ on Redis (Phase 21)
-
-> **Planned (Phase 21).** Described design only, not in the code. See PLAN.md Phase 21.
+| Email | Enqueued by |
+|-------|-------------|
+| Order paid (buyer + each seller) | The Stripe webhook (`sendOrderEmails`, `server/utils/orders.ts`) |
+| Shipped, refunded | The seller's request (`notifyBuyer`) |
+| Password reset | `POST /api/auth/forgot-password` (not awaited) |
+| Contact form | `POST /api/contact` (the message is stored first) |
 
 ```mermaid
 flowchart LR
-  subgraph web[Nitro replicas]
+  subgraph replicas[Nitro replicas]
     webhook[POST /api/stripe/webhook]
-    refund[POST .../refund]
+    reqs["shipped, refund, forgot-password, contact"]
+    worker["mail worker<br/>(one per replica, concurrency 5)"]
   end
-  redis[(Redis<br/>BullMQ queues)]
-  subgraph workers[Worker process]
-    w1[send-email]
-    w2[transfer-to-seller]
-    w3[webhook follow-ups]
-  end
-  dlq[(Dead-letter<br/>failed jobs)]
-  stripe[(Stripe)]
+  redis[("Redis<br/>BullMQ queue mail")]
+  failed[("failed set<br/>last 5,000 jobs")]
   resend[(Resend)]
 
-  webhook -->|enqueue| redis
-  refund -->|enqueue| redis
-  redis --> w1 & w2 & w3
-  w1 --> resend
-  w2 --> stripe
-  w1 & w2 & w3 -->|"after N retries with backoff"| dlq
+  webhook -->|queueMail| redis
+  reqs -->|queueMail| redis
+  redis --> worker --> resend
+  worker -->|"after 5 attempts"| failed
 ```
 
-The plan, as written in PLAN.md:
+- **Retries**: `attempts: 5` with `backoff: { type: 'exponential', delay: 5_000 }` (5 s, 10 s, 20 s, 40 s). A job
+  that still fails stays in BullMQ's failed set (`removeOnFail: 5_000`); completed jobs are trimmed to the last 1,000.
+- **Worker per replica**: `server/plugins/queue-worker.ts` starts a BullMQ `Worker` in every app replica, on its own
+  Redis connection (workers block on Redis and BullMQ requires `maxRetriesPerRequest: null`). BullMQ hands each job
+  to exactly one worker. `QUEUE_WORKER=false` makes a replica web-only, the first step if workers ever move to their
+  own service.
+- **Inline fallback**: without `REDIS_URL` (dev, tests) `queueMail` calls `sendMail` directly. If enqueueing fails
+  (Redis down), it also sends inline rather than lose the mail.
 
-- **Jobs**: emails, seller transfer retries, webhook follow-ups, off the request path.
-- **Worker**: a separate process consuming the queues, scaled independently from the web replicas.
-- **Retries with exponential backoff**, then a **dead-letter** state an admin can inspect and replay.
-- **Inline fallback** when `REDIS_URL` is unset (dev and tests): jobs run immediately in-process, as today.
+What this bought:
 
-### Making it correct, not just async
+1. **Latency and coupling.** A Resend outage no longer slows or fails a webhook or a checkout follow-up: the request
+   only writes a job to Redis.
+2. **Retries.** A transient mail failure heals by itself instead of needing a human.
+3. **No user enumeration through timing.** `forgot-password` doesn't await the mail and never lets a mail error reach
+   the response, so known and unknown emails answer the same way ([06-auth-and-security.md](06-auth-and-security.md)).
 
-A queue doesn't fix the crash window by itself. If the code commits the order and then enqueues the transfer job, a
-crash between the two still loses the job. Two standard answers:
+## Why seller transfers are not queued
 
-- **Transactional outbox.** Write a "pay seller order X" row in the **same database transaction** that marks the order
-  paid. A relay process reads outbox rows and pushes them to the queue. The job can't be lost, because it exists
-  exactly when the payment does.
-- **Idempotent jobs.** A job can run twice (the worker crashed after Stripe answered, before acking). That is already
-  covered: transfers use the idempotency key `transfer-<sellerOrderId>`, so a repeat returns the first transfer.
+Transfers still run inside the webhook (`fulfillCheckout` → `transferToSeller`). The risk was the **crash window**:
+if the process died after the fulfilment transaction committed but before the transfers ran, the retried webhook saw
+the order already `paid` and returned early, so the seller was never paid.
 
-At-least-once delivery + idempotent consumers = effectively-once. The same idea already protects the webhook
+A queue doesn't fix that by itself: commit, then enqueue, and a crash between the two still loses the job. It was
+fixed instead by making `fulfillCheckout` **re-entrant** (`server/utils/orders.ts`):
+
+- The `pending → paid` update is conditional, so only the first delivery fulfils (stock, cart, `payment.succeeded`).
+- The transfer step runs on **every** delivery: it loads the order's `transfer.created` / `transfer.failed` logs and
+  pays each seller order that is `paid` and has no transfer log yet.
+- Every transfer carries the Stripe idempotency key `transfer-<sellerOrderId>`, so even a crash after Stripe answered
+  but before the log row was written returns the same transfer on the next try.
+- The webhook only marks the event processed after `fulfillCheckout` returns, so a crash leaves it unprocessed and
+  Stripe's retry runs the transfer step again.
+
+Why this beats an outbox here: Stripe already **is** the durable, retrying delivery mechanism (it redelivers an
+unacknowledged event for up to three days), and `transaction_logs` already records what ran. Re-entrancy reuses
+both, adds no table, no relay process and no new failure mode. An outbox earns its keep when the trigger has no
+retrying source of its own.
+
+### Exercise: the transactional outbox
+
+Write a "pay seller order X" row in the **same database transaction** that marks the order paid. A relay process
+reads outbox rows and pushes them to a queue. The job can't be lost, because it exists exactly when the payment does.
+Try it for a trigger Stripe doesn't redeliver (an admin action, a scheduled payout), and keep jobs idempotent: a job
+can run twice (the worker crashed after Stripe answered, before acking), which the idempotency key already covers.
+
+At-least-once delivery + idempotent consumers = effectively-once. The same idea protects the webhook
 ([05-money-flow.md](05-money-flow.md#idempotency-four-layers)).
 
 ### What should stay synchronous

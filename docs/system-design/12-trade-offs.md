@@ -15,7 +15,9 @@ ones most worth studying.
 | **Monolith** (one Nuxt app) | One deploy, one process to debug, shared types and Zod schemas end to end | Can't scale the API apart from SSR; a bad deploy takes everything down |
 | **Dogfooded REST API** (D14) | The seller UI and the public API can't drift | The UI pays the public API's constraints (scopes, versioned paths) |
 | **No stock reservation** | Simple checkout, no expiry job to release holds | Rare oversell of the last unit |
-| **Inline side effects** (no queue yet) | No broker, no worker, easy local dev | Webhook latency, no retries, a crash window ([08-queues-and-async.md](08-queues-and-async.md)) |
+| **Only mail is queued**; transfers stay in the webhook, made re-entrant | Stripe's redelivery is the retry, no outbox or relay to run | Webhook latency grows with the number of sellers ([08-queues-and-async.md](08-queues-and-async.md)) |
+| **Optional Redis, fail-open** | Dev and tests need nothing; a Redis outage never fails a request | Per-replica limits and no cache while it is down |
+| **Cache with a 30 s TTL, no invalidation** | No key tracking on writes, no missed-invalidation bugs | Up to ~30 s of stale prices and stock on browse pages ([07-caching.md](07-caching.md)) |
 | **Full refunds only** (D15) | One refund per seller order, simple state machine | No partial refunds |
 
 ## "Why not …?"
@@ -64,8 +66,15 @@ Sealed cookies scale horizontally for free. The usual objection, "you can't revo
 `passwordVersion` check ([06-auth-and-security.md](06-auth-and-security.md#stateless-sessions)). What it can't do: log
 out one specific device without changing the password.
 
-### Why not Redis now?
+### Why Redis only arrived with the second replica
 
-Nothing needs it yet at one replica: no shared rate-limit buckets, no cache pressure, no queue. It arrives in Phase 21
-together with the second replica that makes it necessary. Adding infrastructure before the problem exists is the
-most common over-engineering in system design interviews and in real projects.
+At one replica nothing needed it: in-process rate limits were exact, and there was no cache pressure. It arrived in
+Phase 21 together with the second replica that made shared buckets necessary, and it stays optional: without
+`REDIS_URL` the app behaves exactly as before. Adding infrastructure before the problem exists is the most common
+over-engineering in system design interviews and in real projects.
+
+### Why not an OpenTelemetry Collector?
+
+The app exports traces straight to Tempo (or Railway tracing) over OTLP, and Prometheus scrapes it directly. A
+collector earns its place when several services need shared sampling, batching or routing to many backends; with one
+app it would be one more container to run and monitor.

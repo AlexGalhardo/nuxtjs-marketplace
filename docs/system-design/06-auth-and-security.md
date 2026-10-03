@@ -59,8 +59,8 @@ else. UUIDv7 ids are hard to guess, so the leak is small; making it consistent i
 | CSRF | `SameSite=Lax` cookie **and** an Origin/Referer check on cookie-authenticated mutations | `server/middleware/csrf.ts` |
 | XSS | Vue auto-escaping, no `v-html` with user content, CSP with per-request nonces | `nuxt.config.ts` (`security`) |
 | Injection | Drizzle query builder and bound `sql` templates only; Zod on every body/query/param | `shared/schemas/` |
-| Brute force | Per-IP rate limits: auth 30/5 min, password change 10/15 min, contact 5/15 min, checkout 20/15 min, global 1000/5 min | `nuxt.config.ts` (`routeRules`) |
-| User enumeration | Generic login errors; forgot-password always returns 200 | `server/api/auth/` |
+| Brute force | Per-IP rate limits: auth 30/5 min, password change 10/15 min, contact 5/15 min, checkout 20/15 min, global 1000/5 min; shared by every replica through Redis | `nuxt.config.ts` (`routeRules`) |
+| User enumeration | Generic login errors; forgot-password always returns 200, and its mail is not awaited, so a mail outage can't tell known emails apart | `server/api/auth/` |
 | Forged webhooks | Stripe signature verified with `constructEventAsync` before anything else | `server/api/stripe/webhook.post.ts` |
 | Price tampering | Server re-prices the cart; the client sends no amounts | `server/utils/cart.ts` |
 | Paid file theft | Private `files/` blob prefix never routed; image route refuses `..`, `.`, `\` and leftover `%` | `server/routes/images/[...pathname].get.ts` |
@@ -105,5 +105,5 @@ in front must overwrite that header. Without it, every client shares one bucket
 
 ## Accepted residual risks
 
-No MFA, `style-src 'unsafe-inline'` for Nuxt UI, per-process token rate limit, no stock reservation. The full list
+No MFA, `style-src 'unsafe-inline'` for Nuxt UI, rate limits per replica while Redis is down, no stock reservation. The full list
 lives in [docs/security.md](../security.md#residual-risks-accepted-for-v1).

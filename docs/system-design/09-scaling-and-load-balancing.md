@@ -3,56 +3,72 @@
 Vertical scaling buys a bigger machine. Horizontal scaling runs more copies of the app behind a load balancer. It only
 works if the copies are **stateless**: any replica can serve any request because the state lives elsewhere.
 
-## Today: one replica
+## The state checklist
 
-`infra/docker-compose.yml` runs one `app` container behind a TLS reverse proxy the owner provides. Before adding a
-second replica, check every piece of state the process holds:
+Before running a second replica, check every piece of state the process holds:
 
-| State | Where it lives today | Shared across replicas? | Needed for 2+ replicas |
-|-------|----------------------|-------------------------|------------------------|
-| User sessions | Sealed cookie in the browser (`nuxt-auth-utils`) | Yes, nothing on the server | Nothing: every replica has `NUXT_SESSION_PASSWORD` |
-| Database | PostgreSQL (`DATABASE_URL`) | Yes | Nothing (SQLite would not work: a local file) |
-| Uploads and digital files | `fs` blob driver on the `app-data` volume (`/app/.data`) | **No** | S3-compatible storage, or one shared volume ([docs/infra-and-setup.md](../infra-and-setup.md#uploads-in-the-docker-image)) |
-| Global and per-route rate limits | nuxt-security limiter, in process memory | **No** | Shared storage (Redis); otherwise N replicas allow N × the limit |
-| Per-token API limit (120/min) | `Map` in `server/utils/auth.ts` | **No** | Shared storage (Redis); listed in docs/security.md residual risks |
-| Stripe webhook idempotency | `stripe_events` table | Yes | Nothing: two replicas receiving the same event race safely (conditional updates + idempotency keys) |
-| Cache | None yet | n/a | Redis when added ([07-caching.md](07-caching.md)) |
+| State | Where it lives | Shared across replicas? | How |
+|-------|----------------|-------------------------|-----|
+| User sessions | Sealed cookie in the browser (`nuxt-auth-utils`) | Yes, nothing on the server | Every replica has `NUXT_SESSION_PASSWORD` |
+| Database | PostgreSQL (`DATABASE_URL`) | Yes | SQLite would not work: a local file |
+| Uploads and digital files | S3 bucket (Railway) or the `app-data` volume (compose) | Yes | Compose mounts one named volume into every replica ([docs/infra-and-setup.md](../infra-and-setup.md#uploads-in-the-docker-image)) |
+| Global and per-route rate limits | nuxt-security limiter on `#rate-limiter-storage` | Yes, with Redis | `server/plugins/redis.ts` mounts it on Redis; without Redis each replica allows the full limit |
+| Per-token API limit (120/min) | Redis counter, memory `Map` fallback | Yes, with Redis | Atomic `MULTI` of `INCR` + `PEXPIRE ... NX` + `PTTL` per window (`server/utils/auth.ts`) |
+| Response cache | Nitro `cache` storage on Redis | Yes | Bypassed without Redis ([07-caching.md](07-caching.md)) |
+| Mail jobs | BullMQ queue on Redis | Yes | Each replica runs a worker; BullMQ hands a job to exactly one ([08-queues-and-async.md](08-queues-and-async.md)) |
+| Stripe webhook idempotency | `stripe_events` table | Yes | Two replicas receiving the same event race safely (conditional updates + idempotency keys) |
 
-Sessions and money are already replica-safe, by design. Rate limits and local uploads are not. That table is the
-checklist PLAN.md Phase 21 works through.
+Sessions and money were replica-safe by design from the start; Redis made rate limits and the cache shared too.
 
-## Planned: nginx in front of 2+ replicas (Phase 21)
+**Redis down.** Every Redis use fails open: the cache and the nuxt-security buckets fall back to process memory
+(the fail-open driver in `server/plugins/redis.ts`), the token limit falls back to its `Map`, and mail is sent
+inline when enqueueing fails. Limits become per replica (N replicas allow N × the limit) until Redis is back, but no
+request fails because of it.
 
-> **Planned (Phase 21).** Described design only, not in the code. See PLAN.md Phase 21.
+## Self-hosted: Caddy in front of N replicas
 
 ```mermaid
 flowchart LR
-  internet((Internet)) --> nginx[nginx<br/>TLS, sets X-Real-IP,<br/>gzip, static cache]
-  nginx -->|round robin,<br/>health check /api/health| app1[app replica 1]
-  nginx --> app2[app replica 2]
-  nginx --> appN[app replica N]
+  internet((Internet)) --> caddy["Caddy (lb)<br/>sets X-Real-IP, zstd/gzip"]
+  caddy -->|"least_conn, dynamic a app 3000"| app1[app replica 1]
+  caddy --> app2[app replica 2]
+  caddy --> appN[app replica N]
   app1 & app2 & appN --> pg[(PostgreSQL)]
-  app1 & app2 & appN --> redis[(Redis<br/>cache, rate limits, queues)]
-  app1 & app2 & appN --> s3[(S3-compatible blobs)]
-  redis --> worker[BullMQ worker]
+  app1 & app2 & appN --> redis[("Redis 8, AOF<br/>cache, rate limits, mail queue")]
+  app1 & app2 & appN --> vol[("app-data volume")]
 ```
 
-The plan, as written in PLAN.md:
+What `infra/docker-compose.yml` and `infra/caddy/Caddyfile` do:
 
-- nginx in docker-compose in front of **2+ app replicas**.
-- Health checks against `GET /api/health` (it returns only `{ "status": "ok" }`, `server/api/health.get.ts`).
-- nginx **sets `X-Real-IP`**, which the rate limiter keys on (`nuxt.config.ts`), plus gzip and static caching.
-- Rate limits move to Redis so replicas share buckets.
-- Acceptance: the stack with 2 replicas passes the smoke and QA suites, and works with Redis down (no cache, inline
-  jobs).
+- **2 replicas by default** (`deploy.replicas: 2`); `docker compose up -d --scale app=N` changes the count.
+- **DNS discovery.** `reverse_proxy { dynamic a app 3000 { refresh 10s } }`: Caddy re-resolves Docker's DNS name
+  `app` every 10 s, so scaled replicas join (and removed ones leave) without restarting Caddy.
+- **`lb_policy least_conn`**: a new request goes to the replica with the fewest open requests, which handles slow
+  requests (a webhook making Stripe calls) better than plain round robin.
+- **Passive health.** `lb_try_duration 5s` retries a request on another replica for up to 5 s when one fails to
+  connect; `fail_duration 10s` keeps a failed replica out of rotation for 10 s.
+- **`header_up X-Real-IP {remote_host}`**: overwrites the header with the peer address. The rate limiter keys on it
+  (`ipHeader: 'x-real-ip'` in `nuxt.config.ts`) because `X-Forwarded-For` is client-spoofable.
+- **Redis 8** with `--appendonly yes` (AOF on the `redis-data` volume), so queued mail survives a Redis restart.
+- Caddy listens on `:80` (published as `3000`) with `auto_https off`; with a real domain it gets TLS certificates by
+  itself.
+- `stripe-cli` forwards webhooks to `lb:80`, so local webhooks are balanced like real ones.
+
+## Production: Railway
+
+Railway runs the `app` service with **2 replicas behind Railway's edge**, which terminates TLS, balances the
+replicas and sets `X-Real-IP` (there is no Caddy in production, PLAN.md D25). Next to it: the `Postgres` service, a
+`Redis` service for `REDIS_URL`, and the `uploads` S3 bucket. A deploy only takes traffic once `/api/health`
+answers, and a failing health check keeps the previous deployment serving
+([docs/infra-and-setup.md](../infra-and-setup.md#production-on-railway)).
 
 ### Things to get right
 
-- **No sticky sessions needed.** Because the session is a cookie, round robin is enough. That is a direct payoff of
+- **No sticky sessions needed.** Because the session is a cookie, any balancing policy works. That is a direct payoff of
   the stateless session design ([06-auth-and-security.md](06-auth-and-security.md#stateless-sessions)).
-- **Liveness vs readiness.** `/api/health` says "the process is up", not "the database is reachable". A replica that
-  lost its database still passes, so the balancer keeps sending it traffic. A readiness check that pings the database
-  (cheaply, without leaking details) is the usual split.
+- **Liveness vs readiness.** `/api/health` runs a one-row query and answers 503 when the database is unreachable
+  (`server/api/health.get.ts`), so it is a readiness check: Docker's `HEALTHCHECK` and Railway's deploy check stop
+  trusting a replica that lost its database. It still exposes no version or config details.
 - **Migrations with N replicas.** Today a one-shot `migrate` container runs before `app`. With rolling deploys, old and
   new code run against the same schema for a while, so migrations must be backward-compatible (add a column, deploy,
   then remove the old one in a later release).

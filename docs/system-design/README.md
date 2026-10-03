@@ -20,24 +20,27 @@ would grow.
 | 4 | [Data model](04-data-model.md) | ERD of the 19 tables, snapshots, indexes, dual SQLite/PostgreSQL schema |
 | 5 | [Money flow](05-money-flow.md) | Checkout → Stripe → webhook → fulfilment → transfers → refunds, idempotency, the ledger |
 | 6 | [Auth and security](06-auth-and-security.md) | Stateless sessions, API tokens, CSRF, rate limits, signed download links |
-| 7 | [Caching](07-caching.md) | HTTP caching today; Redis cache (planned) |
-| 8 | [Queues and async work](08-queues-and-async.md) | What runs inline today; BullMQ workers (planned) |
-| 9 | [Load balancing and horizontal scaling](09-scaling-and-load-balancing.md) | What blocks a second replica today; nginx + N replicas (planned) |
-| 10 | [Observability](10-observability.md) | Logs that exist today; OpenTelemetry, Prometheus, Grafana, Tempo, Loki (planned) |
+| 7 | [Caching](07-caching.md) | HTTP caching, the Redis response cache, TTL + stale-while-revalidate instead of invalidation |
+| 8 | [Queues and async work](08-queues-and-async.md) | The BullMQ mail queue, and why seller transfers are re-entrant instead of queued |
+| 9 | [Load balancing and horizontal scaling](09-scaling-and-load-balancing.md) | The state checklist, Caddy in front of N replicas, Railway's edge, Redis fail-open |
+| 10 | [Observability](10-observability.md) | Audit trails, OpenTelemetry traces, Prometheus metrics, Loki logs, Grafana |
 | 11 | [Failure modes](11-failure-modes.md) | What breaks, what the user sees, how the system degrades |
 | 12 | [Trade-offs and "why not"](12-trade-offs.md) | Why Stripe Connect separate charges, why no MongoDB, why no microservices |
 | 13 | [Exercises for the reader](13-exercises.md) | Hands-on changes to try, from small to hard |
 
 ## Built vs planned
 
-This is a learning project. Some pages describe parts that **do not exist yet**. They are always marked:
+Everything these pages describe is in the repository, including Phase 21 (Redis cache and shared rate limits, the
+BullMQ mail queue, Caddy in front of 2+ replicas) and Phase 22 (OpenTelemetry, Prometheus, Grafana, Tempo, Loki).
+What is not built yet is named as such where it comes up ("not handled yet", "known gaps") and collected as
+[exercises](13-exercises.md).
 
-> **Planned (Phase 21/22).** Described design only, not in the code.
+## Interactive diagrams
 
-Phase 21 (Redis cache, BullMQ queues, nginx in front of 2+ replicas) and Phase 22 (OpenTelemetry, Prometheus,
-Grafana, Tempo, Loki) are listed in [PLAN.md](../../PLAN.md). Everything not marked "planned" is in the repository today.
+The app serves the main diagrams as interactive Vue Flow graphs at `/system-design` (`app/pages/system-design.vue`,
+linked from the footer): architecture, request lifecycle, money flow, data model, scaling and observability.
 
 ## Where the rest of the documentation lives
 
-- [PLAN.md](../../PLAN.md): scope, decision log (D1–D23), phase checklist.
+- [PLAN.md](../../PLAN.md): scope, decision log (D1–D25), phase checklist.
 - [docs/](../README.md): the operational guides this guide builds on (architecture, database, payments, security…).

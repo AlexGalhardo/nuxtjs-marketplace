@@ -3,54 +3,56 @@
 Observability answers "what is the system doing right now, and why did that request fail?" The three classic signals
 are **logs** (events), **metrics** (numbers over time) and **traces** (one request across components).
 
-## What exists today
+## Audit trails in the database
 
 | Signal | What | Where |
 |--------|------|-------|
 | Money audit trail | One append-only row per money event, filterable and exportable as CSV by admins | `transaction_logs`, `server/utils/transactions.ts`, `/admin/transaction-logs` |
 | Admin audit trail | Every moderation change and export, in the same transaction as the change | `audit_logs`, `server/utils/audit.ts` |
-| Security events | JSON lines on stdout: `login.succeeded/failed`, `password_reset.requested/completed`, `password.changed`, `csrf.refused` (ids, reason, client IP; never emails, passwords or tokens) | `server/utils/security-log.ts` |
 | Webhook archive | Every Stripe event received, with `processed_at` | `stripe_events` |
-| Liveness | `GET /api/health` → `{ "status": "ok" }`, used by the Docker `HEALTHCHECK` | `server/api/health.get.ts`, `infra/docker/Dockerfile` |
-| Errors | `console.error` for swallowed failures (for example `[orders] email failed`) | `server/utils/orders.ts` |
+| Readiness | `GET /api/health` → `{ "status": "ok" }`, or 503 when the database query fails; used by the Docker `HEALTHCHECK` and Railway's deploy check | `server/api/health.get.ts`, `infra/docker/Dockerfile` |
 
-These are good for audits and incident forensics, but there are no metrics, dashboards, traces or alerts yet. Nobody
-gets paged when `transfer.failed` rows appear.
+## Traces, metrics and logs
 
-## Planned: OpenTelemetry + Prometheus + Grafana + Tempo + Loki (Phase 22)
-
-> **Planned (Phase 22).** Described design only, not in the code. See PLAN.md Phase 22.
+[docs/observability.md](../observability.md) is the operating guide. All three signals are optional: the app runs
+the same with none of them.
 
 ```mermaid
 flowchart LR
   subgraph app[Nitro replicas]
-    otel[OpenTelemetry SDK<br/>Nitro plugin]
-    metrics["/api/metrics (private)"]
-    logs[stdout JSON logs<br/>with trace id]
+    otel["OpenTelemetry SDK<br/>server/plugins/telemetry.ts"]
+    metrics[":9464/metrics (private)"]
+    logs[stdout logs]
   end
-  collector[OpenTelemetry Collector]
+  tempo[("Tempo<br/>or Railway tracing")]
   prom[(Prometheus)]
-  tempo[(Tempo<br/>traces)]
-  loki[(Loki<br/>logs)]
-  promtail[Promtail]
-  grafana[Grafana<br/>provisioned dashboards]
+  alloy[Grafana Alloy]
+  loki[(Loki)]
+  grafana["Grafana<br/>provisioned dashboard"]
 
-  otel -->|OTLP| collector --> tempo
-  prom -->|scrape| metrics
-  logs --> promtail --> loki
+  otel -->|"OTLP/HTTP"| tempo
+  prom -->|"scrape, DNS discovery of app"| metrics
+  logs --> alloy --> loki
   grafana --> prom & tempo & loki
 ```
 
-The plan, as written in PLAN.md:
-
-- **Traces**: an OpenTelemetry SDK in a Nitro plugin creates spans for HTTP requests, database queries and Stripe
-  calls, exported over OTLP. Off when `OTEL_EXPORTER_OTLP_ENDPOINT` is unset.
-- **Trace id in logs**, so a log line links to its trace.
-- **Metrics** on a private `/api/metrics` for Prometheus: request rate and latency histogram, errors, checkout and
-  payment counters, queue depth, cache hits.
-- **A docker-compose `observability` profile**: OpenTelemetry Collector, Prometheus, Grafana with provisioned
-  dashboards, Tempo for traces, Loki + Promtail for logs.
-- **docs/observability.md**: how to read one trace from the buyer's click to the Stripe webhook.
+- **Traces.** The OpenTelemetry Node SDK starts from a Nitro plugin, only when `OTEL_EXPORTER_OTLP_ENDPOINT` or
+  `OTEL_METRICS_EXPORTER` is set. Spans are created by hand from Nitro's `request`, `afterResponse` and `error`
+  hooks, because auto-instrumentation patches Node's `require`, which neither Bun nor a bundled Nitro server goes
+  through. One server span per request: it continues an upstream `traceparent` (Railway's edge), is renamed to the
+  matched route pattern, records the status code and exceptions. The app exports **straight to Tempo** over
+  OTLP/HTTP (no OpenTelemetry Collector), or to Railway tracing in production.
+- **Metrics.** With `OTEL_METRICS_EXPORTER=prometheus` each replica serves `:9464/metrics` (not routed through the
+  load balancer): the `http.server.request.duration` histogram (method, route pattern, status) and the
+  `resell.money_events` / `resell.money_cents` counters, incremented by every `logTransaction()` row. Labels use the
+  route pattern (`/api/products/:slug`), never the raw path, to keep cardinality bounded. Prometheus finds every
+  replica through Docker DNS (`dns_sd_configs`, type `A`, `infra/observability/prometheus.yml`).
+- **Logs.** stdout: Nitro logs, `[redis]` / `[queue]` / `[otel]` lines, and security events as JSON lines
+  (`server/utils/security-log.ts`: logins, password resets, CSRF refusals; ids, reason and client IP, never emails,
+  passwords or tokens). **Grafana Alloy** tails the containers and ships to **Loki** (Promtail is deprecated and not
+  used). Log lines don't carry the trace id yet.
+- **Stack.** `infra/docker-compose.observability.yml`, layered on the main compose file: Tempo, Prometheus, Loki,
+  Alloy and Grafana (datasources and the "resell.sh — app" dashboard provisioned from `infra/observability/`).
 
 ### What to measure in a marketplace
 
@@ -63,10 +65,11 @@ Start from what hurts users and money, not from what is easy to count:
 | Webhook handler errors and latency | Stripe retries, then disables the endpoint after repeated failures | Error rate > 0 for 5 minutes |
 | p95 latency of `GET /api/products` | Browse speed on Black Friday | Above the target from the load test |
 | 429 rate | Real users hitting rate limits (one office behind NAT) | Spikes |
-| Queue depth and dead-letter count (once queues exist) | Work piling up | Growing for 10 minutes |
+| Mail queue depth and failed-job count (not exported yet) | Work piling up, mail not reaching users | Growing for 10 minutes |
 
 ### The trace that teaches the most
 
 A checkout is two requests far apart in time: `POST /api/checkout` and, seconds or minutes later, Stripe's webhook.
-They don't share an HTTP trace context. The link is the order id (`metadata.orderId`, `transfer_group`). Putting the
-order id on both spans as an attribute is what lets you follow one purchase end to end.
+They don't share an HTTP trace context. The link is the order id (`metadata.orderId`, `transfer_group`). The spans
+don't carry it yet: putting the order id on both as an attribute is what would let you follow one purchase end to
+end ([13-exercises.md](13-exercises.md)).

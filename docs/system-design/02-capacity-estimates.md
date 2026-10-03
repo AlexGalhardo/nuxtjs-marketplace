@@ -56,9 +56,9 @@ Assume every buyer shows up inside a 4-hour window and browses 50 pages, and 30%
 - Stripe calls at that moment: 1.7 Checkout Sessions/s, then per paid order one PaymentIntent retrieve and 1.5
   transfers ≈ 1.7 × 3.5 ≈ **6 Stripe calls/s**. Stripe enforces per-account API rate limits; check its docs for the
   current numbers, but this is far from them.
-- Webhooks in flight (Little's law, `L = λ × W`): 1.7 webhooks/s × ~3 s per fulfilment (one retrieve, 1.5 transfers
-  and ~2.5 emails, all sequential in `server/utils/orders.ts`) ≈ **5 concurrent** handlers. Fine for one process,
-  but every one of those seconds is spent inside an HTTP request Stripe is waiting on.
+- Webhooks in flight (Little's law, `L = λ × W`): 1.7 webhooks/s × ~2 s per fulfilment (one retrieve and 1.5
+  transfers, sequential in `server/utils/orders.ts`; the ~2.5 emails are only enqueued) ≈ **4 concurrent** handlers.
+  Fine for one process, but every one of those seconds is spent inside an HTTP request Stripe is waiting on.
 
 ### Bandwidth: the real bottleneck
 
@@ -89,4 +89,4 @@ CDN in front could absorb almost all of it. Without one, image bytes, not databa
 2. Serve images from a CDN before scaling anything else.
 3. One PostgreSQL instance holds years of orders; the webhook archive is what grows.
 4. The checkout spike is small in RPS but long in latency (Stripe round trips), so work that can wait should move
-   off the request path. That is what the planned queue is for ([08-queues-and-async.md](08-queues-and-async.md)).
+   off the request path. Email already goes through a queue ([08-queues-and-async.md](08-queues-and-async.md)).

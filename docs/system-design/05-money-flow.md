@@ -89,7 +89,7 @@ first would turn a crash into a silently lost event.
 
 Every money event inserts one row through `logTransaction()` (`server/utils/transactions.ts`): `checkout.created`,
 `checkout.expired`, `payment.succeeded`, `transfer.created`, `transfer.failed`, `refund.created`, `refund.failed`,
-`transfer.reversed`, `transfer.reversal_failed`, `dispute.created`. Rows are never updated or deleted.
+`transfer.reversed`, `transfer.reversal_failed`, `dispute.created`, `dispute.closed`. Rows are never updated or deleted.
 
 - When the log must agree with a state change, it is written **in the same database transaction**
   (`logTransaction(entry, tx)`): `payment.succeeded` commits or rolls back together with the order becoming paid.
@@ -147,19 +147,23 @@ already refunded and the platform carries the loss until it is settled by hand: 
 |-------|--------|
 | `checkout.session.expired`, `checkout.session.async_payment_failed` | Order `expired`, seller orders `canceled`, `checkout.expired` logged (`expireCheckout`) |
 | `charge.dispute.created` | `dispute.created` logged against the order (`recordDispute`) |
+| `charge.dispute.closed` | `dispute.closed` logged against the order, with the outcome (`won` / `lost`) as its status (`recordDispute`) |
+| `charge.refunded` | Refunds made outside the app (Stripe Dashboard) logged as `refund.created` with `payload.source = stripe_dashboard`. Only the part of `amount_refunded` the ledger doesn't already know is logged, so the app's own refunds and re-deliveries add nothing. The order status is left for an admin to reconcile (`recordExternalRefund`) |
 | `account.updated` | Shop `charges_enabled` / `payouts_enabled` updated; publishing requires `charges_enabled` (D12) |
 
-Not handled yet: refunds made in the Stripe Dashboard (`charge.refunded`), dispute outcomes, payout failures. They are
-listed in PLAN.md Phase 19.
+Not handled yet: payout failures.
 
 ## Known gaps (honest list)
 
 - **No stock reservation.** Stock is checked at checkout and decremented at payment; two buyers can pay for the last
   unit. Stock is clamped at 0 so the seller sees it (`ponytail:` note in `server/api/checkout.post.ts`).
 - **Failed transfers are not retried automatically.** They are logged as `transfer.failed` for an admin.
-- **A crash between the fulfilment commit and the transfers loses the transfers.** The retried webhook finds the
-  order already `paid`, so `fulfillCheckout` returns early and never reaches the transfer loop. The planned queue
-  ([08-queues-and-async.md](08-queues-and-async.md)) is the fix: enqueue "pay seller order X" inside the same
-  transaction (the outbox pattern) and let a worker retry it.
+- **Dashboard refunds don't change order status.** `charge.refunded` only adds the ledger row; an admin reconciles
+  the order from `/admin/transaction-logs`.
+
+Fixed: a crash between the fulfilment commit and the transfers used to lose the transfers (the retried webhook found
+the order `paid` and returned early). `fulfillCheckout` is now re-entrant: on every delivery it pays each `paid`
+seller order that has no `transfer.created` / `transfer.failed` log yet, with the same idempotency keys
+([08-queues-and-async.md](08-queues-and-async.md#why-seller-transfers-are-not-queued)).
 
 Each of these is an exercise in [13-exercises.md](13-exercises.md).

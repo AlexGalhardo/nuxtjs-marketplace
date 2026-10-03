@@ -35,18 +35,20 @@ flowchart LR
     vue[Nuxt app<br/>Vue 3 + Nuxt UI]
   end
 
-  subgraph host[App host: one Bun process]
-    nitro[Nitro server<br/>SSR + /api/**]
+  subgraph host["App replicas (Bun processes)"]
+    nitro["Nitro server<br/>SSR + /api/** + mail worker"]
   end
 
   db[(SQLite file<br/>or PostgreSQL)]
   blob[(Blob store<br/>fs .data/blob or S3)]
+  redis[("Redis (optional)<br/>cache, rate limits, mail queue")]
   stripe[(Stripe API)]
   resend[(Resend API)]
 
   vue -->|HTML, useFetch, $fetch| nitro
   nitro -->|Drizzle ORM| db
   nitro -->|NuxtHub Blob| blob
+  nitro -->|"ioredis, BullMQ"| redis
   nitro -->|stripe SDK| stripe
   stripe -->|POST /api/stripe/webhook| nitro
   nitro -->|resend SDK| resend
@@ -59,7 +61,9 @@ flowchart LR
 | Database | NuxtHub DB + Drizzle; SQLite (dev) or PostgreSQL (Docker/prod), chosen at build time (D5) | `server/db/` |
 | Blob store | NuxtHub Blob: `fs` locally, S3-compatible (SeaweedFS in `infra/docker-compose.dev.yml`) | `server/routes/images/`, `server/routes/downloads/` |
 | Payments | Stripe Checkout + Connect Express | `server/utils/stripe.ts`, `server/utils/orders.ts` |
-| Email | Resend; logged to the console without `NUXT_RESEND_API_KEY` | `server/utils/mail.ts` |
+| Email | Resend, sent through the BullMQ mail queue; logged to the console without `NUXT_RESEND_API_KEY` | `server/utils/mail.ts`, `server/utils/queue.ts` |
+| Cache, rate limits, queue | Redis 8 when `REDIS_URL` is set; in-process memory or inline otherwise | `server/utils/redis.ts`, `server/plugins/redis.ts`, `server/plugins/queue-worker.ts` |
+| Telemetry | OpenTelemetry SDK (traces over OTLP, Prometheus metrics), off unless `OTEL_*` is set | `server/plugins/telemetry.ts` |
 
 Shared code that runs on both sides lives in `shared/`: Zod schemas (`shared/schemas/`), types, and pure functions
 such as money and fee math (`shared/utils/money.ts`, `shared/utils/pricing.ts`). The same schema validates a form in
@@ -87,7 +91,8 @@ sequenceDiagram
   H-->>B: JSON (errors via createError, no stack traces)
 ```
 
-1. `nuxt-security` runs first: headers, CSP nonce, request size limits, rate limiting (`nuxt.config.ts`).
+1. `nuxt-security` runs first: headers, CSP nonce, request size limits, rate limiting (`nuxt.config.ts`; buckets
+   in Redis when it is configured).
 2. `server/middleware/csrf.ts` refuses cross-origin cookie-authenticated mutations.
 3. The handler authenticates and authorizes with `requireUser`, `requireAdmin`, `requireShopOwner`
    (`server/utils/auth.ts`). There is no auth middleware; each handler asks for what it needs.
@@ -102,18 +107,25 @@ code path serves both, so the public API can't silently fall behind the UI. The 
 each handler's `defineRouteMeta()` (`server/api/v1/openapi.json.get.ts`) and rendered with Scalar at
 `/my-shop/api-docs`.
 
-## Deployment view (today)
+## Deployment view
 
 ```mermaid
 flowchart LR
-  internet((Internet)) --> proxy[TLS reverse proxy<br/>sets X-Real-IP<br/>owner-provided]
-  proxy --> app[app container<br/>ghcr.io/alexgalhardo/nuxtjs-marketplace]
-  migrate[migrate container<br/>one-shot] --> pg[(postgres:18-alpine)]
-  app --> pg
-  app --> vol[(app-data volume<br/>/app/.data uploads)]
+  internet((Internet)) --> lb["Load balancer, sets X-Real-IP<br/>Caddy (self-hosted) or Railway's edge"]
+  lb --> app1[app replica 1]
+  lb --> app2[app replica 2]
+  migrate["migrate<br/>(one-shot or pre-deploy)"] --> pg[(PostgreSQL)]
+  app1 & app2 --> pg
+  app1 & app2 --> redis[("Redis 8")]
+  app1 & app2 --> blob[("Blobs: app-data volume<br/>or S3 bucket")]
 ```
 
-`infra/docker-compose.yml` runs the `migrate` image first, then one `app` container, on PostgreSQL. The reverse proxy
-is the owner's job (PLAN.md "Developer actions"); rate limits key on the `X-Real-IP` header it sets
-([docs/infra-and-setup.md](../infra-and-setup.md)). Scaling this out is covered in
+- **Self-hosted** (`infra/docker-compose.yml`): the `migrate` image runs first, then 2 `app` replicas
+  (`--scale app=N` for more) behind Caddy (`infra/caddy/Caddyfile`), with Redis and PostgreSQL. Uploads live on the
+  shared `app-data` volume.
+- **Production on Railway**: 2 `app` replicas behind Railway's edge, the `Postgres` and `Redis` services and the
+  `uploads` S3 bucket; `bun run db:deploy` runs as the pre-deploy command
+  ([docs/infra-and-setup.md](../infra-and-setup.md#production-on-railway)).
+
+Rate limits key on the `X-Real-IP` header the load balancer sets. Scaling is covered in
 [09-scaling-and-load-balancing.md](09-scaling-and-load-balancing.md).
