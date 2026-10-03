@@ -21,26 +21,36 @@ export default defineEventHandler(async (event) => {
 	const stripe = getStripeClient()
 	const config = useRuntimeConfig()
 
-	let stripeAccountId = shop.stripeAccountId
-	if (!stripeAccountId) {
-		const account = await stripe.accounts.create({
-			type: 'express',
-			email: user.email,
-			capabilities: {
-				card_payments: { requested: true },
-				transfers: { requested: true },
-			},
+	// A10: a Stripe outage or error is a 502 with a safe message, never a raw 500.
+	try {
+		let stripeAccountId = shop.stripeAccountId
+		if (!stripeAccountId) {
+			const account = await stripe.accounts.create({
+				type: 'express',
+				email: user.email,
+				capabilities: {
+					card_payments: { requested: true },
+					transfers: { requested: true },
+				},
+			})
+			stripeAccountId = account.id
+			await db
+				.update(schema.shops)
+				.set({ stripeAccountId })
+				.where(eq(schema.shops.id, shop.id))
+		}
+
+		const accountLink = await stripe.accountLinks.create({
+			account: stripeAccountId,
+			type: 'account_onboarding',
+			refresh_url: `${config.public.siteUrl}/my-shop/payouts/refresh`,
+			return_url: `${config.public.siteUrl}/my-shop/payouts/return`,
 		})
-		stripeAccountId = account.id
-		await db.update(schema.shops).set({ stripeAccountId }).where(eq(schema.shops.id, shop.id))
+		return { url: accountLink.url }
+	} catch {
+		throw createError({
+			statusCode: 502,
+			statusMessage: 'Payment provider is unavailable, try again',
+		})
 	}
-
-	const accountLink = await stripe.accountLinks.create({
-		account: stripeAccountId,
-		type: 'account_onboarding',
-		refresh_url: `${config.public.siteUrl}/my-shop/payouts/refresh`,
-		return_url: `${config.public.siteUrl}/my-shop/payouts/return`,
-	})
-
-	return { url: accountLink.url }
 })
