@@ -423,7 +423,8 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (say why 
 - **Assert:** every doc link resolves; Mermaid renders on GitHub
 
 ### Phase 24 — Release v1.1.0
-- [ ] `[Unreleased]` complete; promote `dev` → `main` after green CI; `bun run release minor` → v1.1.0; release + images published; footer shows v1.1.0
+- [x] v1.1.0 released 2026-10-03 (GitHub Release from CHANGELOG, GHCR images); Railway serves it, footer shows v1.1.0
+- [ ] v1.2.0: real Stripe test-mode run on a US platform sandbox (Phase 19), then the next release
 
 ---
 
