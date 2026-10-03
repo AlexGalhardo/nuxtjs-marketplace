@@ -9,6 +9,8 @@ version (see [docs/git-workflow.md](docs/git-workflow.md)).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-03
+
 ### Added
 - QA & pentest suite (`bun run test:qa`, Playwright project `qa`): crawls every page at 390px and desktop in both themes, fuzzes every form and endpoint (XSS, SQL injection, oversize, unicode, money abuse), an authorization matrix over every `/api/**` route, business abuse (tampering, last-unit races, forged/replayed webhooks, CSRF, rate limits, path traversal), money invariants and outgoing emails.
 - Deterministic load seed (`bun run db:seed:load`): 1,000 sellers, 10,000 buyers, ~4.4k products, 3k orders on SQLite or PostgreSQL; Black Friday load test (`bun run test:load`) with p95/error-rate thresholds; both run in a new `qa` CI job with Redis.
@@ -100,5 +102,6 @@ version (see [docs/git-workflow.md](docs/git-workflow.md)).
 - Security events (`login.failed`/`succeeded`, password reset requested/completed, password changed, CSRF refused) are logged as JSON lines without PII.
 - GitHub Actions pinned to commit SHAs; workflows default to `contents: read`.
 
-[Unreleased]: https://github.com/AlexGalhardo/nuxtjs-marketplace/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/nuxtjs-marketplace/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/AlexGalhardo/nuxtjs-marketplace/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/AlexGalhardo/nuxtjs-marketplace/releases/tag/v1.0.0
