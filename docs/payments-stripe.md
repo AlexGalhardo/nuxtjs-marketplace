@@ -1,12 +1,18 @@
 # Payments with Stripe
 
-Model: **Stripe Connect Express** + **separate charges and transfers**, USD, integer cents.
+Model: **Stripe Connect, Accounts v2** (Express dashboard, platform collects fees and owns losses, recipient
+configuration) + **separate charges and transfers**, USD, integer cents. The platform account must be a **US**
+account: a BR platform can't create US connected accounts, and BR recipients would also need card payments (tried
+in the sandbox, 2026-10-02; D26).
 
-1. Seller onboarding (Phase 6, done): `POST /api/v1/shop/stripe/onboarding` creates (or reuses) an
-   Express account and returns a fresh Account Link URL (`server/api/v1/shop/stripe/onboarding.post.ts`).
-   `POST /api/stripe/webhook` verifies the signature and, on `account.updated`, stores
-   `charges_enabled` / `payouts_enabled` on the shop. `requireProductOwner`'s publish handler
-   (`server/api/v1/shop/products/[id]/publish.post.ts`) 409s until `charges_enabled` is true (D12).
+1. Seller onboarding: `POST /api/v1/shop/stripe/onboarding` creates (or reuses) the shop's v2 account
+   (`stripe.v2.core.accounts.create`, `stripe_balance.stripe_transfers` requested, country `us`) and returns a
+   fresh v2 account link (`use_case.account_onboarding`, configuration `recipient`). Stripe no longer lets new
+   platforms create v1 accounts (`type: 'express'`). Readiness is the v2 capability
+   `configuration.recipient.capabilities.stripe_balance.stripe_transfers.status === 'active'` — v1
+   `charges_enabled` stays false for recipient-only accounts — synced by `syncShopStripeStatus()`
+   (`server/utils/stripe.ts`) from the `account.updated` webhook and from `POST /api/v1/shop/stripe/sync`,
+   which the return page calls. The publish handler 409s until it is active (`shops.charges_enabled`, D12).
 2. Cart (Phase 8, done): `/api/cart` + `/api/cart/items[/:productId]` (login required, D2). `loadCart()`
    (`server/utils/cart.ts`) re-prices every line from the DB on each read and flags lines that became
    unavailable/out of stock; digital items are always quantity 1; buying from your own shop is a 400.
@@ -20,7 +26,7 @@ Model: **Stripe Connect Express** + **separate charges and transfers**, USD, int
    **async** `constructEventAsync` — the sync one always throws under Bun):
    - Idempotency: the event id goes into `stripe_events`; an event is skipped only once `processed_at` is set,
      so a handler that throws gets retried by Stripe. Handlers are themselves safe to repeat.
-   - `account.updated` → shop `charges_enabled`/`payouts_enabled`.
+   - `account.updated` → `syncShopStripeStatus()` re-reads the v2 recipient capability.
    - `checkout.session.completed` / `async_payment_succeeded` (only when `payment_status = paid`) →
      `fulfillCheckout()` (`server/utils/orders.ts`): in one transaction, order + seller orders `paid` (conditional
      on `pending`, so only the first delivery fulfils), stock decremented (clamped at 0), download grants

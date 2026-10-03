@@ -68,17 +68,10 @@ export default defineEventHandler(async (event) => {
 		case 'charge.refunded':
 			await recordExternalRefund(stripeEvent.data.object)
 			break
-		case 'account.updated': {
-			const account = stripeEvent.data.object
-			await db
-				.update(schema.shops)
-				.set({
-					chargesEnabled: Boolean(account.charges_enabled),
-					payoutsEnabled: Boolean(account.payouts_enabled),
-				})
-				.where(eq(schema.shops.stripeAccountId, account.id))
+		case 'account.updated':
+			// v1 `charges_enabled` stays false for recipient-only (v2) accounts, so read the v2 capability.
+			await syncShopStripeStatus(stripeEvent.data.object.id)
 			break
-		}
 	}
 
 	await db

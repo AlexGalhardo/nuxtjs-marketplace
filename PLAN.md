@@ -52,6 +52,7 @@ Multi-currency, carrier rate calculation, subscriptions, chat between buyer/sell
 | D23 | Branches | **`dev` = sandbox, `main` = production**. Push to `dev`; promote the same commits to `main` only after `dev`'s `ci` passes | `main` only ever receives commits CI already validated (owner, 2026-10-02). |
 | D24 | Hosting | **Railway** (owner, 2026-10-02): Postgres, S3 bucket, app built from `main` with Wait for CI; SSH `deploy.yml` removed | Managed TLS/edge (`X-Real-IP`), zero-downtime deploys, no server to maintain. GHCR images stay for self-hosters. |
 | D25 | Load balancer | **Caddy** (owner, 2026-10-02) instead of nginx for the self-hosted stack | Smaller config, automatic HTTPS when a domain is set, `dynamic a` re-resolves scaled replicas. Railway's own edge balances replicas in production. |
+| D26 | Stripe platform | **US platform account** (sandbox for now) + **Accounts v2** recipients (Express dashboard, fees/losses on the platform) | Owner, 2026-10-02. New platforms can't create v1 accounts; a BR platform can't onboard US sellers and BR recipients need card payments, which conflicts with D1/D4. |
 
 ### Non-official libraries (Nuxt ecosystem has no equivalent)
 
@@ -391,6 +392,7 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (say why 
 - [ ] Inventory account (test + live): connected accounts, customers, products/prices, webhooks, coupons → show list, owner OKs deletion
 - [ ] Delete via API everything deletable; archive the rest; owner clicks "Delete all test data" and removes old sandboxes
 - [x] `scripts/stripe-bootstrap.ts` (`bun run stripe:bootstrap`): idempotent platform + Connect webhook endpoints (matched by metadata), secrets to Railway with `--railway`; webhook accepts comma-separated secrets
+- [x] Seller onboarding migrated to Accounts v2 (`v2.core.accounts`, v2 account links, capability-based readiness, `POST /api/v1/shop/stripe/sync`); integration-tested against the fake Stripe
 - [~] Stripe cases: async payments, expired sessions, transfer failure, crash-safe transfers, refund failure, disputes created+closed, Dashboard refunds (`charge.refunded`), idempotent retries — done and integration-tested. Open: Stripe SDK 23 / API 2026-08-26 upgrade, payouts are Stripe's to notify (no handler)
 - [ ] Real test-mode run with test cards (success, 3DS, decline, insufficient funds, dispute) via `stripe trigger`/test clocks
 - **Assert:** e2e checkout passes against real Stripe test mode locally; fake-Stripe suite green in CI

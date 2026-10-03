@@ -3,7 +3,8 @@ import { createServer, type Server } from 'node:http'
 // Just enough of the Stripe REST API for the checkout → webhook → transfer flow, so integration
 // tests run without network or real keys (the server gets NUXT_STRIPE_API_BASE pointing here).
 // Test files read what the app sent via GET /__requests. Destination `acct_fail` fails transfers.
-// A refund for a payment intent containing `refund_fail` fails.
+// A refund for a payment intent containing `refund_fail` fails. Accounts v2 (JSON bodies): every account
+// can receive transfers except `acct_restricted`.
 export const FAKE_STRIPE_PORT = 12_111
 
 export interface RecordedRequest {
@@ -30,11 +31,35 @@ export function startFakeStripe(): Server {
 			}
 			if (path === '/__requests') return send(200, requests)
 
-			const body = Object.fromEntries(new URLSearchParams(raw))
+			const body: Record<string, string> = path.startsWith('/v2/')
+				? { json: raw }
+				: Object.fromEntries(new URLSearchParams(raw))
 			const idempotencyKey = (req.headers['idempotency-key'] as string | undefined) ?? null
 			requests.push({ method: req.method ?? '', path, body, idempotencyKey })
 			sequence += 1
 
+			if (req.method === 'POST' && path === '/v2/core/accounts') {
+				return send(200, { id: `acct_fake_${sequence}`, object: 'v2.core.account' })
+			}
+			if (req.method === 'POST' && path === '/v2/core/account_links') {
+				return send(200, {
+					object: 'v2.core.account_link',
+					url: `https://connect.stripe.test/onboarding/${sequence}`,
+				})
+			}
+			const v2Account = path.match(/^\/v2\/core\/accounts\/([^/]+)$/)
+			if (req.method === 'GET' && v2Account) {
+				const status = v2Account[1] === 'acct_restricted' ? 'restricted' : 'active'
+				return send(200, {
+					id: v2Account[1],
+					object: 'v2.core.account',
+					configuration: {
+						recipient: {
+							capabilities: { stripe_balance: { stripe_transfers: { status } } },
+						},
+					},
+				})
+			}
 			if (req.method === 'POST' && path === '/v1/checkout/sessions') {
 				const id = `cs_test_fake_${sequence}`
 				return send(200, {

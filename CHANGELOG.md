@@ -28,6 +28,7 @@ version (see [docs/git-workflow.md](docs/git-workflow.md)).
 - Every `setups/*.sh` script starts the app at the end with its logs on screen, saves the session to `logs/<script>-<timestamp>.log`, and keeps the Git Bash window open on success, error or Ctrl+C.
 
 ### Changed
+- Seller onboarding uses Stripe Accounts v2 (recipient accounts, Express dashboard); a shop can sell once its `stripe_transfers` capability is active, re-checked when the seller returns from Stripe.
 - `ci` builds the Docker image on every push and every job has a timeout; `deploy` waits for the app's healthcheck and rolls back to the last good version when a release never gets healthy.
 - In-range dependency updates (Nuxt UI 4.11.3, Scalar 1.72.4, Resend 6.32.0, Vitest 5.0.3, Biome 2.5.15, ...); `stripe/stripe-cli` image pinned to v1.53.0 instead of `latest`.
 - Branch flow: `dev` is the sandbox and runs the full `ci`; `main` (production) only receives commits whose `dev` run passed; `deploy` refuses any ref but `main`.

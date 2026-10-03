@@ -6,6 +6,8 @@ const toast = useToast()
 
 onMounted(async () => {
 	toast.add({ title: 'Almost there', description: 'Confirming your Stripe account status…' })
+	// Reads the account from Stripe now instead of waiting for the account.updated webhook.
+	await $fetch('/api/v1/shop/stripe/sync', { method: 'POST' }).catch(() => undefined)
 	await navigateTo('/my-shop/payouts')
 })
 </script>

@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm'
 import Stripe from 'stripe'
 
 let client: Stripe | undefined
@@ -21,4 +22,21 @@ export function getStripeClient(): Stripe {
 		})
 	}
 	return client
+}
+
+// A seller can sell once their account can receive transfers (Accounts v2 recipient capability). Called by
+// the `account.updated` webhook and when the seller returns from onboarding, so the shop doesn't wait on a
+// webhook. Returns whether the account is ready.
+export async function syncShopStripeStatus(stripeAccountId: string): Promise<boolean> {
+	const account = await getStripeClient().v2.core.accounts.retrieve(stripeAccountId, {
+		include: ['configuration.recipient'],
+	})
+	const ready =
+		account.configuration?.recipient?.capabilities?.stripe_balance?.stripe_transfers?.status ===
+		'active'
+	await db
+		.update(schema.shops)
+		.set({ chargesEnabled: ready, payoutsEnabled: ready })
+		.where(eq(schema.shops.stripeAccountId, stripeAccountId))
+	return ready
 }

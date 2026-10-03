@@ -78,6 +78,7 @@ describe('apiTokenScopeFor', () => {
 		['POST', '/api/v1/shop/orders/:id/refund', 'orders:write'],
 		['GET', '/api/v1/shop/tokens', null],
 		['POST', '/api/v1/shop/stripe/onboarding', null],
+		['POST', '/api/v1/shop/stripe/sync', null],
 		['GET', '/api/v1/shopping', null],
 		['GET', '/api/cart', null],
 		['GET', '/api/admin/users', null],
