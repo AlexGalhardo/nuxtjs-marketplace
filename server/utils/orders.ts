@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull, sql } from 'drizzle-orm'
+import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm'
 import type { H3Event } from 'h3'
 import type Stripe from 'stripe'
 import type { SellerOrder } from '#shared/types/db'
@@ -194,10 +194,20 @@ async function transferToSeller(
 			},
 			{ idempotencyKey: `transfer-${seller.id}` },
 		)
-		await db
+		// Stripe retries a slow webhook while the first delivery still runs: both reach this point (the
+		// idempotency key makes it one transfer at Stripe). Only the delivery that records the transfer
+		// logs it, or the ledger counts the payout twice (found by the QA suite, tests/qa/abuse.spec.ts).
+		const [recorded] = await db
 			.update(schema.sellerOrders)
 			.set({ stripeTransferId: transfer.id })
-			.where(eq(schema.sellerOrders.id, seller.id))
+			.where(
+				and(
+					eq(schema.sellerOrders.id, seller.id),
+					isNull(schema.sellerOrders.stripeTransferId),
+				),
+			)
+			.returning({ id: schema.sellerOrders.id })
+		if (!recorded) return
 		await logTransaction({
 			...base,
 			type: 'transfer.created',

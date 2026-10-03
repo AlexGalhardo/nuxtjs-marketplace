@@ -82,6 +82,7 @@ To get an admin account, sign up, then run `bun run db:make-admin <email>` and l
 | `bun run test:unit` / `test:coverage` | Unit + Nuxt component tests / unit tests with the 80% coverage gate |
 | `bun run test:integration` | API tests against a built server |
 | `bun run test:smoke` / `test:e2e` | Playwright |
+| `bun run db:seed:load` / `test:qa` / `test:load` | Load seed (1k sellers, 10k buyers) / QA & pentest suite / "black friday" load test ([docs/testing.md](docs/testing.md#qa--pentest-suite)) |
 | `bun run db:migrate` / `db:seed` / `db:reset` | Apply migrations / seed / drop, migrate and seed again |
 | `bun run db:make-admin <email>` | Promote an account to admin |
 | `bun run release <patch\|minor\|major>` | Turn CHANGELOG `[Unreleased]` into a version, bump, tag (pushing the tag publishes the release) |

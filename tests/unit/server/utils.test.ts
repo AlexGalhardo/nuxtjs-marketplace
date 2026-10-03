@@ -1,3 +1,6 @@
+import { mkdtempSync, readFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { SQLiteSyncDialect } from 'drizzle-orm/sqlite-core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as schema from '../../../server/db/schema.sqlite'
@@ -12,6 +15,7 @@ import { getStripeClient } from '../../../server/utils/stripe'
 import { generateToken, hashToken } from '../../../server/utils/token'
 import { transactionLogWhere } from '../../../server/utils/transaction-log-query'
 import { logTransaction } from '../../../server/utils/transactions'
+import { readUploadForm } from '../../../server/utils/upload'
 import { resetRuntimeConfig, runtimeConfig } from './nitro-globals'
 
 const send = vi.fn()
@@ -169,11 +173,34 @@ describe('stripe', () => {
 	})
 })
 
+describe('upload', () => {
+	it('turns a body that is not multipart into a 400 instead of a 500', async () => {
+		const form = new FormData()
+		vi.stubGlobal('readFormData', async () => form)
+		expect(await readUploadForm({} as never)).toBe(form)
+		vi.stubGlobal('readFormData', async () => {
+			throw new TypeError('Failed to parse body as FormData.')
+		})
+		await expect(readUploadForm({} as never)).rejects.toMatchObject({ statusCode: 400 })
+	})
+})
+
 describe('mail', () => {
 	it('logs instead of sending without an API key', async () => {
 		const info = vi.spyOn(console, 'info').mockImplementation(() => undefined)
 		await sendMail({ to: 'a@x.dev', subject: 'hi', text: 'body' })
 		expect(info).toHaveBeenCalledWith(expect.stringContaining('Subject: hi'))
+		info.mockRestore()
+	})
+
+	it('appends logged mails to MAIL_OUTBOX_FILE when set (QA suite outbox)', async () => {
+		const info = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+		const outbox = join(mkdtempSync(join(tmpdir(), 'outbox-')), 'mail.jsonl')
+		vi.stubEnv('MAIL_OUTBOX_FILE', outbox)
+		const mail = { to: 'a@x.dev', subject: 'hi', text: 'body' }
+		await sendMail(mail)
+		expect(JSON.parse(readFileSync(outbox, 'utf-8'))).toEqual(mail)
+		vi.unstubAllEnvs()
 		info.mockRestore()
 	})
 

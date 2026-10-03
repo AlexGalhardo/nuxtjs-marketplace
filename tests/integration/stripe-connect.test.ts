@@ -93,6 +93,17 @@ describe('stripe connect onboarding (accounts v2)', () => {
 		expect(shopState()?.chargesEnabled).toBe(false)
 	})
 
+	it('turns a Stripe error into a safe 502', async () => {
+		dbQuery(
+			`await db.update(schema.shops).set({ stripeAccountId: 'acct_fail' }).where(eq(schema.shops.id, '${shopId}'))`,
+		)
+		const response = await fetch('/api/v1/shop/stripe/onboarding', {
+			method: 'POST',
+			headers: { cookie },
+		})
+		expect(response.status).toBe(502)
+	})
+
 	it('requires a session', async () => {
 		const anonymous = await fetch('/api/v1/shop/stripe/sync', { method: 'POST' })
 		expect(anonymous.status).toBe(401)

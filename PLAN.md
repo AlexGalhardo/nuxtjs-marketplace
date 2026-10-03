@@ -376,15 +376,16 @@ Legend: `[x]` done · `[ ]` todo · `[~]` in progress · `[-]` dropped (say why 
 - **Assert:** `bun run test` green locally; `ci` green on `dev`; image builds
 
 ### Phase 18 — QA / pentest suite in CI (item 2)
-- [ ] Load seed `bun run db:seed:load` (1,000 sellers, 10,000 buyers, products, orders; deterministic faker seed, batched inserts, both dialects)
-- [ ] `tests/qa/` Playwright project: crawl every page/link/button/form as a human tester (all routes, 390px + desktop, both themes), console/CSP/4xx/5xx = fail
-- [ ] Input fuzzing on every form and endpoint: XSS payloads (reflected/stored, rendered escaped), SQL injection, oversize, unicode, negative/float money, enum abuse
-- [ ] AuthZ matrix: every `/api/**` route × {guest, buyer, seller, other seller, admin, API token per scope} → expected status
-- [ ] Business abuse: price/qty tampering, double submit/double spend (concurrent checkout of last unit), replayed and forged webhooks, refund twice, review without purchase, CSRF, rate limits, path traversal, open redirect
-- [ ] Transactions/consistency: money invariants (`transaction_logs` sums = orders), no partial writes after injected failures, dual-dialect parity
-- [ ] Emails: capture outbox in tests (reset, order buyer/seller, shipped, refund, contact) and assert recipients/content
-- [ ] Load test "black friday": k6-free Bun script (concurrent catalog/search/cart/checkout against the seeded DB), p95 + error-rate thresholds
-- [ ] CI job `qa` (needs build) on `dev` and `main`; report artifact; docs/testing.md section
+- [x] Load seed `bun run db:seed:load` (1,000 sellers, 10,000 buyers, products, orders; deterministic faker seed, batched inserts, both dialects)
+- [x] `tests/qa/` Playwright project: crawl every page/link/button/form as a human tester (all routes, 390px + desktop, both themes), console/CSP/4xx/5xx = fail
+- [x] Input fuzzing on every form and endpoint: XSS payloads (reflected/stored, rendered escaped), SQL injection, oversize, unicode, negative/float money, enum abuse
+- [x] AuthZ matrix: every `/api/**` route × {guest, buyer, seller, other seller, admin, API token per scope} → expected status
+- [x] Business abuse: price/qty tampering, double submit/double spend (concurrent checkout of last unit), replayed and forged webhooks, refund twice, review without purchase, CSRF, rate limits, path traversal, open redirect
+- [x] Transactions/consistency: money invariants (`transaction_logs` sums = orders), no partial writes after injected failures, dual-dialect parity
+- [x] Emails: capture outbox in tests (reset, order buyer/seller, shipped, refund, contact) and assert recipients/content
+- [x] Load test "black friday": k6-free Bun script (concurrent catalog/search/cart/checkout against the seeded DB), p95 + error-rate thresholds
+- [x] CI job `qa` (needs build) on `dev` and `main`; report artifact; docs/testing.md section
+- [ ] Open: signup submit dropped inside Nuxt UI's 300 ms validation debounce (documented in docs/testing.md); QA suite not yet run against PostgreSQL
 - **Assert:** `bun run test:qa` and `bun run test:load` green locally and in CI
 
 ### Phase 19 — Stripe automation (item 1; needs owner login)

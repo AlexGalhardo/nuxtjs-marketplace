@@ -22,42 +22,52 @@ export default defineEventHandler(async (event) => {
 	const stripe = getStripeClient()
 	const config = useRuntimeConfig()
 
-	let stripeAccountId = shop.stripeAccountId
-	if (!stripeAccountId) {
-		const account = await stripe.v2.core.accounts.create({
-			contact_email: user.email,
-			display_name: shop.name,
-			dashboard: 'express',
-			// USD-only marketplace (D4): sellers onboard as US recipients.
-			identity: { country: 'us' },
-			defaults: {
-				responsibilities: {
-					fees_collector: 'application',
-					losses_collector: 'application',
+	// A10: a Stripe outage or error is a 502 with a safe message, never a raw 500.
+	try {
+		let stripeAccountId = shop.stripeAccountId
+		if (!stripeAccountId) {
+			const account = await stripe.v2.core.accounts.create({
+				contact_email: user.email,
+				display_name: shop.name,
+				dashboard: 'express',
+				// USD-only marketplace (D4): sellers onboard as US recipients.
+				identity: { country: 'us' },
+				defaults: {
+					responsibilities: {
+						fees_collector: 'application',
+						losses_collector: 'application',
+					},
+				},
+				configuration: {
+					recipient: {
+						capabilities: { stripe_balance: { stripe_transfers: { requested: true } } },
+					},
+				},
+				metadata: { shopId: shop.id },
+			})
+			stripeAccountId = account.id
+			await db
+				.update(schema.shops)
+				.set({ stripeAccountId })
+				.where(eq(schema.shops.id, shop.id))
+		}
+
+		const accountLink = await stripe.v2.core.accountLinks.create({
+			account: stripeAccountId,
+			use_case: {
+				type: 'account_onboarding',
+				account_onboarding: {
+					configurations: ['recipient'],
+					refresh_url: `${config.public.siteUrl}/my-shop/payouts/refresh`,
+					return_url: `${config.public.siteUrl}/my-shop/payouts/return`,
 				},
 			},
-			configuration: {
-				recipient: {
-					capabilities: { stripe_balance: { stripe_transfers: { requested: true } } },
-				},
-			},
-			metadata: { shopId: shop.id },
 		})
-		stripeAccountId = account.id
-		await db.update(schema.shops).set({ stripeAccountId }).where(eq(schema.shops.id, shop.id))
+		return { url: accountLink.url }
+	} catch {
+		throw createError({
+			statusCode: 502,
+			statusMessage: 'Payment provider is unavailable, try again',
+		})
 	}
-
-	const accountLink = await stripe.v2.core.accountLinks.create({
-		account: stripeAccountId,
-		use_case: {
-			type: 'account_onboarding',
-			account_onboarding: {
-				configurations: ['recipient'],
-				refresh_url: `${config.public.siteUrl}/my-shop/payouts/refresh`,
-				return_url: `${config.public.siteUrl}/my-shop/payouts/return`,
-			},
-		},
-	})
-
-	return { url: accountLink.url }
 })

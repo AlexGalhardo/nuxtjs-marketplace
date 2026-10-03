@@ -2,9 +2,9 @@ import { createServer, type Server } from 'node:http'
 
 // Just enough of the Stripe REST API for the checkout → webhook → transfer flow, so integration
 // tests run without network or real keys (the server gets NUXT_STRIPE_API_BASE pointing here).
-// Test files read what the app sent via GET /__requests. Destination `acct_fail` fails transfers.
-// A refund for a payment intent containing `refund_fail` fails. Accounts v2 (JSON bodies): every account
-// can receive transfers except `acct_restricted`.
+// Test files read what the app sent via GET /__requests. Destination `acct_fail` fails transfers and
+// Connect onboarding links. A refund for a payment intent containing `refund_fail` fails. Accounts v2
+// (JSON bodies): every account can receive transfers except `acct_restricted`.
 export const FAKE_STRIPE_PORT = 12_111
 
 export interface RecordedRequest {
@@ -42,6 +42,13 @@ export function startFakeStripe(): Server {
 				return send(200, { id: `acct_fake_${sequence}`, object: 'v2.core.account' })
 			}
 			if (req.method === 'POST' && path === '/v2/core/account_links') {
+				if (
+					(JSON.parse(body.json || '{}') as { account?: string }).account === 'acct_fail'
+				) {
+					return send(400, {
+						error: { type: 'invalid_request_error', message: 'No such account' },
+					})
+				}
 				return send(200, {
 					object: 'v2.core.account_link',
 					url: `https://connect.stripe.test/onboarding/${sequence}`,

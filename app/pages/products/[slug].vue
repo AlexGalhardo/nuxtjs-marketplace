@@ -41,7 +41,13 @@ const photo = computed(() => item.value.images[active.value] ?? null)
 
 const soldOut = computed(() => item.value.kind === 'physical' && item.value.stock === 0)
 
-const { cart, add } = useCart()
+const { cart, add, refresh } = useCart()
+// The header loads the cart without blocking, and Vue SSR renders siblings concurrently: this page could
+// draw "add to cart" before the cart arrived, then hydrate as "in your cart" (a hydration mismatch the
+// QA crawl caught). Wait for the cart here; on client navigation it is already loaded.
+await useAsyncData('product-cart', () =>
+	cart.value ? Promise.resolve(true) : refresh().then(() => true),
+)
 const toast = useToast()
 const adding = ref(false)
 const inCart = computed(() =>

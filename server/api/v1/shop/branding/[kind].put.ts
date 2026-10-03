@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
 		throw createError({ statusCode: 404, statusMessage: 'Shop not found' })
 	}
 
-	const form = await readFormData(event)
+	const form = await readUploadForm(event)
 	const file = form.get('file')
 	if (!(file instanceof File)) {
 		throw createError({ statusCode: 400, statusMessage: 'No file uploaded' })

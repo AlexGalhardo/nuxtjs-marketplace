@@ -10,6 +10,8 @@ version (see [docs/git-workflow.md](docs/git-workflow.md)).
 ## [Unreleased]
 
 ### Added
+- QA & pentest suite (`bun run test:qa`, Playwright project `qa`): crawls every page at 390px and desktop in both themes, fuzzes every form and endpoint (XSS, SQL injection, oversize, unicode, money abuse), an authorization matrix over every `/api/**` route, business abuse (tampering, last-unit races, forged/replayed webhooks, CSRF, rate limits, path traversal), money invariants and outgoing emails.
+- Deterministic load seed (`bun run db:seed:load`): 1,000 sellers, 10,000 buyers, ~4.4k products, 3k orders on SQLite or PostgreSQL; Black Friday load test (`bun run test:load`) with p95/error-rate thresholds; both run in a new `qa` CI job with Redis.
 - `/system-design`: interactive Vue Flow diagrams of the architecture, request lifecycle, money flow, data model, scaling and observability, linked from the footer.
 - `bun run stripe:bootstrap <site-url>` creates the platform and Connect webhook endpoints; `charge.refunded` (Dashboard refunds) and `charge.dispute.closed` are logged.
 - `docs/system-design/` (didactic system design guide), MIT `LICENSE`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, issue and PR templates.
@@ -42,6 +44,10 @@ version (see [docs/git-workflow.md](docs/git-workflow.md)).
 - The blinking terminal cursor in the logo.
 
 ### Fixed
+- Upload endpoints answered 500 to a non-multipart body (now 400); Stripe onboarding errors leaked as 500s (now a safe 502).
+- PATCH bodies had no size limit (nuxt-security only checks POST/PUT/DELETE): capped at 2 MB with a 413.
+- Hydration mismatch on a product page already in the buyer's cart; a CSP violation on every form page (Zod's JIT probe, now `jitless`).
+- Two racing webhook deliveries logged the same seller transfer twice.
 - A crash between marking an order paid and paying its sellers lost the transfers for good (the retried webhook saw the order already paid); every webhook delivery now runs the transfers no attempt was logged for.
 - `/api/auth/forgot-password` answered differently for known emails when the mail provider failed (user enumeration); the reset email is now sent off the request path.
 - `/api/health` passed with the database unreachable; it now checks the database and answers 503.
