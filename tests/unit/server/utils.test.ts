@@ -1,3 +1,6 @@
+import { mkdtempSync, readFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { SQLiteSyncDialect } from 'drizzle-orm/sqlite-core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as schema from '../../../server/db/schema.sqlite'
@@ -189,6 +192,16 @@ describe('mail', () => {
 		info.mockRestore()
 	})
 
+	it('appends logged mails to MAIL_OUTBOX_FILE when set (QA suite outbox)', async () => {
+		const info = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+		const outbox = join(mkdtempSync(join(tmpdir(), 'outbox-')), 'mail.jsonl')
+		vi.stubEnv('MAIL_OUTBOX_FILE', outbox)
+		const mail = { to: 'a@x.dev', subject: 'hi', text: 'body' }
+		await sendMail(mail)
+		expect(JSON.parse(readFileSync(outbox, 'utf-8'))).toEqual(mail)
+		vi.unstubAllEnvs()
+		info.mockRestore()
+	})
 
 	it('sends through Resend with a key, and turns a Resend error into a 502', async () => {
 		runtimeConfig.resend.apiKey = 're_test'

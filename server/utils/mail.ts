@@ -1,3 +1,4 @@
+import { appendFile } from 'node:fs/promises'
 import { Resend } from 'resend'
 
 export interface SendMailOptions {
@@ -12,6 +13,11 @@ export async function sendMail(options: SendMailOptions): Promise<void> {
 
 	if (!config.resend.apiKey) {
 		console.info(`[mail] To: ${options.to}\nSubject: ${options.subject}\n\n${options.text}`)
+		// Test-only outbox (tests/qa): one JSON line per mail, so the QA suite can assert recipients.
+		// Unreachable in production, where NUXT_RESEND_API_KEY is required.
+		if (process.env.MAIL_OUTBOX_FILE) {
+			await appendFile(process.env.MAIL_OUTBOX_FILE, `${JSON.stringify(options)}\n`)
+		}
 		return
 	}
 
