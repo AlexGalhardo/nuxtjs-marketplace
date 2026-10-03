@@ -62,7 +62,8 @@ Local `bun run dev` with `S3_*` is unaffected.
 
 ## Production on Railway
 
-Project `resell-sh` (environment `production`): services `Postgres` and `app`, bucket `uploads`.
+Project `resell-sh` (environment `production`): services `Postgres`, `Redis` and `app` (2 replicas in
+`us-east4`, Railway tracing on), bucket `uploads`. `REDIS_URL=${{Redis.REDIS_URL}}` on `app`.
 URL: https://app-production-8586.up.railway.app
 
 - `app` builds `infra/docker/Dockerfile` from the `main` branch with **Wait for CI** on: Railway deploys a

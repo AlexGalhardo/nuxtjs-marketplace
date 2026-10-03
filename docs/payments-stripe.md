@@ -50,8 +50,8 @@ Model: **Stripe Connect Express** + **separate charges and transfers**, USD, int
      `reversal-<sellerOrderId>`) → `transfer.reversed`, or `transfer.reversal_failed` (buyer already refunded;
      the platform carries it until settled by hand, D1). Skipped when the original transfer had failed.
    - Buyer email. Stock is not restocked.
-   Refunds started in the Stripe Dashboard are not synced back (`charge.refunded` is not handled); refund from
-   `/my-shop/orders` so the order, downloads and logs stay consistent.
+   Refunds started in the Stripe Dashboard only reach the ledger (`charge.refunded` → `refund.created`); the order,
+   downloads and transfer reversal are untouched, so refund from `/my-shop/orders` to keep them consistent.
 
 ## Platform fee
 
