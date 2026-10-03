@@ -87,7 +87,9 @@ bun run test:load                         # .output on :3102 with the fake Strip
 ```
 
 `test:load` knobs: `LOAD_VUS` (40), `LOAD_DURATION_S` (60), `LOAD_THINK_MS` (1000), `LOAD_P95_MS` (1500),
-`LOAD_MAX_ERROR_RATE` (0.01), `LOAD_BASE_URL` (test a running server instead). Each virtual user logs in as its
+`LOAD_MAX_ERROR_RATE` (0.01), `LOAD_BASE_URL` (test a running server instead). The spawned server inherits
+`REDIS_URL`: CI sets it (a Redis service), as production does, so catalog reads come from the cache; without it
+every request hits SQLite and one process saturates around 25 rps on a laptop. Each virtual user logs in as its
 own seeded buyer with its own `X-Real-IP`, browses home, catalog, search and product pages, adds to cart (30%),
 checks out and pays (8%). The summary (RPS, p50/p95/p99, error rate, per endpoint) is printed and written to
 `load-summary.json` (uploaded with the Playwright report when the CI job fails).

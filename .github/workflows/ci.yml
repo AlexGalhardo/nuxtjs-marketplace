@@ -122,6 +122,17 @@ jobs:
     name: qa, pentest, load
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # The load test runs like production: catalog responses cached in Redis (server/utils/redis.ts).
+    services:
+      redis:
+        image: redis:8.8.3-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       NUXT_HUB_DIR: .data-test
       SEED_DEMO_CATALOG: 'false'
@@ -143,6 +154,8 @@ jobs:
         env:
           PLAYWRIGHT_SKIP_BUILD: '1'
       - run: bun run test:load
+        env:
+          REDIS_URL: redis://localhost:6379
       - if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
