@@ -1,5 +1,5 @@
 import { readdirSync } from 'node:fs'
-import type { APIRequestContext, Playwright } from '@playwright/test'
+import type { APIRequestContext } from '@playwright/test'
 import { LOAD_ADMIN_EMAIL } from '../../server/db/seed-load'
 import {
 	checkout,
@@ -11,6 +11,7 @@ import {
 	makeSeller,
 	newApi,
 	ok,
+	type Playwright,
 	pay,
 	type Seller,
 	sellerOrderOf,

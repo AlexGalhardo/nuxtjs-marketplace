@@ -1,7 +1,13 @@
 import { randomInt } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { test as base, expect } from '@nuxt/test-utils/playwright'
-import type { APIRequestContext, APIResponse, Page, Playwright } from '@playwright/test'
+import type {
+	APIRequestContext,
+	APIResponse,
+	Page,
+	PlaywrightWorkerArgs,
+	Response,
+} from '@playwright/test'
 import Stripe from 'stripe'
 import { LOAD_PASSWORD } from '../../server/db/seed-load'
 import type { ProductType } from '../../shared/types/db'
@@ -29,6 +35,8 @@ export const test = base.extend({
 	},
 })
 
+export type Playwright = PlaywrightWorkerArgs['playwright']
+
 const baseURL = (): string => test.info().project.use.baseURL ?? 'http://localhost:3100'
 
 export function newApi(
@@ -42,7 +50,7 @@ export function newApi(
 }
 
 // `page.goto` + wait until Nuxt finished hydrating (what @nuxt/test-utils' `goto` does).
-export async function open(page: Page, path: string): Promise<APIResponse | null> {
+export async function open(page: Page, path: string): Promise<Response | null> {
 	const response = await page.goto(path)
 	await page.waitForFunction(
 		() =>
