@@ -27,6 +27,7 @@ exports[`openapi > documents every seller API operation with its token scope 1`]
   "POST /api/v1/shop/products/{id}/images/reorder products:write",
   "POST /api/v1/shop/products/{id}/publish products:write",
   "POST /api/v1/shop/stripe/onboarding session-only",
+  "POST /api/v1/shop/stripe/sync session-only",
   "POST /api/v1/shop/tokens session-only",
   "PUT /api/v1/shop/branding/{kind} shop:write",
 ]
