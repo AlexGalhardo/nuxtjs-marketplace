@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
 		throw createError({ statusCode: 400, statusMessage: 'Only digital products accept files' })
 	}
 
-	const form = await readFormData(event)
+	const form = await readUploadForm(event)
 	const files = form.getAll('files').filter((entry): entry is File => entry instanceof File)
 	if (!files.length) {
 		throw createError({ statusCode: 400, statusMessage: 'No files uploaded' })

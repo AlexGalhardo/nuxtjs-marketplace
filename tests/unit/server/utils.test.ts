@@ -12,6 +12,7 @@ import { getStripeClient } from '../../../server/utils/stripe'
 import { generateToken, hashToken } from '../../../server/utils/token'
 import { transactionLogWhere } from '../../../server/utils/transaction-log-query'
 import { logTransaction } from '../../../server/utils/transactions'
+import { readUploadForm } from '../../../server/utils/upload'
 import { resetRuntimeConfig, runtimeConfig } from './nitro-globals'
 
 const send = vi.fn()
@@ -168,6 +169,18 @@ describe('stripe', () => {
 	})
 })
 
+describe('upload', () => {
+	it('turns a body that is not multipart into a 400 instead of a 500', async () => {
+		const form = new FormData()
+		vi.stubGlobal('readFormData', async () => form)
+		expect(await readUploadForm({} as never)).toBe(form)
+		vi.stubGlobal('readFormData', async () => {
+			throw new TypeError('Failed to parse body as FormData.')
+		})
+		await expect(readUploadForm({} as never)).rejects.toMatchObject({ statusCode: 400 })
+	})
+})
+
 describe('mail', () => {
 	it('logs instead of sending without an API key', async () => {
 		const info = vi.spyOn(console, 'info').mockImplementation(() => undefined)
@@ -175,6 +188,7 @@ describe('mail', () => {
 		expect(info).toHaveBeenCalledWith(expect.stringContaining('Subject: hi'))
 		info.mockRestore()
 	})
+
 
 	it('sends through Resend with a key, and turns a Resend error into a 502', async () => {
 		runtimeConfig.resend.apiKey = 're_test'
